@@ -248,5 +248,55 @@ export async function runAddendumSetup(payload: Payload, log: (m: string) => voi
     })
     note('Halaman Tentang: banner prestasi + berita HAKORDIA ditambahkan.')
   }
+  // 11. KPS TV: official channel + featured video (URLs supplied by the project owner, 25 Oct 2026)
+  const CHANNEL_URL = 'https://www.youtube.com/channel/UCVaC5I8m-j9Msi036Iega3w'
+  let channel = (await payload.find({ collection: 'social-accounts', where: { profileUrl: { equals: CHANNEL_URL } }, limit: 1, depth: 0, overrideAccess: true })).docs[0]
+  if (!channel) {
+    channel = await payload.create({
+      collection: 'social-accounts',
+      overrideAccess: true,
+      context: ctx,
+      data: {
+        platform: 'youtube',
+        displayName: 'KPS TV SMP Nasional KPS Balikpapan',
+        profileUrl: CHANNEL_URL,
+        owner: 'sekolah',
+        verifiedBySchool: true,
+        verificationNote: 'URL kanal diberikan pemilik proyek (25 Okt 2026).',
+        enabled: true,
+        showInFooter: true,
+        showOnContact: true,
+        showOnMediaPage: true,
+        order: 5,
+      },
+    })
+    note('Kanal YouTube KPS TV ditambahkan sebagai akun resmi.')
+  }
+  const VIDEO_URL = 'https://youtu.be/qZSsp-Jjbcc'
+  const existingVideo = (await payload.find({ collection: 'media-items', where: { providerItemId: { equals: 'qZSsp-Jjbcc' } }, limit: 1, depth: 0, overrideAccess: true, draft: true, trash: true })).docs[0]
+  if (!existingVideo) {
+    await payload.create({
+      collection: 'media-items',
+      overrideAccess: true,
+      context: ctx,
+      data: {
+        // neutral website title; editors may replace it with the video's own title
+        title: 'Video Unggulan KPS TV',
+        slug: 'video-unggulan-kps-tv',
+        originalUrl: VIDEO_URL,
+        excerpt: 'Tayangan pilihan dari kanal resmi KPS TV SMP Nasional KPS Balikpapan.',
+        contentType: 'video',
+        displayMode: 'click_to_load_embed',
+        sourceAccount: channel.id,
+        homepageFeatured: true,
+        homepageOrder: 1,
+        consentStatus: 'not_needed',
+        contentPermissionNote: 'Dipublikasikan di kanal resmi sekolah; dipilih pemilik proyek untuk ditonjolkan.',
+        _status: 'published',
+        workflowStatus: 'published',
+      } as never,
+    })
+    note('Video unggulan KPS TV ditambahkan dan ditampilkan di beranda.')
+  }
   return out
 }

@@ -24,8 +24,8 @@ Website tidak mengarang data. Bagian di bawah ini disembunyikan, diberi label "C
 | 18 | Kondisi terkini halaman sekolah pada foto hero KPS-030 (unggahan 2019) | Dipakai sebagai hero | Humas | Ganti dengan foto horizontal terbaru bila ada |
 | 19 | Warna identitas resmi | Palet usulan brief (navy/teal/emas) | Kepala sekolah | Konfirmasi pedoman logo |
 | 20 | Email notifikasi pesan & SMTP | Belum dipasang; pesan tetap tersimpan di admin | Admin TI | `DEPLOYMENT_RUNBOOK.md` §7 |
-| 21 | URL kanal **KPS TV SMP NASIONAL KPS BALIKPAPAN** | Belum dipasang (nama hanya dari tangkapan layar) | Humas | Video & Media Sosial → Akun → salin URL asli, centang *Sudah diverifikasi* |
-| 22 | Video profil/podcast yang boleh ditampilkan | Section KPS TV tersembunyi otomatis sampai ada konten terbit | Humas | Video & Media → tambah tautan, centang *Tampilkan di beranda* |
+| 21 | Kanal **KPS TV** | Dipasang dari URL pemilik proyek (`youtube.com/channel/UCVaC5I8m-j9Msi036Iega3w`) | Humas | Lengkapi *handle* bila ada |
+| 22 | Judul video unggulan `qZSsp-Jjbcc` | Website memakai judul netral "Video Unggulan KPS TV" (judul asli tidak dapat dibaca dari lingkungan kerja) | Humas | Video & Media → ganti judul/ringkasan; tambah video lain bila perlu (maks. 3 di beranda) |
 | 23 | Instagram @smpnas.kps | Dipindahkan ke Akun Resmi dengan catatan "dari situs lama" | Humas | Konfirmasi ulang catatan verifikasi |
 | 24 | FAQ pendaftaran/pembelajaran/administrasi | Hanya 3 FAQ penggunaan website | Panitia PPDB, TU | FAQ → tulis jawaban resmi, isi *Terakhir ditinjau* |
 | 25 | Mode penerimaan, kapasitas gelombang, jenjang | Mode "Informasi saja"; kapasitas kosong | Panitia PPDB | Pendaftaran (PPDB/PMB) |
