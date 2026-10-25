@@ -806,7 +806,7 @@ figcaption, .caption { font-size: 0.9rem; color: var(--text-2); margin-top: 8px;
 .cal { width: 100%; table-layout: fixed; border-collapse: separate; border-spacing: 2px; }
 .cal th { padding: 6px 0; font: 700 12px var(--font-head); color: var(--text-2); text-transform: uppercase; letter-spacing: 0.04em; }
 .cal__cell { vertical-align: top; height: 52px; padding: 4px; border-radius: 8px; background: #fff; border: 1px solid var(--border); overflow: hidden; }
-.cal__cell.is-out { background: #f6f8fa; color: #9aa6b1; }
+.cal__cell.is-out { background: #f6f8fa; color: #5f6b77; }
 .cal__cell.is-today { border-color: var(--teal); box-shadow: inset 0 0 0 1px var(--teal); }
 .cal__day { display: block; font: 700 13px var(--font-head); }
 .cal__day a { color: var(--teal-2); }

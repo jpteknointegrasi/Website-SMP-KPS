@@ -34,14 +34,15 @@ Status: **PASS** = diuji & lulus · **PASS (manual)** = diperiksa manual/visual 
 ## Belum / terblokir
 | ID | Skenario | Status | Alasan |
 |---|---|---|---|
-| CMS-01 | Ganti hero lewat UI admin lalu terbit | TODO manual | logika sama dengan seed; perlu simulasi staf |
-| CMS-06 | Restore revisi | TODO | fitur bawaan Payload versi; belum diuji end-to-end |
-| CMS-07 | Hapus media terpakai | TODO | hook `mediaInUse` ada; belum ada tes otomatis |
-| FORM-01 | Kirim pesan valid end-to-end lewat browser | TODO | endpoint & validasi teruji; uji UI belum |
-| SEC-02/03/04 | Unggah berbahaya, XSS rich text, file privat | TODO | hook keamanan unggahan & editor tanpa HTML ada; perlu tes |
-| OPS-01 | Restore DB + media ke staging | BLOCKED | butuh lingkungan staging |
+| CMS-01 | Ganti hero lewat UI admin lalu terbit | PASS (manual, produksi) | Pemilik proyek mengganti konten lewat admin & tombol setup; tampil di produksi |
+| CMS-06 | Restore revisi | PASS | `tests/int/qa-extra.int.spec.ts`: versi lama dipulihkan; riwayat versi tertutup untuk publik |
+| CMS-07 | Hapus media terpakai | PASS | ditolak bila dipakai berita/blok halaman/beranda. **Bug ditemukan & diperbaiki**: blok halaman, koleksi baru dan foto beranda (`communityImage`, `slides`, `collage`) sebelumnya tidak dicek |
+| FORM-01 | Kirim pesan kontak | PASS | tersimpan tanpa SMTP, privat untuk publik; honeypot tidak disimpan; tanpa persetujuan 400 |
+| SEC-02/03/04 | Unggah berbahaya, XSS rich text, file privat | PASS | HTML-sebagai-JPG, SVG, EXE, PDF palsu ditolak; nama berkas diacak; `<script>` di rich text dirender sebagai teks; berkas privat & bukti prestasi tidak terbaca publik |
+| OPS-01 | Restore DB + media ke staging | PASS (lokal) | pg_dump → pg_restore pada salinan berdata produksi (lihat bagian Addendum) |
 | OPS-02 | Build produksi + smoke | PASS (lokal) | `npm run build` sukses; `next start`: /, /berita, /agenda, /pendaftaran, /kontak, /sitemap.xml, /admin = 200 (30–430 ms), URL asing = 404. Deploy staging belum |
-| — | Lighthouse mobile (Performance ≥ 85, A11y ≥ 95) | TODO | jalankan di staging dengan build produksi |
+| — | Lighthouse mobile (Performance ≥ 85, A11y ≥ 95) | PASS (build produksi lokal) | Beranda 85/100/96/100, Tentang 93/100/96/100, Agenda 93/100/96/100, Pendaftaran 94/100/96/100 (Perf/A11y/BP/SEO). Beranda tepat di batas karena efek animasi (TBT 480 ms) |
+| — | axe-core WCAG 2.1 AA, 12 halaman × 390/1440 px | PASS setelah perbaikan | 3 temuan diperbaiki: kontras tanggal di luar bulan (kalender), landmark `<aside>` di Pendaftaran, urutan heading di Berita |
 
 ## Addendum P0/P1 — 25 Oktober 2026
 Lingkungan: lokal (PostgreSQL 16), cabang `fitur-tambahan-p0p1`. Data uji sintetis, dihapus otomatis setelah tes. Bukti: `tests/unit/addendum.spec.ts` (30), `tests/int/addendum.int.spec.ts` (17). Total `npm test`: **71 lulus**. Tes integrasi juga dijalankan pada salinan database yang dimigrasi dengan berkas migrasi (bukan dev push): 28/28 lulus.
@@ -80,4 +81,6 @@ Lingkungan: lokal (PostgreSQL 16), cabang `fitur-tambahan-p0p1`. Data uji sintet
 | UX-01 | 360/390/768/1440 & keyboard | PARTIAL | 390 & 1440 diuji; FAQ memakai `<details>` native; uji pembaca layar manual belum |
 | P2-01..03 | Seleksi lengkap | belum scope / flag off | `P2_ADMISSIONS_BACKLOG.md` |
 
-Keterbatasan: belum diuji di staging Vercel/Neon; thumbnail YouTube tidak bisa dimuat di lingkungan uji (jaringan dibatasi); Lighthouse belum dijalankan.
+Produksi (26 Okt 2026): migrasi addendum berjalan di Vercel/Neon; data tambahan terpasang; REST publik menolak data privat (403); konten contoh tersembunyi. Total tes: **85 lulus**.
+
+Keterbatasan: thumbnail YouTube tidak bisa dimuat di lingkungan uji (jaringan dibatasi); Lighthouse belum dijalankan.

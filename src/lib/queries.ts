@@ -202,6 +202,40 @@ const FLAG_PATHS: [RegExp, keyof Flags][] = [
 ]
 export const hrefAllowed = (href: string, flags: Flags) => !FLAG_PATHS.some(([re, f]) => re.test(href) && !flags[f])
 
+/**
+ * Flags for LINKS (menu, footer, call-to-action buttons): a feature is linked only when it is switched on AND has
+ * something to show, so visitors never land on an empty page. The routes themselves follow the plain flags.
+ */
+export const getLinkFlags = cache(async (): Promise<Flags> => {
+  const flags = await getFlags()
+  const payload = await payloadClient()
+  const now = new Date().toISOString()
+  const count = async (fn: () => Promise<{ totalDocs: number }>) => {
+    try {
+      return (await fn()).totalDocs
+    } catch {
+      return 0
+    }
+  }
+  const [visits, works, media, cycles] = await Promise.all([
+    flags.schoolVisits
+      ? count(() =>
+          payload.count({
+            collection: 'visit-sessions',
+            overrideAccess: true,
+            where: { and: [{ sessionStatus: { equals: 'open' } }, { startAt: { greater_than: now } }, { or: [{ bookingDeadline: { exists: false } }, { bookingDeadline: { equals: null } }, { bookingDeadline: { greater_than: now } }] }] },
+          }),
+        )
+      : 0,
+    flags.studentWorks ? count(() => payload.count({ collection: 'student-works', ...pub })) : 0,
+    flags.mediaHub ? count(() => payload.count({ collection: 'media-items', ...pub })) : 0,
+    flags.interestForm
+      ? count(() => payload.count({ collection: 'admissions-cycles', where: { or: [{ interestFormEnabled: { equals: true } }, { mode: { equals: 'interest_form' } }] }, ...pub }))
+      : 0,
+  ])
+  return { ...flags, schoolVisits: visits > 0, studentWorks: works > 0, mediaHub: media > 0, interestForm: cycles > 0 }
+})
+
 export async function listEventCategories() {
   const payload = await payloadClient()
   return (await payload.find({ collection: 'event-categories', sort: 'order', limit: 50, depth: 0, ...pub })).docs

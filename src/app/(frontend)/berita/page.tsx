@@ -32,7 +32,10 @@ export default async function Page({ searchParams }: SP) {
             ))}
           </nav>
           {posts.length ? (
-            <div className="cards">{posts.map((p, i) => <PostCard key={p.id} p={p} i={i} />)}</div>
+            <>
+              <h2 className="sr-only">Daftar berita</h2>
+              <div className="cards">{posts.map((p, i) => <PostCard key={p.id} p={p} i={i} />)}</div>
+            </>
           ) : (
             <EmptyState title="Belum ada berita yang cocok" text="Coba kata kunci lain atau lihat semua kategori." action={{ label: 'Semua berita', href: '/berita' }} />
           )}

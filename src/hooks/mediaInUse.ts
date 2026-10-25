@@ -18,9 +18,14 @@ export const MEDIA_REFERENCES: [string, string][] = [
   ['albums', 'cover'],
   ['albums', 'items.media'],
   ['testimonials', 'photo'],
+  ['pages', 'layout.image'], // imageText & highlightBanner blocks
+  ['media-items', 'thumbnail'],
+  ['student-works', 'cover'],
+  ['student-works', 'gallery'],
+  ['social-accounts', 'profileImage'],
 ]
 
-const GLOBAL_IMAGE_KEYS = new Set(['image', 'imageMobile', 'logo', 'logoDark', 'accentImages', 'ogImage', 'introImage', 'cover'])
+const GLOBAL_IMAGE_KEYS = new Set(['image', 'imageMobile', 'logo', 'logoDark', 'accentImages', 'ogImage', 'introImage', 'cover', 'slides', 'collage', 'communityImage'])
 
 const scan = (node: unknown, id: number | string, hits: string[], path: string) => {
   if (Array.isArray(node)) node.forEach((n, i) => scan(n, id, hits, `${path}[${i}]`))

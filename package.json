@@ -19,6 +19,7 @@
     "typecheck": "tsc --noEmit",
     "test": "cross-env NODE_OPTIONS=--no-deprecation vitest run --config ./vitest.config.mts",
     "vercel-build": "cross-env NODE_OPTIONS=\"--no-deprecation --max-old-space-size=8000\" payload migrate && npm run build",
+    "backup:prod": "cross-env DOTENV_CONFIG_PATH=.env.vercel NODE_OPTIONS=--no-deprecation tsx scripts/backup-json.ts",
     "seed:prod": "cross-env DOTENV_CONFIG_PATH=.env.vercel NODE_OPTIONS=--no-deprecation tsx scripts/seed.ts"
   },
   "dependencies": {

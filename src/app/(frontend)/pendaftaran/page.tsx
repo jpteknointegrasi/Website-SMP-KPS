@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { getCurrentAdmissions, getFlags, getGlobals, listFaqs } from '@/lib/queries'
+import { getCurrentAdmissions, getFlags, getGlobals, getLinkFlags, listFaqs } from '@/lib/queries'
 import { PageHeader, Container, EmptyState } from '@/components/ui/bits'
 import { RichText } from '@/components/ui/RichText'
 import { Icon } from '@/components/ui/Icon'
@@ -20,7 +20,8 @@ const STATUS_TEXT: Record<string, string> = {
 }
 
 export default async function Page() {
-  const [cycle, { settings }, flags, faqs] = await Promise.all([getCurrentAdmissions(), getGlobals(), getFlags(), listFaqs({ category: 'pendaftaran', limit: 12 })])
+  const [cycle, { settings }, flags, linkFlags, faqs] = await Promise.all([getCurrentAdmissions(), getGlobals(), getFlags(), getLinkFlags(), listFaqs({ category: 'pendaftaran', limit: 12 })])
+  const visitsOn = linkFlags.schoolVisits // only when an open visit slot exists
   const mode = cycle?.mode === 'full_admissions' ? 'information_only' : (cycle?.mode ?? 'information_only') // P2 not available
   const status = cycle?.admissionStatus ?? 'unconfirmed'
   const externalOk = Boolean(cycle?.registrationUrl?.startsWith('https://'))
@@ -59,7 +60,7 @@ export default async function Page() {
                   ) : null}
                 </div>
 
-                {interestOn || flags.schoolVisits ? (
+                {interestOn || visitsOn ? (
                   <div className="next-steps">
                     {interestOn ? (
                       <Link className="next-step" href="/pendaftaran/minat" data-cta="cta-minat">
@@ -70,7 +71,7 @@ export default async function Page() {
                         </span>
                       </Link>
                     ) : null}
-                    {flags.schoolVisits ? (
+                    {visitsOn ? (
                       <Link className="next-step" href="/kunjungan" data-cta="cta-kunjungan">
                         <Icon name="school" size={22} />
                         <span>
@@ -164,7 +165,7 @@ export default async function Page() {
               </>
             )}
           </div>
-          <aside>
+          <div>
             <div className="aside-card">
               <h2>Tanya pendaftaran</h2>
               {cycle?.contactNote ? <p>{cycle.contactNote}</p> : null}
@@ -177,7 +178,7 @@ export default async function Page() {
                 Kirim pertanyaan
               </Link>
             </div>
-          </aside>
+          </div>
         </Container>
       </section>
     </>
