@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { findBySlug, getGlobals, listCollection } from '@/lib/queries'
+import { findBySlug, getGlobals, getHomepage, listCollection } from '@/lib/queries'
 import { PageHeader, Container } from '@/components/ui/bits'
 import { PageBlocks } from '@/components/content/PageBlocks'
 import { Img } from '@/components/ui/Img'
@@ -8,18 +8,27 @@ import type { Page as CmsPage, Testimonial, Media } from '@/payload-types'
 export const metadata = { title: 'Alumni', description: 'Jejaring alumni SMP Nasional KPS.', alternates: { canonical: '/alumni' } }
 
 export default async function Page() {
-  const [page, { settings }, stories] = await Promise.all([
+  const [page, { settings }, stories, home] = await Promise.all([
     findBySlug<CmsPage>('pages', 'alumni'),
     getGlobals(),
     // Only stories with recorded publication consent
     listCollection('testimonials', { where: { consent: { equals: true } }, sort: '-updatedAt', limit: 6 }),
+    getHomepage(),
   ])
+  // photo: the alumni page's own cover, else the community/alumni photo chosen for the homepage
+  const photo = (page?.cover && typeof page.cover === 'object' ? (page.cover as Media) : null) ?? (home.texts?.communityImage && typeof home.texts.communityImage === 'object' ? (home.texts.communityImage as Media) : null)
   const items = stories.docs as unknown as Testimonial[]
   return (
     <>
       <PageHeader title={page?.title ?? 'Keluarga Alumni KPS'} lead={page?.excerpt ?? 'Alumni adalah bagian dari keluarga besar SMP Nasional KPS. Tetap terhubung dengan sekolah dan sesama alumni.'} crumbs={[{ label: 'Alumni' }]} />
       <section className="section">
         <Container>
+          {photo ? (
+            <figure className="article-cover">
+              <Img media={photo} priority sizes="(min-width: 1280px) 1200px, 100vw" />
+              {photo.caption || photo.alt ? <figcaption className="muted" style={{ marginTop: 8 }}>{photo.caption || photo.alt}</figcaption> : null}
+            </figure>
+          ) : null}
           {page ? <PageBlocks blocks={page.layout} /> : null}
           <div className="status-panel status-panel--open" style={{ margin: '8px 0 40px' }}>
             <strong>Portal Alumni</strong>

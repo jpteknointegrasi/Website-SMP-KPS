@@ -53,7 +53,7 @@ export const ALT: Record<string, string> = {
   'KPS-024': 'Penyerahan apresiasi kepada peserta berpakaian adat di lapangan',
   'KPS-025': 'Kelompok peserta berfoto bersama pendamping',
   'KPS-026': 'Foto bersama di panggung bertuliskan KPS 9',
-  'KPS-027': 'Warga sekolah berpakaian batik dan kebaya berfoto bersama di halaman sekolah',
+  'KPS-027': 'Guru dan staf SMP Nasional KPS berbusana adat nusantara berfoto bersama di halaman sekolah',
   'KPS-028': 'Banner sekolah: guru dan siswa dengan globe, bertuliskan Belajar bersama, menjelajah dunia dengan ilmu',
   'KPS-029': 'Kelompok berseragam merah dan biru berfoto di depan bangunan sekolah',
   'KPS-030': 'Halaman dan taman sekolah dengan siswa berbaris dalam kegiatan pagi',
@@ -62,6 +62,7 @@ export const ALT: Record<string, string> = {
 const BLOCKED = new Set(['KPS-005', 'KPS-006', 'KPS-031'])
 /** Focal points (percent) so the main subject survives narrow mobile crops. */
 const FOCAL: Record<string, { x: number; y: number }> = {
+  'KPS-ALM01': { x: 55, y: 35 },
   'KPS-P01': { x: 45, y: 25 },
   'KPS-P02': { x: 52, y: 22 },
   'KPS-P03': { x: 55, y: 22 },

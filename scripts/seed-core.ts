@@ -168,6 +168,13 @@ export async function runSeed(payload: Payload, log: (m: string) => void = (m) =
         image: M('KPS-028'),
         imageSide: 'right',
       },
+      {
+        blockType: 'imageText',
+        heading: 'Guru dan Staf SMP Nasional KPS',
+        content: lexical(['Guru dan staf SMP Nasional KPS mendampingi siswa belajar, berkarya dan bertumbuh, sekaligus merawat keberagaman budaya nusantara di lingkungan sekolah.']),
+        image: M('KPS-027'),
+        imageSide: 'left',
+      },
     ],
   })
   await upsert(payload, 'pages', { slug: { equals: 'visi-misi' } }, {
@@ -483,7 +490,7 @@ export async function runSeed(payload: Payload, log: (m: string) => void = (m) =
         newsHeading: 'Cerita dari KPS',
         communityHeading: 'Terhubung dalam Keluarga KPS',
         communityText: 'Siswa, orang tua, guru dan alumni adalah bagian dari keluarga besar KPS. Ikuti kabar sekolah dan tetap terhubung.',
-        communityImage: M('KPS-027'),
+        communityImage: M('KPS-ALM01') ?? M('KPS-027'),
         achievementsAlbum: (archiveAlbum as { id: number }).id,
         ctaHeading: 'Mari Mengenal KPS Lebih Dekat',
         ctaText: 'Temukan lingkungan belajar untuk tumbuh dan berkarya.',

@@ -298,5 +298,38 @@ export async function runAddendumSetup(payload: Payload, log: (m: string) => voi
     })
     note('Video unggulan KPS TV ditambahkan dan ditampilkan di beranda.')
   }
+  // 12. KPS-027 shows teachers & staff (not alumni): fix its alt text, move it to "Tentang KPS",
+  //     and use the 2026 alumni association inauguration photo for the community/alumni block.
+  const oldAlt = 'Warga sekolah berpakaian batik dan kebaya berfoto bersama di halaman sekolah'
+  const staffPhotoId = M('KPS-027')
+  const alumniPhotoId = M('KPS-ALM01')
+  if (staffPhotoId) {
+    const sp = await payload.findByID({ collection: 'media', id: staffPhotoId, depth: 0, overrideAccess: true })
+    if (!sp.alt || sp.alt === oldAlt)
+      await payload.update({ collection: 'media', id: staffPhotoId, overrideAccess: true, context: ctx, data: { alt: 'Guru dan staf SMP Nasional KPS berbusana adat nusantara berfoto bersama di halaman sekolah' } })
+  }
+  const home2 = await payload.findGlobal({ slug: 'homepage', depth: 0, overrideAccess: true, draft: false })
+  const curCommunity = home2.texts?.communityImage
+  const curId = curCommunity && typeof curCommunity === 'object' ? (curCommunity as { id: number }).id : curCommunity
+  if (alumniPhotoId && (!curId || curId === staffPhotoId)) {
+    const { id: _id, createdAt: _c, updatedAt: _u, ...rest } = home2 as unknown as Record<string, unknown>
+    await payload.updateGlobal({ slug: 'homepage', overrideAccess: true, context: ctx, data: { ...rest, texts: { ...(home2.texts ?? {}), communityImage: alumniPhotoId }, _status: 'published' } as never })
+    note('Beranda: foto Komunitas & Alumni diganti foto Pelantikan Ikatan Alumni 2026.')
+  }
+  const about2 = (await payload.find({ collection: 'pages', where: { slug: { equals: 'tentang' } }, limit: 1, depth: 0, overrideAccess: true, draft: true })).docs[0]
+  const hasStaffBlock = (about2?.layout ?? []).some((b) => b.blockType === 'imageText' && (typeof b.image === 'object' ? (b.image as { id: number } | null)?.id : b.image) === staffPhotoId)
+  if (about2 && staffPhotoId && !hasStaffBlock) {
+    const layout = [...(about2.layout ?? [])]
+    const at = layout.findIndex((b) => b.blockType === 'highlightBanner')
+    layout.splice(at >= 0 ? at : layout.length, 0, {
+      blockType: 'imageText',
+      heading: 'Guru dan Staf SMP Nasional KPS',
+      content: lexical(['Guru dan staf SMP Nasional KPS mendampingi siswa belajar, berkarya dan bertumbuh, sekaligus merawat keberagaman budaya nusantara di lingkungan sekolah.']) as never,
+      image: staffPhotoId,
+      imageSide: 'left',
+    } as (typeof layout)[number])
+    await payload.update({ collection: 'pages', id: about2.id, overrideAccess: true, context: ctx, data: { layout, _status: 'published' } as never })
+    note('Halaman Tentang: foto guru & staf dipindahkan ke sini.')
+  }
   return out
 }
