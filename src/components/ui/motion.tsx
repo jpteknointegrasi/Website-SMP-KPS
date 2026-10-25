@@ -160,14 +160,15 @@ export const Parallax = ({ children, depth = 12, className = '' }: { children: R
   const ref = useRef<HTMLDivElement>(null)
   useEffect(() => {
     const el = ref.current
-    if (!el || reduced()) return
+    // Touch/small screens: no parallax (it only adds jank and can push content over neighbouring text).
+    if (!el || reduced() || !window.matchMedia('(hover: hover) and (pointer: fine) and (min-width: 1024px)').matches) return
     let px = 0
     let py = 0
     let sy = 0
     let raf = 0
     const apply = () => {
       raf = 0
-      el.style.transform = `translate3d(${px * depth}px, ${py * depth - sy * depth * 0.04}px, 0)`
+      el.style.transform = `translate3d(${px * depth}px, ${py * depth + sy * depth}px, 0)`
     }
     const queue = () => (raf ||= requestAnimationFrame(apply))
     const onMove = (e: PointerEvent) => {
@@ -175,8 +176,10 @@ export const Parallax = ({ children, depth = 12, className = '' }: { children: R
       py = e.clientY / window.innerHeight - 0.5
       queue()
     }
+    // Scroll offset relative to the element's own position in the viewport (-0.5..0.5), so the shift stays within ±depth px.
     const onScroll = () => {
-      sy = Math.min(window.scrollY, 800)
+      const r = el.getBoundingClientRect()
+      sy = Math.max(-0.5, Math.min(0.5, (r.top + r.height / 2 - window.innerHeight / 2) / window.innerHeight)) * 0.6
       queue()
     }
     window.addEventListener('pointermove', onMove, { passive: true })

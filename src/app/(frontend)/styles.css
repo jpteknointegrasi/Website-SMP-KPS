@@ -471,7 +471,8 @@ figcaption, .caption { font-size: 0.9rem; color: var(--text-2); margin-top: 8px;
 .site-header__actions { display: flex; align-items: center; gap: 8px; margin-left: auto; }
 .site-header .icon-btn { color: var(--navy); }
 .site-header .icon-btn:hover { background: var(--teal-soft); color: var(--teal-2); }
-.site-header .drawer .icon-btn { color: #fff; }
+.drawer .icon-btn { color: #fff; }
+.drawer .icon-btn:hover { background: rgba(255, 255, 255, 0.1); color: #fff; }
 .site-header .btn--outline { border-color: var(--navy); }
 .site-header .btn--outline:hover { background: var(--navy); color: #fff; }
 .nav { display: none; }
