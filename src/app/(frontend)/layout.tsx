@@ -16,7 +16,13 @@ export const metadata: Metadata = {
   metadataBase: new URL(SITE),
   title: { default: 'SMP Nasional KPS Balikpapan', template: '%s · SMP Nasional KPS' },
   description: 'Website resmi SMP Nasional KPS Balikpapan: profil, pembelajaran, kehidupan siswa, berita, pengumuman, agenda dan informasi pendaftaran.',
-  openGraph: { type: 'website', locale: 'id_ID', siteName: 'SMP Nasional KPS' },
+  openGraph: {
+    type: 'website',
+    locale: 'id_ID',
+    siteName: 'SMP Nasional KPS',
+    images: [{ url: '/og-image.jpg', width: 1200, height: 630, alt: 'SMP Nasional KPS Balikpapan — Tempat Bertumbuh, Berkarya, dan Berprestasi' }],
+  },
+  twitter: { card: 'summary_large_image', images: ['/og-image.jpg'] },
   icons: { icon: '/brand/icon.svg' },
   robots: process.env.NOINDEX === 'true' ? { index: false, follow: false } : undefined,
 }

@@ -18,7 +18,8 @@ export async function generateMetadata({ params }: P): Promise<Metadata> {
     title: p.seo?.title ?? p.title,
     description: p.seo?.description ?? p.excerpt ?? undefined,
     alternates: { canonical: `/berita/${p.slug}` },
-    openGraph: { type: 'article', publishedTime: p.publishedAt ?? undefined, images: cover?.sizes?.large?.url ? [cover.sizes.large.url] : undefined },
+    openGraph: { type: 'article', publishedTime: p.publishedAt ?? undefined, locale: 'id_ID', siteName: 'SMP Nasional KPS', images: [cover?.sizes?.large?.url ?? '/og-image.jpg'] },
+    twitter: { card: 'summary_large_image', images: [cover?.sizes?.large?.url ?? '/og-image.jpg'] },
   }
 }
 
