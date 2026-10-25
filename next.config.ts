@@ -11,6 +11,19 @@ const nextConfig: NextConfig = {
   outputFileTracingIncludes: {
     '/setup/isi-data': ['./content/**/*'],
   },
+  // Video players may only come from YouTube's privacy-enhanced domain; nobody may frame this site.
+  async headers() {
+    return [
+      {
+        source: '/:path*',
+        headers: [
+          { key: 'Content-Security-Policy', value: "frame-src 'self' https://www.youtube-nocookie.com; frame-ancestors 'self'" },
+          { key: 'X-Content-Type-Options', value: 'nosniff' },
+          { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+        ],
+      },
+    ]
+  },
   images: {
     localPatterns: [
       {

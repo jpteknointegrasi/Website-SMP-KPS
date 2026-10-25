@@ -1,5 +1,6 @@
 import React from 'react'
-import type { Media } from '@/payload-types'
+import type { Media, MediaItem } from '@/payload-types'
+import { MediaEmbed } from '../media/MediaCard'
 import { PageHeader, Container, DemoBadge } from '../ui/bits'
 import { Img } from '../ui/Img'
 import { RichText } from '../ui/RichText'
@@ -11,6 +12,19 @@ type Doc = {
   content?: unknown
   gallery?: (number | Media)[] | null
   isDemo?: boolean | null
+  activities?: { text: string; id?: string | null }[] | null
+  relatedMedia?: (number | MediaItem)[] | null
+}
+
+/** Related videos/posts (same media item reused across pages, never duplicated). */
+export const RelatedMedia = ({ items }: { items?: (number | MediaItem)[] | null }) => {
+  const list = (items ?? []).filter((m): m is MediaItem => typeof m === 'object' && m !== null)
+  return list.length ? (
+    <div className="block">
+      <h2>Video &amp; media</h2>
+      {list.map((m) => <MediaEmbed key={m.id} m={m} />)}
+    </div>
+  ) : null
 }
 
 /** Shared detail template for programs, extracurriculars, facilities. */
@@ -43,6 +57,13 @@ export const Detail = ({
             ) : null}
             {children}
             <RichText data={doc.content} />
+            {doc.activities?.length ? (
+              <div className="block prose">
+                <h2>Aktivitas</h2>
+                <ul>{doc.activities.map((a) => <li key={a.id ?? a.text}>{a.text}</li>)}</ul>
+              </div>
+            ) : null}
+            <RelatedMedia items={doc.relatedMedia} />
             {gallery.length ? (
               <>
                 <h2>Galeri</h2>

@@ -1,15 +1,21 @@
-import { getGlobals } from '@/lib/queries'
+import { getGlobals, listSocialAccounts } from '@/lib/queries'
+import { PLATFORM_ICON } from '@/components/layout/Footer'
 import { PageHeader, Container } from '@/components/ui/bits'
 import { Icon } from '@/components/ui/Icon'
 import { ContactForm } from '@/components/forms/ContactForm'
 
 export const metadata = { title: 'Kontak', description: 'Alamat, email, telepon dan formulir pesan SMP Nasional KPS Balikpapan.', alternates: { canonical: '/kontak' } }
-type SP = { searchParams: Promise<{ kategori?: string }> }
-const CATS = ['umum', 'pendaftaran', 'akademik', 'saran', 'alumni']
+type SP = { searchParams: Promise<{ kategori?: string; topik?: string }> }
+const CATS = ['umum', 'pendaftaran', 'akademik', 'saran', 'alumni', 'kegiatan', 'kunjungan']
 
 export default async function Page({ searchParams }: SP) {
-  const k = (await searchParams).kategori
-  const { settings: s } = await getGlobals()
+  const sp = await searchParams
+  const k = sp.kategori
+  const topic = typeof sp.topik === 'string' && /^[a-z0-9-]{1,80}$/.test(sp.topik) ? sp.topik : undefined
+  const [{ settings: s }, accounts] = await Promise.all([getGlobals(), listSocialAccounts('showOnContact').catch(() => [])])
+  const socials = accounts.length
+    ? accounts.map((a) => ({ url: a.profileUrl, platform: a.platform, label: a.handle || a.displayName, name: a.displayName }))
+    : (s.socials ?? []).map((so) => ({ url: so.url, platform: so.platform, label: so.handle ?? so.url, name: so.platform[0].toUpperCase() + so.platform.slice(1) }))
   const tel = (v: string) => `tel:${v.replace(/[^0-9+]/g, '')}`
   return (
     <>
@@ -33,8 +39,8 @@ export default async function Page({ searchParams }: SP) {
                 <li><span className="service__icon"><Icon name="phone" size={20} /></span><span><strong>WhatsApp resmi</strong><br /><a href={`https://wa.me/${s.whatsapp.replace(/[^0-9]/g, '')}`} target="_blank" rel="noopener noreferrer">{s.whatsapp}</a></span></li>
               ) : null}
               <li><span className="service__icon"><Icon name="clock" size={20} /></span><span><strong>Jam layanan</strong><br />{s.serviceHours || <span className="muted">Sedang dikonfirmasi sekolah</span>}</span></li>
-              {(s.socials ?? []).map((so) => (
-                <li key={so.url}><span className="service__icon"><Icon name={so.platform === 'instagram' ? 'instagram' : 'link'} size={20} /></span><span><strong>{so.platform[0].toUpperCase() + so.platform.slice(1)}</strong><br /><a href={so.url} target="_blank" rel="noopener noreferrer">{so.handle ?? so.url}</a></span></li>
+              {socials.map((so) => (
+                <li key={so.url}><span className="service__icon"><Icon name={PLATFORM_ICON[so.platform] ?? 'link'} size={20} /></span><span><strong>{so.name}</strong><br /><a href={so.url} target="_blank" rel="noopener noreferrer">{so.label}<span className="sr-only"> (membuka tab baru)</span></a></span></li>
               ))}
             </ul>
             {s.mapUrl ? (
@@ -46,7 +52,7 @@ export default async function Page({ searchParams }: SP) {
           <div>
             <h2 className="h2">Kirim pesan</h2>
             <p className="muted">Pesan diterima tim sekolah melalui kotak masuk admin. Isi minimal satu kanal balasan.</p>
-            <ContactForm defaultCategory={k && CATS.includes(k) ? k : 'umum'} />
+            <ContactForm defaultCategory={k && CATS.includes(k) ? k : 'umum'} topic={topic} />
           </div>
         </Container>
       </section>

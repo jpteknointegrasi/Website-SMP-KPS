@@ -55,3 +55,6 @@ node_modules/
 
 # kredensial produksi untuk seed dari komputer lokal
 /.env.vercel
+
+# local-only helper scripts (test data)
+scripts/_*

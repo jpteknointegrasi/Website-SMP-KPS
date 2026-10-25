@@ -62,6 +62,10 @@ export const ALT: Record<string, string> = {
 const BLOCKED = new Set(['KPS-005', 'KPS-006', 'KPS-031'])
 /** Focal points (percent) so the main subject survives narrow mobile crops. */
 const FOCAL: Record<string, { x: number; y: number }> = {
+  'KPS-P01': { x: 45, y: 25 },
+  'KPS-P02': { x: 52, y: 22 },
+  'KPS-P03': { x: 55, y: 22 },
+  'KPS-A01': { x: 45, y: 35 },
   'KPS-H01': { x: 66, y: 45 },
   'KPS-H02': { x: 50, y: 42 },
   'KPS-H03': { x: 50, y: 50 },

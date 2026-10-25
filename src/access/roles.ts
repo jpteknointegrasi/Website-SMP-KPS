@@ -58,6 +58,16 @@ export const canUpdateContent: Access = ({ req: { user } }) => {
   return false
 }
 
+/**
+ * Private prospective-family data (leads, visit bookings): admissions officers, plus any staff account
+ * explicitly granted `canAccessLeads` by an Admin Teknis. Editor/Humas and admins are NOT included by default.
+ */
+export const canSeeLeads = (user: MaybeUser) =>
+  hasRole(user, 'admissions') || (isStaff(user) && Boolean((user as { canAccessLeads?: boolean }).canAccessLeads))
+export const canExportLeads = (user: MaybeUser) =>
+  canSeeLeads(user) && (hasRole(user, 'admissions') || Boolean((user as { canExportLeads?: boolean }).canExportLeads))
+export const leadsAccess: Access = ({ req: { user } }) => canSeeLeads(user)
+
 /** Admissions-related modules: admin/editor + admissions officer. */
 export const admissionsStaff: Access = ({ req: { user } }) =>
   hasRole(user, 'admin', 'editor', 'admissions')

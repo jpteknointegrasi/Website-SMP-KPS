@@ -5,7 +5,7 @@ export default function robots(): MetadataRoute.Robots {
   // Staging/preview: set NOINDEX=true to block all crawling.
   if (process.env.NOINDEX === 'true') return { rules: [{ userAgent: '*', disallow: '/' }] }
   return {
-    rules: [{ userAgent: '*', allow: '/', disallow: ['/admin', '/api/', '/cari'] }],
+    rules: [{ userAgent: '*', allow: '/', disallow: ['/admin', '/api/', '/cari', '/pratinjau', '/pratinjau-bingkai', '/kunjungan/batal', '/setup'] }],
     sitemap: `${SITE}/sitemap.xml`,
   }
 }

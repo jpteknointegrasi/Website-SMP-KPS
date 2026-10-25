@@ -12,9 +12,10 @@ const size = (b?: number | null) => (!b ? '' : b > 1_000_000 ? `${(b / 1_000_000
 /** Public document rows: title, category, period, version, approval date, file type and size. */
 export const DocumentList = ({ docs }: { docs: Document[] }) => (
   <ul className="list-rows">
-    {docs.map((d) => (
-      <li key={d.id}>
-        <a className="row-link doc-row" href={d.url ?? '#'} download={d.originalFilename ?? undefined}>
+    {docs.map((d) => {
+      const prev = d.supersedes && typeof d.supersedes === 'object' ? (d.supersedes as Document) : null
+      const body = (
+        <>
           <span className="doc-row__type" aria-hidden="true">{ext(d) || 'FILE'}</span>
           <span className="doc-row__body">
             <span className="row-meta">
@@ -26,12 +27,23 @@ export const DocumentList = ({ docs }: { docs: Document[] }) => (
             <strong>{d.title}</strong>
             {d.description ? <span>{d.description}</span> : null}
             <span className="doc-row__foot">
-              {[d.approvedAt && `Disetujui ${formatDate(d.approvedAt)}`, ext(d), size(d.filesize)].filter(Boolean).join(' · ')}
+              {[d.approvedAt && `Disetujui ${formatDate(d.approvedAt)}`, prev && `Menggantikan versi ${prev.version ?? 'sebelumnya'}`, ext(d), size(d.filesize)].filter(Boolean).join(' · ')}
             </span>
           </span>
-          <Icon name="download" />
-        </a>
-      </li>
-    ))}
+        </>
+      )
+      return (
+        <li key={d.id}>
+          {d.url ? (
+            <a className="row-link doc-row" href={d.url} download={d.originalFilename ?? undefined} data-cta="unduh-dokumen">
+              {body}
+              <Icon name="download" />
+            </a>
+          ) : (
+            <div className="row-link doc-row" style={{ cursor: 'default' }}>{body}</div>
+          )}
+        </li>
+      )
+    })}
   </ul>
 )

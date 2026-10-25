@@ -38,8 +38,41 @@ export const AdmissionsCycles = defineContent({
       ],
       admin: { description: 'Tombol "Daftar" hanya muncul jika status Dibuka DAN URL pendaftaran valid.' },
     },
+    {
+      name: 'mode',
+      type: 'select',
+      label: 'Mode penerimaan',
+      required: true,
+      defaultValue: 'information_only',
+      options: [
+        { label: 'Informasi saja', value: 'information_only' },
+        { label: 'Sistem pendaftaran eksternal (resmi)', value: 'external_system' },
+        { label: 'Form minat (bukan pendaftaran resmi)', value: 'interest_form' },
+        { label: 'Pendaftaran lengkap di website (P2 — belum tersedia)', value: 'full_admissions' },
+      ],
+      validate: (v: unknown) => (v === 'full_admissions' ? 'Mode pendaftaran lengkap belum tersedia (P2). Pilih mode lain.' : true),
+      admin: { description: 'Hanya satu proses resmi: bila memakai sistem eksternal, website menjadi pusat informasi dan tombol ke sistem itu.' },
+    },
+    { name: 'levels', type: 'text', label: 'Jenjang yang diterima', admin: { description: 'Contoh: Kelas 7. Kosongkan bila belum dikonfirmasi.' } },
     { name: 'intro', type: 'textarea', label: 'Pengantar' },
     safeUrlField('registrationUrl', 'URL sistem pendaftaran resmi', { description: 'Harus https://. Uji tautan sebelum mengaktifkan status Dibuka.' }),
+    {
+      name: 'interestFormEnabled',
+      type: 'checkbox',
+      label: 'Tampilkan form minat ("Titipkan minat, bukan pendaftaran resmi")',
+      defaultValue: false,
+      admin: { description: 'Butuh fitur "Form minat" aktif di Pengaturan → Fitur Aktif. Bisa dipakai saat status belum dibuka/ditutup (minat siklus berikutnya).' },
+    },
+    {
+      name: 'closedOffer',
+      type: 'select',
+      label: 'Saat ditutup, tawarkan',
+      defaultValue: 'contact',
+      options: [
+        { label: 'Kontak sekolah', value: 'contact' },
+        { label: 'Form minat untuk siklus berikutnya', value: 'interest_next' },
+      ],
+    },
     {
       name: 'waves',
       type: 'array',
@@ -51,6 +84,15 @@ export const AdmissionsCycles = defineContent({
           { name: 'end', type: 'date', label: 'Selesai' },
         ] },
         { name: 'note', type: 'text', label: 'Catatan' },
+        { type: 'row', fields: [
+          { name: 'capacity', type: 'number', min: 0, label: 'Kapasitas (hanya bila sudah disahkan)' },
+          { name: 'waveStatus', type: 'select', label: 'Status gelombang', defaultValue: 'unconfirmed', options: [
+            { label: 'Belum dikonfirmasi', value: 'unconfirmed' },
+            { label: 'Belum dibuka', value: 'not_open' },
+            { label: 'Dibuka', value: 'open' },
+            { label: 'Ditutup', value: 'closed' },
+          ] },
+        ] },
       ],
     },
     { name: 'steps', type: 'array', label: 'Alur pendaftaran', fields: [
@@ -65,6 +107,8 @@ export const AdmissionsCycles = defineContent({
       { name: 'answer', type: 'textarea', required: true },
     ] },
     { name: 'contactNote', type: 'textarea', label: 'Kontak informasi pendaftaran' },
+    { name: 'infoDocuments', type: 'relationship', relationTo: 'documents', hasMany: true, label: 'Dokumen informasi (brosur, panduan)' },
+    { name: 'videos', type: 'relationship', relationTo: 'media-items', hasMany: true, maxRows: 2, label: 'Video profil/tur (opsional)', admin: { description: 'Hanya video yang relevan dan masih berlaku untuk siklus ini.' } },
   ],
 })
 
@@ -111,8 +155,11 @@ export const ContactMessages: CollectionConfig = {
         { label: 'Akademik', value: 'akademik' },
         { label: 'Kritik & saran', value: 'saran' },
         { label: 'Alumni', value: 'alumni' },
+        { label: 'Kegiatan & ekstrakurikuler', value: 'kegiatan' },
+        { label: 'Kunjungan sekolah', value: 'kunjungan' },
       ],
     },
+    { name: 'topic', type: 'text', label: 'Topik (dari tautan)', admin: { readOnly: true } },
     { name: 'message', type: 'textarea', label: 'Pesan', required: true, admin: { readOnly: true } },
     { name: 'consent', type: 'checkbox', label: 'Setuju penggunaan data', admin: { readOnly: true } },
     {
@@ -130,6 +177,13 @@ export const ContactMessages: CollectionConfig = {
     },
     { name: 'assignedTo', type: 'relationship', relationTo: 'users', label: 'Ditugaskan ke' },
     { name: 'internalNote', type: 'textarea', label: 'Catatan privat' },
+    {
+      name: 'linkedLead',
+      type: 'relationship',
+      relationTo: 'leads',
+      label: 'Hubungkan ke data minat',
+      admin: { condition: (d) => d?.category === 'pendaftaran', description: 'Opsional dan manual. Hanya pesan pendaftaran yang relevan.' },
+    },
     { name: 'emailNotified', type: 'checkbox', label: 'Notifikasi email terkirim', admin: { readOnly: true } },
   ],
 }
@@ -160,6 +214,7 @@ export const AuditLogs: CollectionConfig = {
     { name: 'docTitle', type: 'text', label: 'Objek' },
     { name: 'status', type: 'text' },
     { name: 'workflowStatus', type: 'text' },
+    { name: 'changedFields', type: 'text', label: 'Field yang berubah (nama saja)' },
     { name: 'actor', type: 'relationship', relationTo: 'users' },
     { name: 'actorEmail', type: 'text', label: 'Pelaku' },
   ],

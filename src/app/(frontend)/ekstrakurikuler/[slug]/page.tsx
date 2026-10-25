@@ -17,7 +17,15 @@ export default async function Page({ params }: P) {
     <Detail
       doc={d}
       crumbs={[{ label: 'Kehidupan Siswa', href: '/kehidupan-siswa' }, { label: d.title }]}
-      aside={info.length ? <div className="aside-card"><dl>{info.map(([k, v]) => <div key={k}><dt>{k}</dt><dd>{v}</dd></div>)}</dl></div> : undefined}
+      aside={
+        <div className="aside-card">
+          {info.length ? <dl>{info.map(([k, v]) => <div key={k}><dt>{k}</dt><dd>{v}</dd></div>)}</dl> : null}
+          {/* interest goes to the existing private inbox; it is not a membership registration */}
+          <a className="btn btn--teal" href={`/kontak?kategori=kegiatan&topik=${d.slug}`} style={{ marginTop: 14 }} data-cta="minat-kegiatan">
+            Tanya / minat kegiatan ini
+          </a>
+        </div>
+      }
     />
   )
 }

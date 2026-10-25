@@ -11,6 +11,7 @@ type IcsEvent = {
   excerpt?: string | null
   eventStatus?: string | null
   updatedAt?: string
+  sequence?: number | null
 }
 
 const esc = (s: string) => s.replace(/\\/g, '\\\\').replace(/\n/g, '\\n').replace(/,/g, '\\,').replace(/;/g, '\\;')
@@ -43,6 +44,9 @@ export function buildIcs(e: IcsEvent, siteUrl: string) {
   const lines = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//SMP Nasional KPS//Agenda//ID', 'CALSCALE:GREGORIAN', 'METHOD:PUBLISH', 'BEGIN:VEVENT']
   lines.push(`UID:event-${e.id}@smp.kps.sch.id`)
   lines.push(`DTSTAMP:${utcStamp(e.updatedAt ?? new Date().toISOString())}`)
+  // revision counter: calendar apps replace the stored copy when SEQUENCE increases
+  lines.push(`SEQUENCE:${Math.max(0, Math.floor(Number(e.sequence ?? 0)))}`)
+  if (e.updatedAt) lines.push(`LAST-MODIFIED:${utcStamp(e.updatedAt)}`)
   if (e.allDay) {
     const s = witaDate(e.startAt)
     const end = e.endAt ? witaDate(e.endAt) : s

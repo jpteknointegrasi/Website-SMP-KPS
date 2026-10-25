@@ -6,8 +6,10 @@ import { RichText } from '@/components/ui/RichText'
 import { Img } from '@/components/ui/Img'
 import { Icon } from '@/components/ui/Icon'
 import { Countdown } from '@/components/ui/motion'
-import { EVENT_STATUS, formatEventWhen } from '@/lib/format'
-import type { Event, Media } from '@/payload-types'
+import { AUDIENCE, EVENT_STATUS, formatEventWhen } from '@/lib/format'
+import { googleCalendarUrl } from '@/lib/calendar'
+import { DocumentList } from '@/components/content/DocumentList'
+import type { Event, Media, EventCategory, Document } from '@/payload-types'
 
 type P = { params: Promise<{ slug: string }> }
 
@@ -23,6 +25,9 @@ export default async function Page({ params }: P) {
   const cover = e.cover && typeof e.cover === 'object' ? (e.cover as Media) : null
   const upcoming = new Date(e.startAt).getTime() > Date.now() && e.eventStatus === 'scheduled'
   const SITE = process.env.NEXT_PUBLIC_SERVER_URL || ''
+  const cat = e.category && typeof e.category === 'object' ? (e.category as EventCategory) : null
+  const audience = (e.audience ?? []).filter((a) => a !== 'semua')
+  const docs = (e.attachments ?? []).filter((d): d is Document => typeof d === 'object' && d !== null)
   const ld = {
     '@context': 'https://schema.org',
     '@type': 'Event',
@@ -54,6 +59,12 @@ export default async function Page({ params }: P) {
               </figure>
             ) : null}
             <RichText data={e.content} />
+            {docs.length ? (
+              <div className="block">
+                <h2>Lampiran</h2>
+                <DocumentList docs={docs} />
+              </div>
+            ) : null}
           </div>
           <aside>
             <div className="aside-card">
@@ -68,12 +79,20 @@ export default async function Page({ params }: P) {
                 <dd>{formatEventWhen(e)}</dd>
                 {e.location ? (<><dt>Lokasi</dt><dd>{e.location}</dd></>) : null}
                 {e.organizer ? (<><dt>Penyelenggara</dt><dd>{e.organizer}</dd></>) : null}
+                {cat ? (<><dt>Kategori</dt><dd><a href={`/agenda?kategori=${cat.slug}`}>{cat.title}</a></dd></>) : null}
+                <dt>Sasaran</dt>
+                <dd>{audience.length ? audience.map((a) => AUDIENCE[a] ?? a).join(', ') : 'Semua'}</dd>
               </dl>
               <div style={{ display: 'grid', gap: 10, marginTop: 18 }}>
                 {e.eventStatus !== 'cancelled' ? (
-                  <a className="btn btn--teal" href={`/agenda/${e.slug}/ics`} download>
-                    <Icon name="calendar" size={18} /> Tambah ke kalender
-                  </a>
+                  <>
+                    <a className="btn btn--teal" href={`/agenda/${e.slug}/ics`} download data-cta="agenda-ics">
+                      <Icon name="calendar" size={18} /> Tambah ke kalender (.ics)
+                    </a>
+                    <a className="btn btn--ghost" href={googleCalendarUrl(e, SITE ? `${SITE}/agenda/${e.slug}` : undefined)} target="_blank" rel="noopener noreferrer" data-cta="agenda-google">
+                      Google Calendar <Icon name="external" size={16} /><span className="sr-only"> (membuka tab baru)</span>
+                    </a>
+                  </>
                 ) : null}
                 {e.registrationUrl && /^https:\/\//.test(e.registrationUrl) && upcoming ? (
                   <a className="btn btn--gold" href={e.registrationUrl} target="_blank" rel="noopener noreferrer">

@@ -62,3 +62,19 @@ Belum ada adaptor email terpasang (pesan tetap tersimpan di admin). Untuk mengak
 - Login terkunci 15 menit setelah 5 kali gagal. Formulir kontak dibatasi 5 kiriman/10 menit per IP.
 - Header keamanan (CSP, HSTS) dipasang di reverse proxy; jangan tampilkan stack trace (mode produksi sudah menyembunyikannya).
 - `PAYLOAD_SECRET` dan kredensial database hanya di env/secret manager, tidak di repository.
+
+## Addendum P0/P1 — deploy & rollback
+Perubahan ada di cabang `fitur-tambahan-p0p1`. **Push ke `main` = Vercel menjalankan `payload migrate` di database produksi.** Hati-hati juga dengan push cabang lain: bila variabel `DATABASE_URL` Preview menunjuk database yang sama, build Preview juga memigrasi produksi.
+
+1. **Backup**: Neon → Branches → *Create branch* dari `main` (titik pulih), atau `pg_dump "$DATABASE_URL" -Fc > sebelum-addendum.dump`.
+2. **Migrasi** `20261025_142217_addendum_p0p1` bersifat aditif: tabel/kolom/enum baru, tanpa DROP/ubah tipe, kolom wajib baru punya nilai bawaan. Sudah diuji up → down → up pada salinan berisi data.
+3. Gabungkan ke `main` → tunggu Vercel **Ready**.
+4. Login admin → buka `/setup/isi-data` → **Pasang data fitur tambahan**. Ini hanya menambah yang belum ada (kategori agenda, 3 FAQ penggunaan website, akun Instagram ke koleksi baru, tautan menu FAQ/Media/Karya, section KPS TV). Jangan tekan *Isi ulang konten awal* kecuali memang ingin mengembalikan teks awal.
+5. Fitur yang menyimpan data pribadi tetap **mati** sampai dinyalakan Admin di *Pengaturan → Fitur Aktif* (`FEATURE_FLAGS.md`).
+6. Smoke: `/`, `/agenda?tampilan=kalender`, `/pendaftaran`, `/faq`, `/media`, `/admin`.
+
+**Rollback**
+- Kode: Vercel → Deployments → deployment sebelumnya → *Promote to Production*. Kode lama tetap berjalan di atas skema baru karena kolom/tabel tambahan diabaikan.
+- Skema (jarang perlu): dari mesin dengan akses DB, `DATABASE_URI=… NODE_ENV=production npx payload migrate:down` (menghapus tabel addendum **beserta datanya**, termasuk minat & pemesanan). Lebih aman: pulihkan cabang Neon dari langkah 1.
+
+Variabel opsional baru: `NEXT_PUBLIC_SCHOOL_TIMEZONE` (bawaan Asia/Makassar), `ADMISSIONS_NOTIFY_EMAIL` (+ SMTP). Job `releaseVisitHolds` dijadwalkan per jam; di Vercel Hobby cron hanya harian, tetapi pelepasan kuota juga terjadi otomatis setiap ada permintaan pemesanan/ketersediaan.

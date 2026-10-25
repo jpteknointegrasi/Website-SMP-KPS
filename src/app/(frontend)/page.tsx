@@ -1,6 +1,6 @@
 import React from 'react'
 import type { Metadata } from 'next'
-import { getCurrentAdmissions, getGlobals, getHomepage, getPriorityAnnouncement, listAnnouncements, listCollection, listPosts, listUpcomingEvents } from '@/lib/queries'
+import { getCurrentAdmissions, getFlags, getGlobals, getHomepage, getPriorityAnnouncement, listAnnouncements, listCollection, listMediaItems, listPosts, listSocialAccounts, listUpcomingEvents } from '@/lib/queries'
 import {
   Achievements,
   AdmissionsCta,
@@ -11,6 +11,7 @@ import {
   Highlights,
   type Highlight,
   LatestNews,
+  MediaHubSection,
   PriorityStrip,
   Programs,
   QuickLinks,
@@ -18,7 +19,7 @@ import {
   SearchBand,
   StudentLife,
 } from '@/components/sections/home'
-import type { Achievement, Album, Announcement, Event, Extracurricular, Facility, Media, Post, Program } from '@/payload-types'
+import type { Achievement, Album, Announcement, Event, Extracurricular, Facility, Media, MediaItem, Post, Program } from '@/payload-types'
 import { payloadClient } from '@/lib/payload'
 import { BackToTop, PointerFX } from '@/components/ui/fx'
 
@@ -31,6 +32,11 @@ export default async function Home() {
   const has = (t: string) => sections.some((s) => s.type === t)
 
   const payload = await payloadClient()
+  const flags = await getFlags()
+  const showMedia = has('mediaHub') && flags.mediaHub
+  const [mediaFeatured, ytAccounts] = showMedia
+    ? await Promise.all([listMediaItems({ featured: true, limit: Math.min(lim('mediaHub', 3), 3) }), listSocialAccounts('showOnMediaPage')])
+    : [null, []]
   const [programs, life, achievements, archive, anns, events, posts, facilities, cycle] = await Promise.all([
     has('programs') ? listCollection('programs', { where: { featured: { equals: true } }, limit: lim('programs', 3) }) : null,
     has('studentLife') ? listCollection('extracurriculars', { where: { featured: { equals: true } }, limit: lim('studentLife', 4) }) : null,
@@ -74,7 +80,7 @@ export default async function Home() {
     email: settings.email || undefined,
     telephone: settings.phone || undefined,
     address: settings.address ? { '@type': 'PostalAddress', streetAddress: settings.address, addressLocality: settings.city, addressCountry: 'ID' } : undefined,
-    sameAs: (settings.socials ?? []).map((s) => s.url),
+    sameAs: (settings.socials ?? []).map((s) => s.url).concat(ytAccounts.map((a) => a.profileUrl)),
   }
 
   const render = (type: string) => {
@@ -97,6 +103,16 @@ export default async function Home() {
         return <AnnouncementsAgenda eyebrow={t.infoEyebrow} announcements={(anns?.docs ?? []) as Announcement[]} events={(events?.docs ?? []) as Event[]} />
       case 'latestNews':
         return <LatestNews eyebrow={t.newsEyebrow} heading={t.newsHeading} posts={(posts?.docs ?? []) as Post[]} />
+      case 'mediaHub':
+        return showMedia ? (
+          <MediaHubSection
+            eyebrow={t.mediaEyebrow}
+            heading={t.mediaHeading}
+            intro={t.mediaIntro}
+            items={(mediaFeatured?.docs ?? []) as MediaItem[]}
+            channel={ytAccounts.find((a) => a.platform === 'youtube') ?? null}
+          />
+        ) : null
       case 'facilities':
         return <FacilitiesSection items={(facilities?.docs ?? []) as Facility[]} />
       case 'communityAlumni':
