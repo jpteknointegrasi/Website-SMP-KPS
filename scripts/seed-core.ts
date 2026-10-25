@@ -200,12 +200,13 @@ export async function runSeed(payload: Payload, log: (m: string) => void = (m) =
 
   // ---------- 5. leadership (names, positions and photos as published on the official homepage) ----------
   const leaders = [
-    ['M. Afcariono, S.Si., M.Pd.', 'Kepala Sekolah', 1, 'KPS-002'],
-    ['Abundaris Khamil Iftara, S.Pd.', 'Wakil Bidang Kurikulum dan Sarpras', 2, 'KPS-003'],
-    ['Hanim Farida, S.Pd., M.Pd.', 'Wakil Bidang Kesiswaan', 3, 'KPS-004'],
+    ['M. Afcariono, S.Si., M.Pd.', 'Kepala Sekolah', 1, 'KPS-P01'],
+    ['Abundaris Khamil Iftara, S.Pd.', 'Wakil Bidang Kurikulum dan Sarpras', 2, 'KPS-P02'],
+    ['Hanim Farida, S.Pd., M.Pd.', 'Wakil Bidang Kesiswaan', 3, 'KPS-P03'],
   ] as const
   for (const [name, position, order, photoId] of leaders) {
-    const photo = M(photoId)
+    // portrait from the leaders template; falls back to the old hexagon photo
+    const photo = M(photoId) ?? M({ 'KPS-P01': 'KPS-002', 'KPS-P02': 'KPS-003', 'KPS-P03': 'KPS-004' }[photoId]!)
     await upsert(payload, 'staff', { name: { equals: name } }, {
       name, position, order, group: 'pimpinan', isDemo: false,
       ...(photo ? { photo, publicationConsent: true } : { publicationConsent: false }),

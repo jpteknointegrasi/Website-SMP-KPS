@@ -341,7 +341,8 @@ export const Staff = defineContent({
     slugField('name'),
     { name: 'position', type: 'text', label: 'Jabatan', required: true },
     { name: 'group', type: 'select', label: 'Kelompok', defaultValue: 'pimpinan', options: [
-      { label: 'Pimpinan', value: 'pimpinan' },
+      { label: 'Pimpinan Yayasan', value: 'yayasan' },
+      { label: 'Pimpinan Sekolah', value: 'pimpinan' },
       { label: 'Guru', value: 'guru' },
       { label: 'Tenaga kependidikan', value: 'staf' },
     ] },
@@ -532,6 +533,21 @@ const blocks = [
         { name: 'title', type: 'text', required: true },
         { name: 'text', type: 'textarea' },
       ] },
+    ],
+  },
+  {
+    slug: 'highlightBanner',
+    labels: { singular: 'Banner sorotan (mis. prestasi)', plural: 'Banner sorotan' },
+    fields: [
+      { name: 'eyebrow', type: 'text', label: 'Label kecil', defaultValue: 'Prestasi' },
+      { name: 'heading', type: 'text', label: 'Judul', required: true },
+      { name: 'text', type: 'textarea', label: 'Teks singkat', maxLength: 240 },
+      { name: 'image', type: 'upload', relationTo: 'media', label: 'Gambar (opsional; bila kosong memakai sampul berita)' },
+      { type: 'row', fields: [
+        { name: 'linkLabel', type: 'text', label: 'Teks tombol', defaultValue: 'Lihat semua prestasi' },
+        safeUrlField('linkHref', 'Tujuan tombol'),
+      ] },
+      { name: 'post', type: 'relationship', relationTo: 'posts', label: 'Berita yang ditampilkan (1)', admin: { description: 'Berita yang belum terbit tidak akan ditampilkan.' } },
     ],
   },
   {

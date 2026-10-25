@@ -100,7 +100,7 @@ export async function POST(req: Request) {
   const { payload } = auth
   const form = await req.formData().catch(() => null)
   if (form?.get('aksi') === 'fitur-tambahan') {
-    const lines = await runAddendumSetup(payload)
+    const lines = await runAddendumSetup(payload, undefined, { deadline: Date.now() + STEP_MS })
     const esc = (t: string) => t.replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' })[c]!)
     return page(
       'Fitur tambahan siap',

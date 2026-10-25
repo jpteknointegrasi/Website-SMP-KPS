@@ -1,9 +1,10 @@
 import Link from 'next/link'
 import type { Where } from 'payload'
-import { listCollection, findBySlug } from '@/lib/queries'
+import { listCollection, findBySlug, listPosts } from '@/lib/queries'
+import { formatDate } from '@/lib/format'
 import { PageHeader, Container, EmptyState, Pagination } from '@/components/ui/bits'
 import { Img } from '@/components/ui/Img'
-import type { Achievement, Album, Media } from '@/payload-types'
+import type { Achievement, Album, Media, Post } from '@/payload-types'
 
 export const metadata = { title: 'Prestasi', description: 'Capaian siswa SMP Nasional KPS yang telah diverifikasi.', alternates: { canonical: '/prestasi' } }
 const LEVELS: Record<string, string> = { sekolah: 'Sekolah', kota: 'Kota', provinsi: 'Provinsi', nasional: 'Nasional', internasional: 'Internasional' }
@@ -21,12 +22,38 @@ export default async function Page({ searchParams }: SP) {
   const res = await listCollection('achievements', { where: and.length ? { and } : undefined, sort: '-year', limit: 12, page })
   const items = res.docs as Achievement[]
   const archive = await findBySlug<Album>('albums', 'arsip-apresiasi-siswa-2022', 1)
+  // news tagged with the "Prestasi" category (editors choose what appears here by tagging)
+  const news = (await listPosts({ category: 'prestasi', limit: 3 })).docs as Post[]
   const thisYear = new Date().getFullYear()
   return (
     <>
       <PageHeader title="Semangat untuk Berprestasi" lead="Capaian siswa yang dimuat di sini telah diverifikasi dari sumber tertulis." crumbs={[{ label: 'Prestasi' }]} />
       <section className="section">
         <Container>
+          {news.length && page === 1 ? (
+            <div className="block">
+              <h2>Berita prestasi</h2>
+              <ul className="news-feature">
+                {news.map((n) => {
+                  const cover = n.cover && typeof n.cover === 'object' ? (n.cover as Media) : null
+                  return (
+                    <li key={n.id}>
+                      <Link href={`/berita/${n.slug}`} className="news-feature__item" data-cta="berita-prestasi">
+                        {cover ? <span className="news-feature__media"><Img media={cover} sizes="(min-width: 1024px) 360px, 100vw" /></span> : null}
+                        <span className="news-feature__body">
+                          {n.publishedAt ? <time dateTime={n.publishedAt}>{formatDate(n.publishedAt)}</time> : null}
+                          <strong>{n.title}</strong>
+                          {n.excerpt ? <span>{n.excerpt}</span> : null}
+                          <span className="arrow-link">Baca berita →</span>
+                        </span>
+                      </Link>
+                    </li>
+                  )
+                })}
+              </ul>
+            </div>
+          ) : null}
+          <h2 className="h2">Daftar capaian</h2>
           <form className="filter-form" method="get">
             <label>Tahun
               <select name="tahun" defaultValue={sp.tahun ?? ''}>

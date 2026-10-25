@@ -36,5 +36,9 @@ Website tidak mengarang data. Bagian di bawah ini disembunyikan, diberi label "C
 | 30 | Status & URL layanan (Perpustakaan, Rapor, Link Tugas, E-Buletin) | Status "Segera tersedia" | Admin TI | Layanan → URL + status Aktif + tanggal verifikasi |
 | 31 | Karya siswa berizin | Fitur **mati** | Guru/Humas | Karya Siswa (persetujuan wajib) → Fitur Aktif |
 | 32 | Daftar mapel guru & bio | Kosong | TU | Guru & Pimpinan → Mata pelajaran |
+| 33 | Ejaan nama Wakil Kurikulum: templat foto tertulis "FITARA", situs resmi lama "Iftara" | Website memakai **Iftara** | TU | Konfirmasi, lalu ubah di Guru & Pimpinan bila perlu |
+| 34 | Pimpinan Yayasan (nama, jabatan, foto berizin) | Kelompok tersedia, belum ada data — tidak tampil | Yayasan | Guru & Pimpinan → Kelompok *Pimpinan Yayasan* |
+| 35 | Rincian HAKORDIA 2025: tanggal penyerahan, penyelenggara, tingkat | Berita & prestasi hanya memuat fakta dari pemilik proyek (Juara I, kategori Sekolah Integritas); tanggal tampil = tanggal unggah | Humas | Lengkapi di Prestasi (Tanggal, Penyelenggara, Tingkat) & Berita |
+| 36 | Foto asli HAKORDIA resolusi penuh | Foto yang diberikan: teks kecil pada piagam/papan tidak terbaca jelas | Humas | Ganti sampul dengan foto asli kamera bila ada |
 
 Semua pengumuman & agenda berawalan "Contoh:" adalah data demo dan otomatis tersembunyi saat `SHOW_DEMO_CONTENT=false`.

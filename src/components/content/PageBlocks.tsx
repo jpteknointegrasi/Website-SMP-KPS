@@ -1,13 +1,13 @@
 import React from 'react'
 import Link from 'next/link'
-import type { Page, Media, Faq, Event, MediaItem, StudentWork, Guide } from '@/payload-types'
+import type { Page, Media, Faq, Event, MediaItem, StudentWork, Guide, Post } from '@/payload-types'
 import { RichText } from '../ui/RichText'
 import { Img } from '../ui/Img'
 import { SmartLink } from '../ui/bits'
 import { FaqList } from './FaqList'
 import { MediaEmbed } from '../media/MediaCard'
 import { getFlags, listFaqs, listUpcomingEvents } from '@/lib/queries'
-import { formatEventWhen, WORK_CATS } from '@/lib/format'
+import { formatDate, formatEventWhen, WORK_CATS } from '@/lib/format'
 
 // related documents that are unpublished come back as bare ids (access rules), so they are dropped here
 const objs = <T,>(v: unknown): T[] => (Array.isArray(v) ? v.filter((x): x is T => typeof x === 'object' && x !== null) : [])
@@ -71,6 +71,36 @@ export async function PageBlocks({ blocks }: { blocks?: Page['layout'] }) {
               ) : null}
             </div>
           )
+        case 'highlightBanner': {
+          const post = b.post && typeof b.post === 'object' ? (b.post as Post) : null
+          const img = (b.image && typeof b.image === 'object' ? (b.image as Media) : null) ?? (post?.cover && typeof post.cover === 'object' ? (post.cover as Media) : null)
+          return (
+            <section className="block hl-banner" key={i} aria-labelledby={`hl-${i}`}>
+              {img ? (
+                <div className="hl-banner__media">
+                  <Img media={img} sizes="(min-width: 1024px) 420px, 100vw" />
+                </div>
+              ) : null}
+              <div className="hl-banner__body">
+                {b.eyebrow ? <p className="hl-banner__eyebrow">{b.eyebrow}</p> : null}
+                <h2 id={`hl-${i}`}>{b.heading}</h2>
+                {b.text ? <p>{b.text}</p> : null}
+                {post ? (
+                  <Link className="hl-banner__post" href={`/berita/${post.slug}`} data-cta="sorotan-berita">
+                    <small>Berita{post.publishedAt ? ` · ${formatDate(post.publishedAt)}` : ''}</small>
+                    <strong>{post.title}</strong>
+                    <span>Baca berita →</span>
+                  </Link>
+                ) : null}
+                {b.linkHref ? (
+                  <SmartLink href={b.linkHref} className="btn btn--gold" data-cta="sorotan-tautan">
+                    {b.linkLabel || 'Selengkapnya'}
+                  </SmartLink>
+                ) : null}
+              </div>
+            </section>
+          )
+        }
         case 'faqBlock': {
           const items = objs<Faq>(b.items).length ? objs<Faq>(b.items) : ((extra[i] as Faq[] | null) ?? [])
           return items.length ? (

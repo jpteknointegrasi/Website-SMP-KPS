@@ -39,6 +39,7 @@ Bukti fitur lama & keputusan reuse: `CURRENT_FEATURE_AUDIT.md`. Pengaturan fitur
 | F13 | Pratinjau draf desktop+HP, blok reusable (FAQ, agenda, media, karya, panduan, CTA), audit nama field berubah, feature flags | completed | Live preview real-time belum (tombol Pratinjau membuka draf tersimpan) |
 | F14 | Seleksi lengkap | backlog | `P2_ADMISSIONS_BACKLOG.md` |
 | F15 | KPS TV & media sosial: akun resmi terverifikasi, `/media`, `/media/[slug]`, section beranda, blok media, klik-untuk-memuat, CSP | completed | URL kanal KPS TV menunggu verifikasi; impor otomatis tidak dibuat (flag terkunci) |
+| + | Foto pimpinan dari templat (potret per orang), kelompok Pimpinan Yayasan, banner prestasi di Tentang KPS, berita & prestasi HAKORDIA 2025 | completed | Masuk lewat "Pasang data fitur tambahan" |
 | §19 | Zona waktu dari `NEXT_PUBLIC_SCHOOL_TIMEZONE` | completed | Skema tanggal tetap WITA (mengubahnya butuh migrasi) |
 
 Uji: 71 tes lulus (`npm test`): 30 unit addendum, 17 integrasi addendum, 24 lama. Migrasi diuji: up → down → up pada salinan berisi data seperti produksi, dan pada database kosong.

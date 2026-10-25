@@ -1,5 +1,6 @@
 import type { Payload } from 'payload'
 import { lexical } from '../src/lib/lexical'
+import { importMedia } from './import-media'
 
 /**
  * Setup for the P0/P1 addendum. ADDITIVE and NON-OVERWRITING: it only creates what is missing, so it is safe on
@@ -11,7 +12,7 @@ import { lexical } from '../src/lib/lexical'
  */
 const ctx = { skipAudit: true }
 
-export async function runAddendumSetup(payload: Payload, log: (m: string) => void = (m) => payload.logger.info(m)) {
+export async function runAddendumSetup(payload: Payload, log: (m: string) => void = (m) => payload.logger.info(m), opts: { deadline?: number } = {}) {
   const out: string[] = []
   const note = (m: string) => {
     out.push(m)
@@ -138,6 +139,114 @@ export async function runAddendumSetup(payload: Payload, log: (m: string) => voi
     f2.splice(at >= 0 ? at : f2.length, 0, { label: 'FAQ', href: '/faq' } as (typeof f2)[number])
     await payload.updateGlobal({ slug: 'navigation', overrideAccess: true, context: ctx, data: { footer: f2 } as never })
     note('Footer: tautan FAQ ditambahkan.')
+  }
+  // 7. new photos from the project owner (leader portraits cropped from the template, HAKORDIA 2025)
+  const media = await importMedia(payload, () => {}, { deadline: opts.deadline })
+  note(`Foto baru: ${media.created} diunggah, ${media.skipped} sudah ada${media.remaining ? `, ${media.remaining} menunggu (jalankan lagi)` : ''}.`)
+  const M = (id: string) => (media.ids[id] as number | undefined) ?? undefined
+
+  // 8. leader portraits: replace only the old hexagon photos (KPS-002..004) or an empty photo — never a staff upload
+  const OLD = new Set(['KPS-002', 'KPS-003', 'KPS-004'])
+  const leaders: [string, string][] = [
+    ['M. Afcariono, S.Si., M.Pd.', 'KPS-P01'],
+    ['Abundaris Khamil Iftara, S.Pd.', 'KPS-P02'],
+    ['Hanim Farida, S.Pd., M.Pd.', 'KPS-P03'],
+  ]
+  let swapped = 0
+  for (const [name, id] of leaders) {
+    const newId = M(id)
+    if (!newId) continue
+    const st = (await payload.find({ collection: 'staff', where: { name: { equals: name } }, limit: 1, depth: 1, overrideAccess: true })).docs[0]
+    if (!st) continue
+    const cur = st.photo && typeof st.photo === 'object' ? (st.photo as { id: number; sourceId?: string | null }) : null
+    if (cur && cur.id === newId) continue
+    if (cur && !OLD.has(String(cur.sourceId ?? ''))) continue
+    await payload.update({ collection: 'staff', id: st.id, overrideAccess: true, context: ctx, data: { photo: newId, publicationConsent: true } })
+    swapped++
+  }
+  note(`Foto pimpinan (templat potret): ${swapped} diperbarui.`)
+
+  // 9. "Prestasi" news category + HAKORDIA 2025 news and achievement (facts as given by the project owner)
+  const cat =
+    (await payload.find({ collection: 'categories', where: { slug: { equals: 'prestasi' } }, limit: 1, overrideAccess: true })).docs[0] ??
+    (await payload.create({ collection: 'categories', overrideAccess: true, context: ctx, data: { title: 'Prestasi', slug: 'prestasi' } }))
+  const POST_SLUG = 'juara-1-sekolah-integritas-hakordia-2025'
+  let post = (await payload.find({ collection: 'posts', where: { slug: { equals: POST_SLUG } }, limit: 1, depth: 0, overrideAccess: true, draft: true, trash: true })).docs[0]
+  if (!post) {
+    post = await payload.create({
+      collection: 'posts',
+      overrideAccess: true,
+      context: ctx,
+      data: {
+        title: 'SMP Nasional KPS Raih Juara I Kategori Sekolah Integritas pada HAKORDIA 2025',
+        slug: POST_SLUG,
+        excerpt: 'SMP Nasional KPS menerima penghargaan Juara I kategori Sekolah Integritas dalam peringatan Hari Antikorupsi Sedunia (HAKORDIA) 2025.',
+        cover: M('KPS-A01'),
+        coverCaption: 'Penyerahan penghargaan Juara I kategori Sekolah Integritas, HAKORDIA 2025.',
+        categories: [cat.id],
+        content: lexical([
+          'SMP Nasional KPS menerima penghargaan Juara I kategori Sekolah Integritas dalam rangkaian peringatan Hari Antikorupsi Sedunia (HAKORDIA) 2025.',
+          'Penghargaan ini sejalan dengan nilai Berakhlak Mulia yang menjadi pegangan sekolah dalam keseharian belajar dan bekerja.',
+          'Terima kasih kepada seluruh guru, staf, siswa dan orang tua yang terus menjaga budaya kejujuran dan integritas di SMP Nasional KPS.',
+        ]) as never,
+        _status: 'published',
+        workflowStatus: 'published',
+      } as never,
+    })
+    note('Berita HAKORDIA 2025 dibuat.')
+  }
+  const ACH_SLUG = 'hakordia-2025-sekolah-integritas'
+  if (!(await payload.find({ collection: 'achievements', where: { slug: { equals: ACH_SLUG } }, limit: 1, depth: 0, overrideAccess: true, draft: true, trash: true })).docs[0]) {
+    await payload.create({
+      collection: 'achievements',
+      overrideAccess: true,
+      context: ctx,
+      data: {
+        title: 'Juara I Kategori Sekolah Integritas — HAKORDIA 2025',
+        slug: ACH_SLUG,
+        year: 2025,
+        category: 'lainnya',
+        recipientPublic: 'SMP Nasional KPS',
+        excerpt: 'Penghargaan Juara I kategori Sekolah Integritas pada peringatan Hari Antikorupsi Sedunia (HAKORDIA) 2025.',
+        content: lexical([
+          'SMP Nasional KPS meraih Juara I kategori Sekolah Integritas pada peringatan Hari Antikorupsi Sedunia (HAKORDIA) 2025.',
+        ]) as never,
+        cover: M('KPS-A01'),
+        // evidence: photo of the award board/certificate supplied by the project owner (content/assets/prestasi)
+        verified: true,
+        featured: true,
+        _status: 'published',
+        workflowStatus: 'published',
+      } as never,
+    })
+    note('Prestasi HAKORDIA 2025 dibuat (terverifikasi dari foto piagam yang diberikan pemilik proyek).')
+  }
+
+  // 10. "Tentang KPS" page: highlight banner linking to achievements + the HAKORDIA news (only if none yet)
+  const about = (await payload.find({ collection: 'pages', where: { slug: { equals: 'tentang' } }, limit: 1, depth: 0, overrideAccess: true, draft: true })).docs[0]
+  if (about && !(about.layout ?? []).some((b) => b.blockType === 'highlightBanner')) {
+    await payload.update({
+      collection: 'pages',
+      id: about.id,
+      overrideAccess: true,
+      context: ctx,
+      data: {
+        layout: [
+          ...(about.layout ?? []),
+          {
+            blockType: 'highlightBanner',
+            eyebrow: 'Prestasi',
+            heading: 'Semangat untuk Berprestasi',
+            text: 'Capaian siswa dan sekolah yang telah dipublikasikan, termasuk penghargaan Sekolah Integritas pada HAKORDIA 2025.',
+            linkLabel: 'Lihat semua prestasi',
+            linkHref: '/prestasi',
+            post: post.id,
+          },
+        ],
+        _status: 'published',
+      } as never,
+    })
+    note('Halaman Tentang: banner prestasi + berita HAKORDIA ditambahkan.')
   }
   return out
 }

@@ -271,6 +271,24 @@ export interface Page {
             blockType: 'values';
           }
         | {
+            eyebrow?: string | null;
+            heading: string;
+            text?: string | null;
+            image?: (number | null) | Media;
+            linkLabel?: string | null;
+            /**
+             * Gunakan https://… atau tautan internal yang diawali "/".
+             */
+            linkHref?: string | null;
+            /**
+             * Berita yang belum terbit tidak akan ditampilkan.
+             */
+            post?: (number | null) | Post;
+            id?: string | null;
+            blockName?: string | null;
+            blockType: 'highlightBanner';
+          }
+        | {
             heading?: string | null;
             category?: ('pendaftaran' | 'pembelajaran' | 'kegiatan' | 'administrasi' | 'website') | null;
             items?: (number | Faq)[] | null;
@@ -420,19 +438,23 @@ export interface Media {
   };
 }
 /**
- * Hanya jawaban resmi. Bila belum ada jawaban, jangan diterbitkan — arahkan ke kontak.
- *
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "faqs".
+ * via the `definition` "posts".
  */
-export interface Faq {
+export interface Post {
   id: number;
   title: string;
   /**
    * Huruf kecil, angka dan tanda hubung. Dibuat otomatis dari judul bila kosong.
    */
   slug: string;
-  answer: {
+  /**
+   * Maksimal 220 karakter. Tampil di kartu dan hasil pencarian.
+   */
+  excerpt?: string | null;
+  cover?: (number | null) | Media;
+  coverCaption?: string | null;
+  content?: {
     root: {
       type: string;
       children: {
@@ -446,15 +468,26 @@ export interface Faq {
       version: number;
     };
     [k: string]: unknown;
-  };
-  category: 'pendaftaran' | 'pembelajaran' | 'kegiatan' | 'administrasi' | 'website';
+  } | null;
+  gallery?: (number | Media)[] | null;
   /**
-   * Contoh: /pendaftaran atau /kunjungan
+   * Pilih dari Video & Media. Item yang sama bisa dipakai di beberapa halaman tanpa duplikasi.
    */
-  relatedPage?: string | null;
-  featured?: boolean | null;
-  order?: number | null;
-  lastReviewedAt?: string | null;
+  relatedMedia?: (number | MediaItem)[] | null;
+  categories?: (number | Category)[] | null;
+  /**
+   * Kosongkan bila belum disetujui.
+   */
+  authorName?: string | null;
+  /**
+   * Untuk materi migrasi, isi tanggal asli. Tanggal di masa depan = terjadwal tampil.
+   */
+  publishedAt?: string | null;
+  sourceUrl?: string | null;
+  seo?: {
+    title?: string | null;
+    description?: string | null;
+  };
   /**
    * Kontributor: pilih "Ajukan Review" lalu klik Simpan Draf. Editor menerbitkan setelah review.
    */
@@ -471,6 +504,138 @@ export interface Faq {
   createdAt: string;
   deletedAt?: string | null;
   _status?: ('draft' | 'published') | null;
+}
+/**
+ * Tempel tautan video/postingan, isi judul & ringkasan sendiri, lalu terbitkan. Pemutar baru dimuat ketika pengunjung menekan Putar.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "media-items".
+ */
+export interface MediaItem {
+  id: number;
+  /**
+   * Boleh berbeda dari judul asli di platform.
+   */
+  title: string;
+  /**
+   * Huruf kecil, angka dan tanda hubung. Dibuat otomatis dari judul bila kosong.
+   */
+  slug: string;
+  /**
+   * Salin dari tombol Bagikan / alamat browser. Video, Shorts, playlist, kanal, Reel, TikTok, Facebook atau artikel. Bukan kode iframe.
+   */
+  originalUrl: string;
+  excerpt?: string | null;
+  /**
+   * Jangan klaim transkrip otomatis akurat tanpa ditinjau.
+   */
+  editorialBody?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  /**
+   * Terdeteksi otomatis. Video YouTube boleh diberi label Podcast.
+   */
+  contentType?: ('video' | 'short' | 'podcast' | 'playlist' | 'social_post' | 'channel' | 'external_article') | null;
+  /**
+   * Pemutar hanya untuk video/playlist YouTube. Lainnya otomatis kartu tautan.
+   */
+  displayMode?: ('click_to_load_embed' | 'link_card') | null;
+  aspectRatio?: ('16:9' | '9:16' | '1:1') | null;
+  /**
+   * Opsional untuk video YouTube (memakai gambar resmi YouTube). Disarankan untuk platform lain.
+   */
+  thumbnail?: (number | null) | Media;
+  thumbnailAlt?: string | null;
+  caption?: string | null;
+  sourcePublishedAt?: string | null;
+  durationSeconds?: number | null;
+  sourceAccount?: (number | null) | SocialAccount;
+  relatedEvents?: (number | Event)[] | null;
+  publishedAt?: string | null;
+  /**
+   * Maksimal 3 tampil; urutan kecil di depan.
+   */
+  homepageFeatured?: boolean | null;
+  homepageOrder?: number | null;
+  consentStatus: 'not_needed' | 'obtained' | 'pending';
+  contentPermissionNote?: string | null;
+  /**
+   * Tidak tersedia/dibatasi = tampil sebagai kartu tautan tanpa pemutar.
+   */
+  availability?: ('unchecked' | 'available' | 'unavailable' | 'restricted') | null;
+  lastVerifiedAt?: string | null;
+  platform?: string | null;
+  providerItemId?: string | null;
+  normalizedUrl?: string | null;
+  /**
+   * Kontributor: pilih "Ajukan Review" lalu klik Simpan Draf. Editor menerbitkan setelah review.
+   */
+  workflowStatus: 'draft' | 'in_review' | 'published' | 'archived';
+  reviewNote?: string | null;
+  /**
+   * Data contoh hanya tampil bila SHOW_DEMO_CONTENT=true. Produksi wajib false.
+   */
+  isDemo?: boolean | null;
+  archivedAt?: string | null;
+  createdBy?: (number | null) | User;
+  updatedBy?: (number | null) | User;
+  updatedAt: string;
+  createdAt: string;
+  deletedAt?: string | null;
+  _status?: ('draft' | 'published') | null;
+}
+/**
+ * Akun/kanal tempat mengikuti sekolah. Tampil publik hanya bila Aktif dan sudah diverifikasi sekolah.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "social-accounts".
+ */
+export interface SocialAccount {
+  id: number;
+  platform: 'youtube' | 'instagram' | 'tiktok' | 'facebook' | 'whatsapp' | 'web';
+  /**
+   * Contoh: KPS TV SMP Nasional KPS Balikpapan
+   */
+  displayName: string;
+  /**
+   * Contoh: @smpnas.kps
+   */
+  handle?: string | null;
+  /**
+   * Salin dari tautan asli (https://). Jangan menebak dari tangkapan layar.
+   */
+  profileUrl: string;
+  profileImage?: (number | null) | Media;
+  /**
+   * Akun yayasan tidak otomatis sama dengan akun sekolah.
+   */
+  owner?: ('sekolah' | 'lainnya') | null;
+  /**
+   * Siapa/kapan mengonfirmasi, atau sumber tautan.
+   */
+  verificationNote?: string | null;
+  verifiedBySchool?: boolean | null;
+  enabled?: boolean | null;
+  showInFooter?: boolean | null;
+  showOnContact?: boolean | null;
+  showOnMediaPage?: boolean | null;
+  verifiedAt?: string | null;
+  verifiedBy?: (number | null) | User;
+  order?: number | null;
+  updatedAt: string;
+  createdAt: string;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -657,30 +822,33 @@ export interface Document {
   focalY?: number | null;
 }
 /**
- * Tempel tautan video/postingan, isi judul & ringkasan sendiri, lalu terbitkan. Pemutar baru dimuat ketika pengunjung menekan Putar.
- *
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "media-items".
+ * via the `definition` "categories".
  */
-export interface MediaItem {
+export interface Category {
   id: number;
-  /**
-   * Boleh berbeda dari judul asli di platform.
-   */
   title: string;
   /**
    * Huruf kecil, angka dan tanda hubung. Dibuat otomatis dari judul bila kosong.
    */
   slug: string;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Hanya jawaban resmi. Bila belum ada jawaban, jangan diterbitkan — arahkan ke kontak.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "faqs".
+ */
+export interface Faq {
+  id: number;
+  title: string;
   /**
-   * Salin dari tombol Bagikan / alamat browser. Video, Shorts, playlist, kanal, Reel, TikTok, Facebook atau artikel. Bukan kode iframe.
+   * Huruf kecil, angka dan tanda hubung. Dibuat otomatis dari judul bila kosong.
    */
-  originalUrl: string;
-  excerpt?: string | null;
-  /**
-   * Jangan klaim transkrip otomatis akurat tanpa ditinjau.
-   */
-  editorialBody?: {
+  slug: string;
+  answer: {
     root: {
       type: string;
       children: {
@@ -694,42 +862,15 @@ export interface MediaItem {
       version: number;
     };
     [k: string]: unknown;
-  } | null;
+  };
+  category: 'pendaftaran' | 'pembelajaran' | 'kegiatan' | 'administrasi' | 'website';
   /**
-   * Terdeteksi otomatis. Video YouTube boleh diberi label Podcast.
+   * Contoh: /pendaftaran atau /kunjungan
    */
-  contentType?: ('video' | 'short' | 'podcast' | 'playlist' | 'social_post' | 'channel' | 'external_article') | null;
-  /**
-   * Pemutar hanya untuk video/playlist YouTube. Lainnya otomatis kartu tautan.
-   */
-  displayMode?: ('click_to_load_embed' | 'link_card') | null;
-  aspectRatio?: ('16:9' | '9:16' | '1:1') | null;
-  /**
-   * Opsional untuk video YouTube (memakai gambar resmi YouTube). Disarankan untuk platform lain.
-   */
-  thumbnail?: (number | null) | Media;
-  thumbnailAlt?: string | null;
-  caption?: string | null;
-  sourcePublishedAt?: string | null;
-  durationSeconds?: number | null;
-  sourceAccount?: (number | null) | SocialAccount;
-  relatedEvents?: (number | Event)[] | null;
-  publishedAt?: string | null;
-  /**
-   * Maksimal 3 tampil; urutan kecil di depan.
-   */
-  homepageFeatured?: boolean | null;
-  homepageOrder?: number | null;
-  consentStatus: 'not_needed' | 'obtained' | 'pending';
-  contentPermissionNote?: string | null;
-  /**
-   * Tidak tersedia/dibatasi = tampil sebagai kartu tautan tanpa pemutar.
-   */
-  availability?: ('unchecked' | 'available' | 'unavailable' | 'restricted') | null;
-  lastVerifiedAt?: string | null;
-  platform?: string | null;
-  providerItemId?: string | null;
-  normalizedUrl?: string | null;
+  relatedPage?: string | null;
+  featured?: boolean | null;
+  order?: number | null;
+  lastReviewedAt?: string | null;
   /**
    * Kontributor: pilih "Ajukan Review" lalu klik Simpan Draf. Editor menerbitkan setelah review.
    */
@@ -746,47 +887,6 @@ export interface MediaItem {
   createdAt: string;
   deletedAt?: string | null;
   _status?: ('draft' | 'published') | null;
-}
-/**
- * Akun/kanal tempat mengikuti sekolah. Tampil publik hanya bila Aktif dan sudah diverifikasi sekolah.
- *
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "social-accounts".
- */
-export interface SocialAccount {
-  id: number;
-  platform: 'youtube' | 'instagram' | 'tiktok' | 'facebook' | 'whatsapp' | 'web';
-  /**
-   * Contoh: KPS TV SMP Nasional KPS Balikpapan
-   */
-  displayName: string;
-  /**
-   * Contoh: @smpnas.kps
-   */
-  handle?: string | null;
-  /**
-   * Salin dari tautan asli (https://). Jangan menebak dari tangkapan layar.
-   */
-  profileUrl: string;
-  profileImage?: (number | null) | Media;
-  /**
-   * Akun yayasan tidak otomatis sama dengan akun sekolah.
-   */
-  owner?: ('sekolah' | 'lainnya') | null;
-  /**
-   * Siapa/kapan mengonfirmasi, atau sumber tautan.
-   */
-  verificationNote?: string | null;
-  verifiedBySchool?: boolean | null;
-  enabled?: boolean | null;
-  showInFooter?: boolean | null;
-  showOnContact?: boolean | null;
-  showOnMediaPage?: boolean | null;
-  verifiedAt?: string | null;
-  verifiedBy?: (number | null) | User;
-  order?: number | null;
-  updatedAt: string;
-  createdAt: string;
 }
 /**
  * Diunggah guru/kontributor, ditinjau Editor. Tampil publik hanya bila terbit DAN persetujuan publikasi sudah ada.
@@ -934,88 +1034,6 @@ export interface Guide {
   createdAt: string;
   deletedAt?: string | null;
   _status?: ('draft' | 'published') | null;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "posts".
- */
-export interface Post {
-  id: number;
-  title: string;
-  /**
-   * Huruf kecil, angka dan tanda hubung. Dibuat otomatis dari judul bila kosong.
-   */
-  slug: string;
-  /**
-   * Maksimal 220 karakter. Tampil di kartu dan hasil pencarian.
-   */
-  excerpt?: string | null;
-  cover?: (number | null) | Media;
-  coverCaption?: string | null;
-  content?: {
-    root: {
-      type: string;
-      children: {
-        type: any;
-        version: number;
-        [k: string]: unknown;
-      }[];
-      direction: ('ltr' | 'rtl') | null;
-      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
-      indent: number;
-      version: number;
-    };
-    [k: string]: unknown;
-  } | null;
-  gallery?: (number | Media)[] | null;
-  /**
-   * Pilih dari Video & Media. Item yang sama bisa dipakai di beberapa halaman tanpa duplikasi.
-   */
-  relatedMedia?: (number | MediaItem)[] | null;
-  categories?: (number | Category)[] | null;
-  /**
-   * Kosongkan bila belum disetujui.
-   */
-  authorName?: string | null;
-  /**
-   * Untuk materi migrasi, isi tanggal asli. Tanggal di masa depan = terjadwal tampil.
-   */
-  publishedAt?: string | null;
-  sourceUrl?: string | null;
-  seo?: {
-    title?: string | null;
-    description?: string | null;
-  };
-  /**
-   * Kontributor: pilih "Ajukan Review" lalu klik Simpan Draf. Editor menerbitkan setelah review.
-   */
-  workflowStatus: 'draft' | 'in_review' | 'published' | 'archived';
-  reviewNote?: string | null;
-  /**
-   * Data contoh hanya tampil bila SHOW_DEMO_CONTENT=true. Produksi wajib false.
-   */
-  isDemo?: boolean | null;
-  archivedAt?: string | null;
-  createdBy?: (number | null) | User;
-  updatedBy?: (number | null) | User;
-  updatedAt: string;
-  createdAt: string;
-  deletedAt?: string | null;
-  _status?: ('draft' | 'published') | null;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "categories".
- */
-export interface Category {
-  id: number;
-  title: string;
-  /**
-   * Huruf kecil, angka dan tanda hubung. Dibuat otomatis dari judul bila kosong.
-   */
-  slug: string;
-  updatedAt: string;
-  createdAt: string;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1430,7 +1448,7 @@ export interface Staff {
    */
   slug: string;
   position: string;
-  group?: ('pimpinan' | 'guru' | 'staf') | null;
+  group?: ('yayasan' | 'pimpinan' | 'guru' | 'staf') | null;
   /**
    * Pisahkan dengan koma. Contoh: Matematika, IPA. Hanya yang dikonfirmasi sekolah.
    */
@@ -2177,6 +2195,19 @@ export interface PagesSelect<T extends boolean = true> {
                     text?: T;
                     id?: T;
                   };
+              id?: T;
+              blockName?: T;
+            };
+        highlightBanner?:
+          | T
+          | {
+              eyebrow?: T;
+              heading?: T;
+              text?: T;
+              image?: T;
+              linkLabel?: T;
+              linkHref?: T;
+              post?: T;
               id?: T;
               blockName?: T;
             };

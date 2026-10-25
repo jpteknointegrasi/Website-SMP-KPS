@@ -70,12 +70,29 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   ALTER TYPE "public"."enum__announcements_v_version_audience" ADD VALUE 'kelas_9' BEFORE 'alumni';
   ALTER TYPE "public"."enum__announcements_v_version_audience" ADD VALUE 'calon_siswa' BEFORE 'alumni';
   ALTER TYPE "public"."enum__announcements_v_version_audience" ADD VALUE 'guru' BEFORE 'alumni';
+  ALTER TYPE "public"."enum_staff_group" ADD VALUE 'yayasan' BEFORE 'pimpinan';
+  ALTER TYPE "public"."enum__staff_v_version_group" ADD VALUE 'yayasan' BEFORE 'pimpinan';
   ALTER TYPE "public"."enum_contact_messages_category" ADD VALUE 'kegiatan';
   ALTER TYPE "public"."enum_contact_messages_category" ADD VALUE 'kunjungan';
   ALTER TYPE "public"."enum_payload_jobs_log_task_slug" ADD VALUE 'releaseVisitHolds' BEFORE 'schedulePublish';
   ALTER TYPE "public"."enum_payload_jobs_task_slug" ADD VALUE 'releaseVisitHolds' BEFORE 'schedulePublish';
   ALTER TYPE "public"."enum_homepage_sections_type" ADD VALUE 'mediaHub' BEFORE 'facilities';
   ALTER TYPE "public"."enum__homepage_v_version_sections_type" ADD VALUE 'mediaHub' BEFORE 'facilities';
+  CREATE TABLE "pages_blocks_highlight_banner" (
+  	"_order" integer NOT NULL,
+  	"_parent_id" integer NOT NULL,
+  	"_path" text NOT NULL,
+  	"id" varchar PRIMARY KEY NOT NULL,
+  	"eyebrow" varchar DEFAULT 'Prestasi',
+  	"heading" varchar,
+  	"text" varchar,
+  	"image_id" integer,
+  	"link_label" varchar DEFAULT 'Lihat semua prestasi',
+  	"link_href" varchar,
+  	"post_id" integer,
+  	"block_name" varchar
+  );
+  
   CREATE TABLE "pages_blocks_faq_block" (
   	"_order" integer NOT NULL,
   	"_parent_id" integer NOT NULL,
@@ -141,6 +158,22 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   	"events_id" integer,
   	"media_items_id" integer,
   	"student_works_id" integer
+  );
+  
+  CREATE TABLE "_pages_v_blocks_highlight_banner" (
+  	"_order" integer NOT NULL,
+  	"_parent_id" integer NOT NULL,
+  	"_path" text NOT NULL,
+  	"id" serial PRIMARY KEY NOT NULL,
+  	"eyebrow" varchar DEFAULT 'Prestasi',
+  	"heading" varchar,
+  	"text" varchar,
+  	"image_id" integer,
+  	"link_label" varchar DEFAULT 'Lihat semua prestasi',
+  	"link_href" varchar,
+  	"post_id" integer,
+  	"_uuid" varchar,
+  	"block_name" varchar
   );
   
   CREATE TABLE "_pages_v_blocks_faq_block" (
@@ -784,6 +817,9 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   ALTER TABLE "_homepage_v" ADD COLUMN "version_texts_media_eyebrow" varchar DEFAULT 'KPS TV';
   ALTER TABLE "_homepage_v" ADD COLUMN "version_texts_media_heading" varchar DEFAULT 'KPS TV & Cerita Digital';
   ALTER TABLE "_homepage_v" ADD COLUMN "version_texts_media_intro" varchar DEFAULT 'Kenali kehidupan sekolah melalui video, podcast, dan cerita dari komunitas KPS.';
+  ALTER TABLE "pages_blocks_highlight_banner" ADD CONSTRAINT "pages_blocks_highlight_banner_image_id_media_id_fk" FOREIGN KEY ("image_id") REFERENCES "public"."media"("id") ON DELETE set null ON UPDATE no action;
+  ALTER TABLE "pages_blocks_highlight_banner" ADD CONSTRAINT "pages_blocks_highlight_banner_post_id_posts_id_fk" FOREIGN KEY ("post_id") REFERENCES "public"."posts"("id") ON DELETE set null ON UPDATE no action;
+  ALTER TABLE "pages_blocks_highlight_banner" ADD CONSTRAINT "pages_blocks_highlight_banner_parent_id_fk" FOREIGN KEY ("_parent_id") REFERENCES "public"."pages"("id") ON DELETE cascade ON UPDATE no action;
   ALTER TABLE "pages_blocks_faq_block" ADD CONSTRAINT "pages_blocks_faq_block_parent_id_fk" FOREIGN KEY ("_parent_id") REFERENCES "public"."pages"("id") ON DELETE cascade ON UPDATE no action;
   ALTER TABLE "pages_blocks_events_block" ADD CONSTRAINT "pages_blocks_events_block_parent_id_fk" FOREIGN KEY ("_parent_id") REFERENCES "public"."pages"("id") ON DELETE cascade ON UPDATE no action;
   ALTER TABLE "pages_blocks_media_block" ADD CONSTRAINT "pages_blocks_media_block_parent_id_fk" FOREIGN KEY ("_parent_id") REFERENCES "public"."pages"("id") ON DELETE cascade ON UPDATE no action;
@@ -796,6 +832,9 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   ALTER TABLE "pages_rels" ADD CONSTRAINT "pages_rels_events_fk" FOREIGN KEY ("events_id") REFERENCES "public"."events"("id") ON DELETE cascade ON UPDATE no action;
   ALTER TABLE "pages_rels" ADD CONSTRAINT "pages_rels_media_items_fk" FOREIGN KEY ("media_items_id") REFERENCES "public"."media_items"("id") ON DELETE cascade ON UPDATE no action;
   ALTER TABLE "pages_rels" ADD CONSTRAINT "pages_rels_student_works_fk" FOREIGN KEY ("student_works_id") REFERENCES "public"."student_works"("id") ON DELETE cascade ON UPDATE no action;
+  ALTER TABLE "_pages_v_blocks_highlight_banner" ADD CONSTRAINT "_pages_v_blocks_highlight_banner_image_id_media_id_fk" FOREIGN KEY ("image_id") REFERENCES "public"."media"("id") ON DELETE set null ON UPDATE no action;
+  ALTER TABLE "_pages_v_blocks_highlight_banner" ADD CONSTRAINT "_pages_v_blocks_highlight_banner_post_id_posts_id_fk" FOREIGN KEY ("post_id") REFERENCES "public"."posts"("id") ON DELETE set null ON UPDATE no action;
+  ALTER TABLE "_pages_v_blocks_highlight_banner" ADD CONSTRAINT "_pages_v_blocks_highlight_banner_parent_id_fk" FOREIGN KEY ("_parent_id") REFERENCES "public"."_pages_v"("id") ON DELETE cascade ON UPDATE no action;
   ALTER TABLE "_pages_v_blocks_faq_block" ADD CONSTRAINT "_pages_v_blocks_faq_block_parent_id_fk" FOREIGN KEY ("_parent_id") REFERENCES "public"."_pages_v"("id") ON DELETE cascade ON UPDATE no action;
   ALTER TABLE "_pages_v_blocks_events_block" ADD CONSTRAINT "_pages_v_blocks_events_block_parent_id_fk" FOREIGN KEY ("_parent_id") REFERENCES "public"."_pages_v"("id") ON DELETE cascade ON UPDATE no action;
   ALTER TABLE "_pages_v_blocks_media_block" ADD CONSTRAINT "_pages_v_blocks_media_block_parent_id_fk" FOREIGN KEY ("_parent_id") REFERENCES "public"."_pages_v"("id") ON DELETE cascade ON UPDATE no action;
@@ -872,6 +911,11 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   ALTER TABLE "visit_bookings_history" ADD CONSTRAINT "visit_bookings_history_parent_id_fk" FOREIGN KEY ("_parent_id") REFERENCES "public"."visit_bookings"("id") ON DELETE cascade ON UPDATE no action;
   ALTER TABLE "visit_bookings" ADD CONSTRAINT "visit_bookings_session_id_visit_sessions_id_fk" FOREIGN KEY ("session_id") REFERENCES "public"."visit_sessions"("id") ON DELETE set null ON UPDATE no action;
   ALTER TABLE "visit_bookings" ADD CONSTRAINT "visit_bookings_lead_id_leads_id_fk" FOREIGN KEY ("lead_id") REFERENCES "public"."leads"("id") ON DELETE set null ON UPDATE no action;
+  CREATE INDEX "pages_blocks_highlight_banner_order_idx" ON "pages_blocks_highlight_banner" USING btree ("_order");
+  CREATE INDEX "pages_blocks_highlight_banner_parent_id_idx" ON "pages_blocks_highlight_banner" USING btree ("_parent_id");
+  CREATE INDEX "pages_blocks_highlight_banner_path_idx" ON "pages_blocks_highlight_banner" USING btree ("_path");
+  CREATE INDEX "pages_blocks_highlight_banner_image_idx" ON "pages_blocks_highlight_banner" USING btree ("image_id");
+  CREATE INDEX "pages_blocks_highlight_banner_post_idx" ON "pages_blocks_highlight_banner" USING btree ("post_id");
   CREATE INDEX "pages_blocks_faq_block_order_idx" ON "pages_blocks_faq_block" USING btree ("_order");
   CREATE INDEX "pages_blocks_faq_block_parent_id_idx" ON "pages_blocks_faq_block" USING btree ("_parent_id");
   CREATE INDEX "pages_blocks_faq_block_path_idx" ON "pages_blocks_faq_block" USING btree ("_path");
@@ -898,6 +942,11 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   CREATE INDEX "pages_rels_events_id_idx" ON "pages_rels" USING btree ("events_id");
   CREATE INDEX "pages_rels_media_items_id_idx" ON "pages_rels" USING btree ("media_items_id");
   CREATE INDEX "pages_rels_student_works_id_idx" ON "pages_rels" USING btree ("student_works_id");
+  CREATE INDEX "_pages_v_blocks_highlight_banner_order_idx" ON "_pages_v_blocks_highlight_banner" USING btree ("_order");
+  CREATE INDEX "_pages_v_blocks_highlight_banner_parent_id_idx" ON "_pages_v_blocks_highlight_banner" USING btree ("_parent_id");
+  CREATE INDEX "_pages_v_blocks_highlight_banner_path_idx" ON "_pages_v_blocks_highlight_banner" USING btree ("_path");
+  CREATE INDEX "_pages_v_blocks_highlight_banner_image_idx" ON "_pages_v_blocks_highlight_banner" USING btree ("image_id");
+  CREATE INDEX "_pages_v_blocks_highlight_banner_post_idx" ON "_pages_v_blocks_highlight_banner" USING btree ("post_id");
   CREATE INDEX "_pages_v_blocks_faq_block_order_idx" ON "_pages_v_blocks_faq_block" USING btree ("_order");
   CREATE INDEX "_pages_v_blocks_faq_block_parent_id_idx" ON "_pages_v_blocks_faq_block" USING btree ("_parent_id");
   CREATE INDEX "_pages_v_blocks_faq_block_path_idx" ON "_pages_v_blocks_faq_block" USING btree ("_path");
@@ -1174,13 +1223,15 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
 
 export async function down({ db, payload, req }: MigrateDownArgs): Promise<void> {
   await db.execute(sql`
-   ALTER TABLE "pages_blocks_faq_block" DISABLE ROW LEVEL SECURITY;
+   ALTER TABLE "pages_blocks_highlight_banner" DISABLE ROW LEVEL SECURITY;
+  ALTER TABLE "pages_blocks_faq_block" DISABLE ROW LEVEL SECURITY;
   ALTER TABLE "pages_blocks_events_block" DISABLE ROW LEVEL SECURITY;
   ALTER TABLE "pages_blocks_media_block" DISABLE ROW LEVEL SECURITY;
   ALTER TABLE "pages_blocks_works_block" DISABLE ROW LEVEL SECURITY;
   ALTER TABLE "pages_blocks_guide_block" DISABLE ROW LEVEL SECURITY;
   ALTER TABLE "pages_blocks_admissions_cta" DISABLE ROW LEVEL SECURITY;
   ALTER TABLE "pages_rels" DISABLE ROW LEVEL SECURITY;
+  ALTER TABLE "_pages_v_blocks_highlight_banner" DISABLE ROW LEVEL SECURITY;
   ALTER TABLE "_pages_v_blocks_faq_block" DISABLE ROW LEVEL SECURITY;
   ALTER TABLE "_pages_v_blocks_events_block" DISABLE ROW LEVEL SECURITY;
   ALTER TABLE "_pages_v_blocks_media_block" DISABLE ROW LEVEL SECURITY;
@@ -1223,6 +1274,7 @@ export async function down({ db, payload, req }: MigrateDownArgs): Promise<void>
   ALTER TABLE "feature_flags" DISABLE ROW LEVEL SECURITY;
   ALTER TABLE "_feature_flags_v" DISABLE ROW LEVEL SECURITY;
   ALTER TABLE "payload_jobs_stats" DISABLE ROW LEVEL SECURITY;
+  DROP TABLE IF EXISTS "pages_blocks_highlight_banner" CASCADE;
   DROP TABLE IF EXISTS "pages_blocks_faq_block" CASCADE;
   DROP TABLE IF EXISTS "pages_blocks_events_block" CASCADE;
   DROP TABLE IF EXISTS "pages_blocks_media_block" CASCADE;
@@ -1230,6 +1282,7 @@ export async function down({ db, payload, req }: MigrateDownArgs): Promise<void>
   DROP TABLE IF EXISTS "pages_blocks_guide_block" CASCADE;
   DROP TABLE IF EXISTS "pages_blocks_admissions_cta" CASCADE;
   DROP TABLE IF EXISTS "pages_rels" CASCADE;
+  DROP TABLE IF EXISTS "_pages_v_blocks_highlight_banner" CASCADE;
   DROP TABLE IF EXISTS "_pages_v_blocks_faq_block" CASCADE;
   DROP TABLE IF EXISTS "_pages_v_blocks_events_block" CASCADE;
   DROP TABLE IF EXISTS "_pages_v_blocks_media_block" CASCADE;
@@ -1332,6 +1385,18 @@ export async function down({ db, payload, req }: MigrateDownArgs): Promise<void>
   DROP TYPE IF EXISTS "public"."enum__announcements_v_version_audience";
   CREATE TYPE "public"."enum__announcements_v_version_audience" AS ENUM('umum', 'orang_tua', 'siswa', 'alumni');
   ALTER TABLE "_announcements_v_version_audience" ALTER COLUMN "value" SET DATA TYPE "public"."enum__announcements_v_version_audience" USING "value"::"public"."enum__announcements_v_version_audience";
+  ALTER TABLE "staff" ALTER COLUMN "group" SET DATA TYPE text;
+  ALTER TABLE "staff" ALTER COLUMN "group" SET DEFAULT 'pimpinan'::text;
+  DROP TYPE IF EXISTS "public"."enum_staff_group";
+  CREATE TYPE "public"."enum_staff_group" AS ENUM('pimpinan', 'guru', 'staf');
+  ALTER TABLE "staff" ALTER COLUMN "group" SET DEFAULT 'pimpinan'::"public"."enum_staff_group";
+  ALTER TABLE "staff" ALTER COLUMN "group" SET DATA TYPE "public"."enum_staff_group" USING "group"::"public"."enum_staff_group";
+  ALTER TABLE "_staff_v" ALTER COLUMN "version_group" SET DATA TYPE text;
+  ALTER TABLE "_staff_v" ALTER COLUMN "version_group" SET DEFAULT 'pimpinan'::text;
+  DROP TYPE IF EXISTS "public"."enum__staff_v_version_group";
+  CREATE TYPE "public"."enum__staff_v_version_group" AS ENUM('pimpinan', 'guru', 'staf');
+  ALTER TABLE "_staff_v" ALTER COLUMN "version_group" SET DEFAULT 'pimpinan'::"public"."enum__staff_v_version_group";
+  ALTER TABLE "_staff_v" ALTER COLUMN "version_group" SET DATA TYPE "public"."enum__staff_v_version_group" USING "version_group"::"public"."enum__staff_v_version_group";
   ALTER TABLE "contact_messages" ALTER COLUMN "category" SET DATA TYPE text;
   DROP TYPE IF EXISTS "public"."enum_contact_messages_category";
   CREATE TYPE "public"."enum_contact_messages_category" AS ENUM('umum', 'pendaftaran', 'akademik', 'saran', 'alumni');
