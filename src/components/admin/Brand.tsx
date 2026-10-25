@@ -21,7 +21,7 @@ export const AdminLogo = () => (
 )
 
 export const AdminIcon = () => (
-  <svg width="26" height="26" viewBox="0 0 32 32" aria-hidden="true">
+  <svg width="100%" height="100%" viewBox="0 0 32 32" aria-hidden="true" style={{ display: 'block', minWidth: 18, minHeight: 18 }}>
     <rect width="32" height="32" rx="8" fill="#142A46" />
     <path d="M9 9v14M9 16l8-7M12 14l6 9" stroke="#D5AF54" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" fill="none" />
     <circle cx="23" cy="10" r="2.2" fill="#167467" />
