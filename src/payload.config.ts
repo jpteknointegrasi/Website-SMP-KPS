@@ -112,7 +112,9 @@ export default buildConfig({
       enabled: Boolean(process.env.BLOB_READ_WRITE_TOKEN),
       token: process.env.BLOB_READ_WRITE_TOKEN,
       alwaysInsertFields: true, // identical schema/migrations with or without the token
-      addRandomSuffix: true, // unguessable blob URLs (important for private files)
+      // No random suffix: with it, resized image variants get URLs that don't match the stored blobs.
+      // File names are already random UUIDs (hooks/uploadSecurity.ts).
+      addRandomSuffix: false,
       collections: {
         // public images are served straight from the Blob CDN
         media: { disablePayloadAccessControl: true, prefix: 'media' },
