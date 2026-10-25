@@ -12,6 +12,7 @@ import config from '@/payload.config'
 import { createTestSchool, dropTestSchool, type TestSchool } from './school'
 import { readFlags } from '@/lib/flags'
 import { contactSubmitEndpoint } from '@/endpoints/contact'
+import { visitBookingEndpoint } from '@/endpoints/visits'
 import { clearTenantCache, tenantByHost } from '@/tenancy/resolve'
 import { scopePayload } from '@/tenancy/scoped'
 import { runAsTenant } from '@/lib/payload'
@@ -259,5 +260,37 @@ describe('TEN-10 sekolah baru langsung siap', () => {
     expect(await s.findGlobal({ slug: 'feature-flags', overrideAccess: true })).toBeTruthy()
     // homepage is a draft until the school adds a photo: not public yet
     expect(await s.findGlobal({ slug: 'homepage', ...pub })).toBeNull()
+  })
+})
+
+describe('TEN-11 temuan audit: kuota, buka kunci akun, alamat login', () => {
+  it('petugas A tidak bisa memindahkan pemesanan ke sesi sekolah B (kuota B tidak berubah)', async () => {
+    await A.payload.updateGlobal({ slug: 'feature-flags', overrideAccess: true, data: { schoolVisits: true } })
+    const sess = (s: TestSchool, cap: number) =>
+      s.payload.create({ collection: 'visit-sessions', overrideAccess: true, data: { title: `Sesi ${RUN}`, kind: 'open_house', sessionStatus: 'open', startAt: new Date(Date.now() + 7 * 864e5).toISOString(), capacity: cap, capacityUnit: 'people', requiresConfirmation: false } as never })
+    const sa = await sess(A, 5)
+    const sb = await sess(B, 10)
+    const body = { session: sa.id, parentName: `Wali ${RUN}`, email: 'w@contoh.id', participants: 1, consent: true, idempotencyKey: randomBytes(16).toString('hex') }
+    const res = await visitBookingEndpoint.handler({ payload: raw, user: null, url: 'http://x/api/x', headers: new Headers({ host: A.domain, 'x-forwarded-for': '10.201.1.1' }), json: async () => body } as unknown as PayloadRequest)
+    expect(res.status).toBe(200)
+    const bk = (await A.payload.find({ collection: 'visit-bookings', where: { parentName: { equals: `Wali ${RUN}` } }, overrideAccess: true })).docs[0]!
+    await expect(raw.update({ collection: 'visit-bookings', id: bk.id, user: staff.Aadmissions, overrideAccess: false, data: { session: sb.id, status: 'confirmed', participants: 10 } as never })).rejects.toThrow()
+    expect(Number((await B.payload.findByID({ collection: 'visit-sessions', id: sb.id, overrideAccess: true })).bookedCount ?? 0)).toBe(0)
+    expect(Number((await A.payload.findByID({ collection: 'visit-sessions', id: sa.id, overrideAccess: true })).bookedCount ?? 0)).toBe(1)
+  })
+  it('staf sekolah A tidak bisa membuka kunci akun sekolah B; admin B bisa', async () => {
+    await raw.update({ collection: 'users', id: staff.Badmin.id, overrideAccess: true, data: { loginAttempts: 5, lockUntil: new Date(Date.now() + 3600e3).toISOString() } as never })
+    await expect(raw.unlock({ collection: 'users', data: { email: staff.Badmin.email }, user: staff.Aadmin, overrideAccess: false } as never)).rejects.toThrow()
+    expect(((await raw.findByID({ collection: 'users', id: staff.Badmin.id, overrideAccess: true, showHiddenFields: true })) as any).loginAttempts).toBe(5)
+    await raw.unlock({ collection: 'users', data: { email: staff.Badmin.email }, user: superAdmin, overrideAccess: false } as never)
+    expect(((await raw.findByID({ collection: 'users', id: staff.Badmin.id, overrideAccess: true, showHiddenFields: true })) as any).loginAttempts).toBe(0)
+  })
+  it('staf tidak bisa masuk lewat alamat yang bukan milik sekolah mana pun', async () => {
+    const password = pw()
+    await raw.update({ collection: 'users', id: staff.Beditor.id, overrideAccess: true, data: { password } })
+    await expect(raw.login({ collection: 'users', data: { email: staff.Beditor.email, password }, req: { headers: new Headers({ host: `asing-${RUN}.contoh.test` }) } as never })).rejects.toThrow()
+  })
+  it('kunci dokumen bersama dimatikan untuk semua koleksi', () => {
+    for (const c of raw.config.collections) if (!c.slug.startsWith('payload-')) expect([c.slug, c.lockDocuments]).toEqual([c.slug, false])
   })
 })

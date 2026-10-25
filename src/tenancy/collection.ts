@@ -115,6 +115,8 @@ export function withTenancy(c: CollectionConfig, opts: { optional?: boolean } = 
   const indexes = (c.indexes ?? []).map((ix) => (ix.unique && !ix.fields.includes('tenant') ? { ...ix, fields: ['tenant', ...ix.fields] } : ix))
   return {
     ...c,
+    // Payload's document locks live in one shared collection that cannot be limited per school, so locking is off.
+    lockDocuments: false,
     fields: [...fields, tenantField(!opts.optional)],
     indexes: [...indexes, ...uniques.map((name) => ({ fields: ['tenant', name], unique: true }))],
     access: {

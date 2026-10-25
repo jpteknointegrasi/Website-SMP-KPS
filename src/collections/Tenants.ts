@@ -28,6 +28,7 @@ export const Tenants: CollectionConfig = {
     delete: superAdminOnly,
   },
   versions: { maxPerDoc: 20 },
+  lockDocuments: false,
   hooks: {
     beforeValidate: [
       ({ data }) => {

@@ -35,6 +35,7 @@ Lapisan-lapisan berikut saling melengkapi. Bila satu lapisan terlewat, lapisan b
 | 4 | **Relasi** (gambar, kategori, sesi, dst.) hanya bisa menunjuk dokumen sekolah yang sama, dan divalidasi di server | `scopeRelationship` | Menempel gambar atau berkas sekolah lain |
 | 5 | **Basis data**: `tenant_id` NOT NULL + foreign key; slug/kode unik **per sekolah** | migrasi `20261025_200110` | Data tanpa sekolah, bentrok slug antarsekolah |
 | 6 | **CSRF**: permintaan API yang mengubah data harus berasal dari host yang sama | `src/proxy.ts` | Situs lain memakai sesi login staf |
+| 7 | **Fitur Payload bersama** dibatasi: kunci dokumen (*document locking*) dimatikan karena tabelnya tidak bisa dipisah per sekolah; buka-kunci akun hanya oleh admin sekolah itu; menjalankan job hanya Super Admin/`CRON_SECRET`; kuota kunjungan dihitung dengan syarat `tenant_id` | `tenancy/collection.ts`, `Users.ts`, `lib/capacity.ts` | Celah di luar aturan akses koleksi |
 
 Siapa sekolah "permintaan" (`requestTenantId`):
 
@@ -53,7 +54,7 @@ Siapa sekolah "permintaan" (`requestTenantId`):
 
 Akun pertama di platform yang masih kosong otomatis menjadi Super Admin. Untuk platform yang sudah berisi (KPS), Super Admin dibuat dengan `npm run platform:superadmin -- --email …`.
 
-Email login bersifat unik di seluruh platform: satu akun hanya untuk satu sekolah. Staf hanya bisa masuk lewat alamat sekolahnya sendiri.
+Email login bersifat unik di seluruh platform: satu akun hanya untuk satu sekolah. Staf hanya bisa masuk lewat alamat sekolahnya sendiri (bukan lewat alamat platform atau `*.vercel.app`). Tautan *lupa kata sandi* memakai domain utama sekolah.
 
 ## 5. Pengaturan per sekolah (bekas global)
 
@@ -95,14 +96,15 @@ Tanggal yang sudah tersimpan tetap memakai zonanya masing-masing.
 - Deduplikasi checksum foto kini per sekolah.
 - "Unggah ulang foto" di `/setup/isi-data` mempertahankan berkas semua sekolah.
 
-## 9. Migrasi data KPS (`20261025_200110_platform_multi_tenant`)
+## 9. Migrasi data KPS (`20261025_200110_platform_multi_tenant` + `20261025_211956_platform_document_locks`)
 
 Bila database sudah berisi data:
 
 1. Dibuat sekolah `kps` (nama dari Pengaturan, paket Pro, status Aktif, zona `NEXT_PUBLIC_SCHOOL_TIMEZONE` atau WITA). Domain diambil dari `NEXT_PUBLIC_SERVER_URL`.
 2. Setiap baris konten, berkas, akun, audit, dan versinya ditandai milik sekolah itu.
 3. Nama singkat diambil dari singkatan di akhir nama ("KPS"). Email notifikasi lama dari env disalin ke Pengaturan.
-4. `tenant_id` dijadikan NOT NULL.
+4. `tenant_id` dijadikan NOT NULL, dengan foreign key `ON DELETE RESTRICT`.
+5. Kunci dokumen yang tersisa dihapus. Migrasi kedua membuang kolom kunci dokumen yang tidak dipakai lagi.
 
 Pengujian: up → down → up pada salinan berisi data seperti produksi, migrasi penuh pada database kosong, dan `migrate:create` tidak menemukan selisih skema.
 
@@ -120,11 +122,12 @@ Pengujian: up → down → up pada salinan berisi data seperti produksi, migrasi
 | Cache & rate limit | Per instance server (perubahan domain/status sekolah berlaku ≤ 60 detik) |
 | Tautan internal di rich text | Hanya bisa menunjuk dokumen sekolah sendiri saat ditampilkan; tautan ke dokumen sekolah lain tidak dirender |
 | Alamat tak dikenal | Menampilkan halaman "tidak ditemukan" dengan status 200 + `noindex` |
+| Peringatan "sedang diedit orang lain" | Hilang karena kunci dokumen dimatikan; dua editor yang menyimpan dokumen sama → simpanan terakhir yang berlaku (riwayat versi tetap ada) |
 | Paket konten awal | Hanya untuk KPS; sekolah baru mulai kosong |
 
 ## 11. Pengujian
 
-`npm test`: **115 tes lulus**, terdiri dari 85 tes lama (kini berjalan di sekolah uji sementara) dan 30 tes isolasi baru `tests/int/tenancy.int.spec.ts` (TEN-01..10).
+`npm test`: **119 tes lulus**, terdiri dari 85 tes lama (kini berjalan di sekolah uji sementara) dan 34 tes isolasi baru `tests/int/tenancy.int.spec.ts` (TEN-01..11).
 
 Tes isolasi memakai dua sekolah (WITA/Pro dan WIB/Basic) dan memeriksa:
 
@@ -136,6 +139,7 @@ Tes isolasi memakai dua sekolah (WITA/Pro dan WIB/Basic) dan memeriksa:
 - pencarian dan endpoint publik;
 - fitur dan paket;
 - audit, Super Admin, sekolah ditangguhkan;
-- provisioning sekolah baru.
+- provisioning sekolah baru;
+- temuan audit independen (TEN-11): kuota kunjungan lintas sekolah, buka-kunci akun lintas sekolah, login dari alamat tak dikenal, kunci dokumen.
 
 *Kontrol negatif*: bila pembatasan sekolah di aturan akses dimatikan, 10 tes isolasi gagal. Artinya tes ini benar-benar menguji isolasi.

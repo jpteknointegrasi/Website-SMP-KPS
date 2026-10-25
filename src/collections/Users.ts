@@ -18,18 +18,32 @@ export const Users: CollectionConfig = {
   slug: 'users',
   labels: { singular: 'Pengguna', plural: 'Pengguna' },
   admin: { useAsTitle: 'name', group: 'Pengguna & Akses', defaultColumns: ['name', 'email', 'role', 'tenant', 'active'] },
+  lockDocuments: false,
   auth: {
     maxLoginAttempts: 5,
     lockTime: 15 * 60 * 1000,
     tokenExpiration: 60 * 60 * 8,
     cookies: { secure: process.env.NODE_ENV === 'production', sameSite: 'Lax' },
     useAPIKey: false,
+    // Reset link on the school's own domain (the platform has no single server URL).
+    forgotPassword: {
+      generateEmailSubject: () => 'Atur ulang kata sandi CMS website sekolah',
+      generateEmailHTML: async (args) => {
+        const { req, token, user } = (args ?? {}) as { req?: { payload?: never; headers?: Headers }; token?: string; user?: { tenant?: unknown } }
+        const school = req?.payload ? await tenantById(req.payload, idOf(user?.tenant)) : null
+        const host = school?.primaryDomain ?? req?.headers?.get?.('host') ?? ''
+        const url = `https://${host}/admin/reset/${token}`
+        return `<p>Ada permintaan mengatur ulang kata sandi akun CMS Anda.</p><p><a href="${url}">Atur ulang kata sandi</a></p><p>Abaikan email ini bila Anda tidak memintanya.</p>`
+      },
+    },
   },
   access: {
     read: manageUsers(true),
     create: ({ req: { user } }) => isSuperAdmin(user) || (isAdmin(user) && Boolean(tenantOfUser(user))),
     update: manageUsers(true),
     delete: manageUsers(false),
+    // Unlocking a locked-out account: only the account's own school admin (or the Super Admin).
+    unlock: manageUsers(false),
     admin: ({ req: { user } }) => Boolean(user && (user as { active?: boolean }).active !== false),
   },
   hooks: {
@@ -43,7 +57,8 @@ export const Users: CollectionConfig = {
         if (!isLive(own)) throw new APIError('Akun ini tidak terhubung ke sekolah yang aktif. Hubungi pengelola platform.', 403, null, true)
         const host = req.headers?.get?.('host')
         const here = host ? await tenantByHost(req.payload, host) : null
-        if (here && here.id !== own.id) throw new APIError('Akun ini milik sekolah lain. Masuk lewat alamat website sekolah Anda.', 403, null, true)
+        // only on the school's own address (an address that belongs to no school is the platform's, for the Super Admin)
+        if (!here || here.id !== own.id) throw new APIError('Akun ini milik sekolah lain. Masuk lewat alamat website sekolah Anda.', 403, null, true)
         return user
       },
     ],

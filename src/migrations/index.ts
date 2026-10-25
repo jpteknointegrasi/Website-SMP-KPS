@@ -3,6 +3,7 @@ import * as migration_20261025_110113_hero_slides from './20261025_110113_hero_s
 import * as migration_20261025_111618_blob_storage from './20261025_111618_blob_storage';
 import * as migration_20261025_150726_addendum_p0p1 from './20261025_150726_addendum_p0p1';
 import * as migration_20261025_200110_platform_multi_tenant from './20261025_200110_platform_multi_tenant';
+import * as migration_20261025_211956_platform_document_locks from './20261025_211956_platform_document_locks';
 
 export const migrations = [
   {
@@ -28,6 +29,11 @@ export const migrations = [
   {
     up: migration_20261025_200110_platform_multi_tenant.up,
     down: migration_20261025_200110_platform_multi_tenant.down,
-    name: '20261025_200110_platform_multi_tenant'
+    name: '20261025_200110_platform_multi_tenant',
+  },
+  {
+    up: migration_20261025_211956_platform_document_locks.up,
+    down: migration_20261025_211956_platform_document_locks.down,
+    name: '20261025_211956_platform_document_locks'
   },
 ];

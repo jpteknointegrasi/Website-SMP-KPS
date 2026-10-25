@@ -1,3 +1,4 @@
+import { scopeToDoc } from '../tenancy/scoped'
 import { schoolTimezone } from '../tenancy/timezone'
 import type { CollectionBeforeChangeHook, CollectionAfterChangeHook, CollectionConfig, Field } from 'payload'
 import { APIError } from 'payload'
@@ -262,7 +263,14 @@ const bookingCapacity: CollectionBeforeChangeHook = async ({ data, originalDoc, 
   const next: BookingLike = { ...prev, ...data }
   const nextSession = sessionIdOf(next)
   const prevSession = operation === 'update' ? sessionIdOf(prev) : null
-  const unitOf = async (id: number) => (await req.payload.findByID({ collection: 'visit-sessions', id, depth: 0, overrideAccess: true })).capacityUnit
+  // Everything below runs for the booking's own school only: a session id from another school is rejected
+  // before any seat is counted (this hook runs before field validation).
+  const school = scopeToDoc(req.payload, data, originalDoc)
+  const unitOf = async (id: number) => {
+    const s = await school.findByID({ collection: 'visit-sessions', id, depth: 0, overrideAccess: true, disableErrors: true } as never)
+    if (!s) throw new APIError('Sesi kunjungan tidak ditemukan.', 400, null, true)
+    return (s as { capacityUnit?: string }).capacityUnit
+  }
   const nextSeats = nextSession ? seatsFor(await unitOf(nextSession), next.participants) : 0
   const prevSeats = prevSession ? seatsFor(await unitOf(prevSession), prev.participants) : 0
   const take = (n: number) => nextSession && n > 0 && !context.capacityReserved
@@ -271,12 +279,12 @@ const bookingCapacity: CollectionBeforeChangeHook = async ({ data, originalDoc, 
   const wasHolding = operation === 'update' && consumes(prev.status)
   const willHold = consumes(next.status)
   if (willHold && (!wasHolding || nextSession !== prevSession)) {
-    if (take(nextSeats) && !(await tryReserve(req.payload, nextSession!, nextSeats)))
+    if (take(nextSeats) && !(await tryReserve(school, nextSession!, nextSeats)))
       throw new APIError('Kuota sesi tujuan sudah penuh. Pilih sesi lain atau tambah kapasitas.', 409, null, true)
     if (wasHolding && prevSession) releaseLater.push({ id: prevSession, seats: prevSeats })
   } else if (willHold && wasHolding && nextSession === prevSession && nextSeats !== prevSeats) {
     const diff = nextSeats - prevSeats
-    if (diff > 0 && !(await tryReserve(req.payload, nextSession!, diff))) throw new APIError('Kuota sesi tidak cukup untuk jumlah peserta ini.', 409, null, true)
+    if (diff > 0 && !(await tryReserve(school, nextSession!, diff))) throw new APIError('Kuota sesi tidak cukup untuk jumlah peserta ini.', 409, null, true)
     if (diff < 0) releaseLater.push({ id: nextSession!, seats: -diff })
   } else if (!willHold && wasHolding && prevSession) {
     releaseLater.push({ id: prevSession, seats: prevSeats })
@@ -299,7 +307,7 @@ const bookingCapacity: CollectionBeforeChangeHook = async ({ data, originalDoc, 
 }
 
 const bookingRelease: CollectionAfterChangeHook = async ({ doc, req, context }) => {
-  for (const r of (context.releaseLater as { id: number; seats: number }[] | undefined) ?? []) await release(req.payload, r.id, r.seats)
+  for (const r of (context.releaseLater as { id: number; seats: number }[] | undefined) ?? []) await release(scopeToDoc(req.payload, doc), r.id, r.seats)
   return doc
 }
 

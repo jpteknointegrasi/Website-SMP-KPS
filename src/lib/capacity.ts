@@ -3,8 +3,8 @@ import type { TenantPayload } from '../tenancy/scoped'
 
 /** Query helpers take a school-scoped Payload: a session id from one school can never touch another's. */
 type Payload = TenantPayload
-/** Raw counter updates only need the database handle; callers pass session ids already checked for the school. */
-type Db = Pick<RawPayload, 'db'>
+/** Raw counter updates: database handle + the school; every statement is limited to that school's sessions. */
+type Db = Pick<RawPayload, 'db'> & { tenantId: number }
 import { sql } from '@payloadcms/db-postgres'
 
 /**
@@ -24,9 +24,9 @@ export const seatsFor = (unit: string | null | undefined, participants: number |
   unit === 'people' ? Math.max(1, Math.min(20, Number(participants) || 1)) : 1
 
 type Row = { id: number }
-const isPg = (payload: Db) => payload.db.name === 'postgres'
+const isPg = (payload: Pick<RawPayload, 'db'>) => payload.db.name === 'postgres'
 
-async function exec(payload: Db, q: ReturnType<typeof sql>): Promise<Row[]> {
+async function exec(payload: Pick<RawPayload, 'db'>, q: ReturnType<typeof sql>): Promise<Row[]> {
   const db = payload.db.drizzle as unknown as {
     execute?: (q: unknown) => Promise<{ rows: Row[] }>
     all?: (q: unknown) => Promise<Row[]>
@@ -40,7 +40,7 @@ export async function tryReserve(payload: Db, sessionId: number, seats: number) 
   const rows = await exec(
     payload,
     sql`UPDATE visit_sessions SET booked_count = COALESCE(booked_count, 0) + ${seats}
-        WHERE id = ${sessionId} AND COALESCE(booked_count, 0) + ${seats} <= capacity
+        WHERE id = ${sessionId} AND tenant_id = ${payload.tenantId} AND COALESCE(booked_count, 0) + ${seats} <= capacity
         RETURNING id`,
   )
   return rows.length === 1
@@ -49,9 +49,9 @@ export async function tryReserve(payload: Db, sessionId: number, seats: number) 
 /** Gives seats back (never below zero). */
 export async function release(payload: Db, sessionId: number, seats: number) {
   if (isPg(payload)) {
-    await exec(payload, sql`UPDATE visit_sessions SET booked_count = GREATEST(COALESCE(booked_count, 0) - ${seats}, 0) WHERE id = ${sessionId} RETURNING id`)
+    await exec(payload, sql`UPDATE visit_sessions SET booked_count = GREATEST(COALESCE(booked_count, 0) - ${seats}, 0) WHERE id = ${sessionId} AND tenant_id = ${payload.tenantId} RETURNING id`)
   } else {
-    await exec(payload, sql`UPDATE visit_sessions SET booked_count = MAX(COALESCE(booked_count, 0) - ${seats}, 0) WHERE id = ${sessionId} RETURNING id`)
+    await exec(payload, sql`UPDATE visit_sessions SET booked_count = MAX(COALESCE(booked_count, 0) - ${seats}, 0) WHERE id = ${sessionId} AND tenant_id = ${payload.tenantId} RETURNING id`)
   }
 }
 
@@ -66,7 +66,7 @@ export async function recomputeBooked(payload: Payload, sessionId: number) {
     overrideAccess: true,
   })
   const total = res.docs.reduce((n, b) => n + seatsFor(session.capacityUnit, b.participants), 0)
-  await exec(payload, sql`UPDATE visit_sessions SET booked_count = ${total} WHERE id = ${sessionId} RETURNING id`)
+  await exec(payload, sql`UPDATE visit_sessions SET booked_count = ${total} WHERE id = ${sessionId} AND tenant_id = ${payload.tenantId} RETURNING id`)
   return total
 }
 

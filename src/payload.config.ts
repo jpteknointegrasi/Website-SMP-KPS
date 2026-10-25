@@ -42,7 +42,7 @@ import { Faqs, StudentWorks } from './collections/extra'
 import { MediaItems, SocialAccounts } from './collections/media-hub'
 import { Leads, VisitBookings, VisitSessions } from './collections/admissions'
 import { AnalyticsDaily } from './collections/analytics'
-import { isStaff } from './access/roles'
+import { isSuperAdmin } from './access/roles'
 import { readFlags } from './lib/flags'
 import { releaseExpiredHolds } from './lib/capacity'
 
@@ -162,7 +162,8 @@ export default buildConfig({
   ],
   graphQL: { disable: true },
   jobs: {
-    access: { run: ({ req }) => isStaff(req.user) || req.headers.get('authorization') === `Bearer ${process.env.CRON_SECRET}` },
+    // runs every school's queued jobs: platform operator or the scheduler only
+    access: { run: ({ req }) => isSuperAdmin(req.user) || (Boolean(process.env.CRON_SECRET) && req.headers.get('authorization') === `Bearer ${process.env.CRON_SECRET}`) },
     // Runs scheduled publish/unpublish jobs every minute while the server is up.
     // Expiry of announcements does not depend on this: public queries filter by date.
     autoRun: [{ cron: '* * * * *', queue: 'default', limit: 20 }],
