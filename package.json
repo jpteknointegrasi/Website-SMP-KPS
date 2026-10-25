@@ -2,7 +2,7 @@
   "name": "smp-kps-website",
   "version": "0.1.0",
   "private": true,
-  "description": "Website & CMS SMP Nasional KPS (Next.js + Payload CMS + PostgreSQL)",
+  "description": "Platform website & CMS sekolah (multi-sekolah) — Next.js + Payload CMS + PostgreSQL. Sekolah pertama: SMP Nasional KPS.",
   "type": "module",
   "scripts": {
     "dev": "cross-env NODE_OPTIONS=--no-deprecation next dev",
@@ -20,7 +20,11 @@
     "test": "cross-env NODE_OPTIONS=--no-deprecation vitest run --config ./vitest.config.mts",
     "vercel-build": "cross-env NODE_OPTIONS=\"--no-deprecation --max-old-space-size=8000\" payload migrate && npm run build",
     "backup:prod": "cross-env DOTENV_CONFIG_PATH=.env.vercel NODE_OPTIONS=--no-deprecation tsx scripts/backup-json.ts",
-    "seed:prod": "cross-env DOTENV_CONFIG_PATH=.env.vercel NODE_OPTIONS=--no-deprecation tsx scripts/seed.ts"
+    "seed:prod": "cross-env DOTENV_CONFIG_PATH=.env.vercel NODE_OPTIONS=--no-deprecation tsx scripts/seed.ts",
+    "sekolah:baru": "cross-env NODE_OPTIONS=--no-deprecation tsx scripts/create-school.ts",
+    "sekolah:baru:prod": "cross-env DOTENV_CONFIG_PATH=.env.vercel NODE_OPTIONS=--no-deprecation tsx scripts/create-school.ts",
+    "platform:superadmin": "cross-env NODE_OPTIONS=--no-deprecation tsx scripts/create-superadmin.ts",
+    "platform:superadmin:prod": "cross-env DOTENV_CONFIG_PATH=.env.vercel NODE_OPTIONS=--no-deprecation tsx scripts/create-superadmin.ts"
   },
   "dependencies": {
     "@fontsource-variable/inter": "^5.2.8",

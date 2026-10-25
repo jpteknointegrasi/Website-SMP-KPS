@@ -3,6 +3,10 @@
 Website publik sekolah + CMS untuk staf, dibangun dengan **Next.js 16 + TypeScript + Payload CMS 3 + PostgreSQL**.
 Spesifikasi: `content/BRIEF_LENGKAP_WEBSITE_SMP_KPS_UNTUK_CLAUDE.md`. Status pekerjaan: `IMPLEMENTATION_STATUS.md`.
 
+> **Cabang `platform-sekolah`: platform multi-sekolah (SaaS).** Satu deployment melayani banyak sekolah; SMP Nasional KPS
+> adalah sekolah pertama. Arsitektur & isolasi data: `SAAS_ARCHITECTURE.md`. Operasional (menambah sekolah, domain,
+> memindahkan produksi KPS): `PANDUAN_PLATFORM.md`.
+
 ## Persyaratan
 
 - Node.js ≥ 22.12, npm
@@ -19,7 +23,9 @@ npm run seed                     # konten resmi + media dari content/ (aman diul
 npm run dev                      # http://localhost:3000  · CMS: http://localhost:3000/admin
 ```
 
-Akun pertama: buka `/admin` → formulir "buat pengguna pertama" otomatis menjadi **Admin Teknis**.
+Lokal: `DEFAULT_TENANT_SLUG=kps` di `.env` agar `localhost` menampilkan sekolah KPS (dibuat oleh `npm run seed`).
+Akun pertama di platform kosong: buka `/admin` → "buat pengguna pertama" otomatis menjadi **Super Admin platform**;
+akun staf sekolah dibuat di Pengguna dengan memilih sekolahnya. Sekolah baru: `npm run sekolah:baru -- --nama … --kode …`.
 Atau saat seed: `SEED_ADMIN_EMAIL=… SEED_ADMIN_PASSWORD=… npm run seed`. Tidak ada kredensial bawaan di kode.
 
 ## Perintah
@@ -27,6 +33,8 @@ Atau saat seed: `SEED_ADMIN_EMAIL=… SEED_ADMIN_PASSWORD=… npm run seed`. Tid
 | Perintah | Fungsi |
 |---|---|
 | `npm run dev` | Server pengembangan |
+| `npm run sekolah:baru -- …` | Menambah sekolah (+ akun Admin Teknis) — lihat `PANDUAN_PLATFORM.md` |
+| `npm run platform:superadmin -- --email …` | Membuat/menaikkan akun Super Admin platform |
 | `npm run build` / `npm start` | Build & jalankan produksi |
 | `npm run migrate` | Terapkan migrasi database |
 | `npm run migrate:create -- nama` | Buat migrasi baru setelah mengubah koleksi |

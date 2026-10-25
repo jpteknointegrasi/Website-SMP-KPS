@@ -507,6 +507,11 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
     // short name used in texts ("Tentang KPS"): the trailing acronym of the school name, if any
     const acronym = name.trim().split(/\s+/).pop() ?? ''
     if (/^[A-Z]{2,8}$/.test(acronym)) await db.execute(sql`UPDATE site_settings SET short_name = ${acronym} WHERE short_name IS NULL`)
+    // notification addresses used to be platform env values; they are per school now
+    const contactTo = process.env.CONTACT_NOTIFY_EMAIL || null
+    const admissionsTo = process.env.ADMISSIONS_NOTIFY_EMAIL || null
+    if (contactTo || admissionsTo)
+      await db.execute(sql`UPDATE site_settings SET notify_contact_email = COALESCE(notify_contact_email, ${contactTo}), notify_admissions_email = COALESCE(notify_admissions_email, ${admissionsTo})`)
     payload.logger.info(`Data lama dipindahkan ke sekolah "${name}" (kode ${slug}, id ${tid}${domain ? `, domain ${domain}` : ''}).`)
   }
   for (const t of OWNED) await db.execute(sql.raw(`ALTER TABLE "${t}" ALTER COLUMN tenant_id SET NOT NULL`))

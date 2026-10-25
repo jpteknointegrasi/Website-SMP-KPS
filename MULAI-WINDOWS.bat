@@ -29,6 +29,9 @@ if not exist ".env" (
   exit /b 1
 )
 
+rem Platform multi-sekolah: alamat localhost menampilkan sekolah KPS (isi paket konten awal).
+findstr /b /c:"DEFAULT_TENANT_SLUG=" .env >nul 2>nul || (echo.>>.env & echo DEFAULT_TENANT_SLUG=kps>>.env)
+
 if not exist "node_modules\@payloadcms\storage-vercel-blob\" (
   echo [1/3] Memasang paket - sekali saja, beberapa menit...
   call npm ci

@@ -26,7 +26,10 @@ export async function dropTestSchool(raw: Payload, id: number) {
   for (const c of raw.config.collections) {
     if (c.slug === 'tenants' || c.slug.startsWith('payload-')) continue
     if (!c.flattenedFields.some((f) => 'name' in f && f.name === 'tenant')) continue
-    await raw.delete({ collection: c.slug as 'posts', where: { tenant: { equals: id } }, overrideAccess: true, trash: false, context: ctx } as never).catch(() => {})
+    await raw
+      .delete({ collection: c.slug as 'posts', where: { tenant: { equals: id } }, overrideAccess: true, trash: false, context: ctx } as never)
+      .then((r: any) => r?.errors?.length && console.warn(c.slug, r.errors.map((e: any) => e.message).join('; ')))
+      .catch((e) => console.warn(c.slug, e.message))
   }
   await raw.delete({ collection: 'tenants', id, overrideAccess: true, context: ctx }).catch((e) => console.warn('school not deleted', e.message))
   clearTenantCache()
