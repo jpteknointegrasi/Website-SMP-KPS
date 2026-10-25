@@ -27,6 +27,8 @@ const P: Record<string, React.ReactNode> = {
   heart: <path d="M12 20s-7.5-4.6-7.5-10A4.3 4.3 0 0 1 12 7.3 4.3 4.3 0 0 1 19.5 10c0 5.4-7.5 10-7.5 10z" />,
   chevron: <path d="m9 6 6 6-6 6" />,
   chevronDown: <path d="m6 9 6 6 6-6" />,
+  play: <path d="M8 5.5v13l10-6.5z" fill="currentColor" />,
+  pause: <path d="M8 5v14M16 5v14" strokeWidth={3} />,
   sparkle: <path d="M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.5 2.5M15.5 15.5 18 18M6 18l2.5-2.5M15.5 8.5 18 6" />,
 }
 

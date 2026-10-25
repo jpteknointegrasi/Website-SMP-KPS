@@ -5,19 +5,19 @@ Tanggal: 25 Oktober 2026. Sumber: snapshot `content/sources/` (11 halaman) dan `
 ## Ringkasan
 | Jenis | Sumber | Diimpor | Duplikat dilewati | Gagal |
 |---|---|---|---|---|
-| Media (gambar) | 31 di manifest | 31 (setiap record menyimpan source_url, halaman sumber, nama asli, tanggal unduh, SHA-256) | Dijalankan ulang 3×: 0 baru | 0 |
+| Media (gambar) | 35 di manifest (31 situs lama + 4 foto hero) | 35 (setiap record menyimpan source_url, halaman sumber, nama asli, tanggal unduh, SHA-256) | Seed ulang setelah foto hero ditambahkan: 4 baru, 31 dilewati (checksum) | 0 |
 | Berita resmi | 6 artikel | 6, tanggal publikasi asli dipertahankan, `source_url` tercatat | 0 | 0 |
 | Halaman (Tentang, Visi-Misi, Kebijakan Privasi) | profil.txt | 3 | — | 0 |
 | Pengaturan & kontak | kontak.txt | 1 (berstatus belum terverifikasi) | — | 0 |
 | Pengalihan URL | REDIRECT_MAP.csv | 21 | — | 0 |
 
-Uji idempotensi: seed dijalankan pada database kosong (migrasi → seed) dan pada database berisi; hasil jumlah record sama (6 berita, 31 media), tidak ada duplikat.
+Uji idempotensi: seed dijalankan pada database kosong (migrasi → seed) dan pada database berisi; hasil jumlah record sama (6 berita, 31 media saat itu), tidak ada duplikat. Foto hero (KPS-H01–H04) ditambahkan kemudian lewat manifest yang sama.
 
 ## Pemetaan gambar
 | Posisi | Aset |
 |---|---|
 | Logo header/footer | KPS-001 (PNG transparan asli, di atas latar navy) |
-| Hero | KPS-030 |
+| Hero (bergantian) | KPS-H01 pramuka, KPS-H02 guru & staf, KPS-H03 petugas upacara, KPS-H04 upacara di taman — diberikan pemilik proyek 25 Okt 2026 (`content/assets/hero/`) |
 | Kolase "Mengenal" | KPS-010 (utama), KPS-007, KPS-013 |
 | Program | KPS-028 (Pembelajaran Aktif), KPS-009 (Tahfidz) |
 | Kehidupan siswa | KPS-008 Pramuka, KPS-011 Keagamaan, KPS-012 Studi Edukasi, KPS-029 Seni & Musik |

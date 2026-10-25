@@ -22,7 +22,9 @@ Masuk ke **/admin** dengan akun pribadi Anda. Jangan berbagi akun. Setiap peruba
 ## Mengganti hero beranda
 Pengaturan → **Beranda** → grup *Hero*: ubah eyebrow, judul (maks. 80 karakter), deskripsi, foto, dan tombol.
 - Foto: gunakan foto **horizontal** resmi. Di menu Media, klik foto lalu atur **titik fokus** agar wajah tidak terpotong di HP. Isi teks *alt* yang menggambarkan isi foto.
-- Foto mobile (opsional) untuk potongan khusus HP.
+- **Foto hero bergantian** (maks. 6): bila diisi, foto-foto ini tampil bergantian dengan efek memudar dan zoom pelan. Atur *Jeda antar foto* (4–15 detik). Pengunjung dapat menjeda lewat tombol ⏸ di pojok foto; pergantian otomatis berhenti saat kursor di atas foto dan bagi pengguna yang mematikan animasi. Kosongkan untuk memakai satu foto utama saja.
+- Foto hero paling cocok berukuran lebar (rasio sekitar 3:1, minimal 2000 px). Atur titik fokus agar subjek utama tetap terlihat di HP.
+- Foto mobile (opsional) untuk potongan khusus HP (hanya dipakai bila tidak memakai foto bergantian).
 - Klik **Terbitkan**.
 
 Di halaman yang sama Anda bisa mengubah: 6 **Akses cepat**, teks & kolase **Mengenal sekolah**, label kecil dan judul setiap blok, serta **urutan & status blok** (seret untuk mengubah urutan; matikan blok yang belum punya konten layak). Blok *Sekilas KPS* (angka otomatis dari konten terbit) tersedia tetapi nonaktif secara bawaan.

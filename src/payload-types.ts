@@ -2274,6 +2274,11 @@ export interface Homepage {
      */
     image: number | Media;
     imageMobile?: (number | null) | Media;
+    /**
+     * Bila diisi, foto-foto ini tampil bergantian (crossfade). Gunakan foto horizontal lebar; atur titik fokus di Media. Kosongkan untuk memakai satu foto utama.
+     */
+    slides?: (number | Media)[] | null;
+    slideInterval?: number | null;
     accentImages?: (number | Media)[] | null;
     primaryLabel?: string | null;
     /**
@@ -2470,6 +2475,8 @@ export interface HomepageSelect<T extends boolean = true> {
         description?: T;
         image?: T;
         imageMobile?: T;
+        slides?: T;
+        slideInterval?: T;
         accentImages?: T;
         primaryLabel?: T;
         primaryHref?: T;

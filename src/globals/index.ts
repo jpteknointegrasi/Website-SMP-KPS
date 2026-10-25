@@ -110,6 +110,16 @@ export const Homepage: GlobalConfig = {
         },
         { name: 'imageMobile', type: 'upload', relationTo: 'media', label: 'Foto mobile (opsional)' },
         {
+          name: 'slides',
+          type: 'upload',
+          relationTo: 'media',
+          hasMany: true,
+          maxRows: 6,
+          label: 'Foto hero bergantian (maks. 6)',
+          admin: { description: 'Bila diisi, foto-foto ini tampil bergantian (crossfade). Gunakan foto horizontal lebar; atur titik fokus di Media. Kosongkan untuk memakai satu foto utama.' },
+        },
+        { name: 'slideInterval', type: 'number', label: 'Jeda antar foto (detik)', defaultValue: 6, min: 4, max: 15 },
+        {
           name: 'accentImages',
           type: 'upload',
           relationTo: 'media',

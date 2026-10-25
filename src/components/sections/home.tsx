@@ -6,6 +6,7 @@ import { Icon } from '../ui/Icon'
 import { DemoBadge, SmartLink } from '../ui/bits'
 import { Countdown, HexField, LiveClock, Parallax, Reveal } from '../ui/motion'
 import { CountOnView } from '../ui/fx'
+import { HeroSlides } from '../ui/HeroSlides'
 import { EVENT_STATUS, dayParts, formatDate, formatEventWhen } from '@/lib/format'
 
 const m = (v: unknown) => (v && typeof v === 'object' ? (v as Media) : null)
@@ -55,13 +56,18 @@ export const Hero = ({ hero, settings }: { hero: Homepage['hero']; settings: Sit
   const words = (hero.title ?? '').split(' ')
   const img = m(hero.image)
   const mobile = m(hero.imageMobile)
+  const slides = ((hero.slides ?? []).map(m).filter((s) => s?.url) as Media[])
   return (
     <section className="hero" aria-labelledby="hero-title">
       <div className="hero__photo">
-        <picture>
-          {mobile?.url ? <source media="(max-width: 767px)" srcSet={mobile.sizes?.card?.url ?? mobile.url} /> : null}
-          <Img media={img} priority sizes="(min-width: 1024px) 64vw, 100vw" className="hero__img" />
-        </picture>
+        {slides.length > 1 ? (
+          <HeroSlides slides={slides} interval={hero.slideInterval ?? 6} />
+        ) : (
+          <picture>
+            {mobile?.url ? <source media="(max-width: 767px)" srcSet={mobile.sizes?.card?.url ?? mobile.url} /> : null}
+            <Img media={slides[0] ?? img} priority sizes="(min-width: 1024px) 64vw, 100vw" className="hero__img" />
+          </picture>
+        )}
       </div>
       <HexField className="hero__hex" cols={12} rows={8} />
       <div className="container hero__inner">

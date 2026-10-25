@@ -60,6 +60,13 @@ export const ALT: Record<string, string> = {
   'KPS-031': 'Interior ruangan gelap dengan jendela',
 }
 const BLOCKED = new Set(['KPS-005', 'KPS-006', 'KPS-031'])
+/** Focal points (percent) so the main subject survives narrow mobile crops. */
+const FOCAL: Record<string, { x: number; y: number }> = {
+  'KPS-H01': { x: 66, y: 45 },
+  'KPS-H02': { x: 50, y: 42 },
+  'KPS-H03': { x: 50, y: 50 },
+  'KPS-H04': { x: 55, y: 55 },
+}
 
 export async function importMedia(payload: Payload, log = console.log) {
   const manifest = JSON.parse(fs.readFileSync(path.join(ROOT, 'assets-manifest.json'), 'utf8')) as { assets: Asset[] }
@@ -90,8 +97,9 @@ export async function importMedia(payload: Payload, log = console.log) {
           sha256: sha,
           license: 'Aset website resmi sekolah; khusus perancangan ulang situs sekolah yang sama.',
           consent: 'unknown',
-          reviewStatus: BLOCKED.has(a.id) ? 'blocked' : 'pending',
+          reviewStatus: BLOCKED.has(a.id) ? 'blocked' : (a as { auto_publish?: boolean }).auto_publish ? 'approved' : 'pending',
           editorialNote: `${a.recommended_use}. ${a.editorial_note}`,
+          ...(FOCAL[a.id] ? { focalX: FOCAL[a.id].x, focalY: FOCAL[a.id].y } : {}),
         },
       })
       result.ids[a.id] = doc.id
