@@ -6,10 +6,16 @@ import { getPayload, type Payload } from 'payload'
 import { randomBytes } from 'crypto'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import config from '@/payload.config'
+import type { TenantPayload } from '@/tenancy/scoped'
+import { createTestSchool, dropTestSchool, type TestSchool } from './school'
 import { search, activeAnnouncementWhere } from '@/lib/queries'
+import { runAsTenant } from '@/lib/payload'
 
 const RUN = `t${Date.now().toString(36)}`
-let payload: Payload
+let raw: Payload
+let school: TestSchool
+/** school-scoped Payload (as used by pages/endpoints) */
+let payload: TenantPayload
 const users: Record<string, any> = {}
 const created: { collection: string; id: number }[] = []
 const lexical = (t: string) => ({ root: { type: 'root', direction: 'ltr', format: '', indent: 0, version: 1, children: [{ type: 'paragraph', direction: 'ltr', format: '', indent: 0, version: 1, textFormat: 0, children: [{ type: 'text', text: t, detail: 0, format: 0, mode: 'normal', style: '', version: 1 }] }] } })
@@ -17,7 +23,9 @@ const track = <T extends { id: number }>(collection: string, doc: T) => (created
 const pub = { overrideAccess: false as const, draft: false as const }
 
 beforeAll(async () => {
-  payload = await getPayload({ config })
+  raw = await getPayload({ config })
+  school = await createTestSchool(raw, RUN)
+  payload = school.payload
   for (const role of ['admin', 'editor', 'contributor', 'admissions'] as const) {
     const u = await payload.create({
       collection: 'users',
@@ -34,6 +42,7 @@ afterAll(async () => {
   }
   for (const u of Object.values(users)) await payload.delete({ collection: 'users', id: u.id, overrideAccess: true }).catch(() => {})
   await payload.delete({ collection: 'audit-logs', where: { actorEmail: { like: RUN } }, overrideAccess: true }).catch(() => {})
+  await dropTestSchool(raw, school.id)
 })
 
 describe('CMS-02 kontributor', () => {
@@ -58,7 +67,7 @@ describe('CMS-03/04 draf tidak bocor', () => {
     track('posts', await payload.create({ collection: 'posts', user: users.editor, overrideAccess: false, draft: true, data: { title: `Rahasia ${word}`, slug: `rahasia-${RUN}`, _status: 'draft' } as never }))
     const res = await payload.find({ collection: 'posts', where: { slug: { equals: `rahasia-${RUN}` } }, ...pub })
     expect(res.totalDocs).toBe(0)
-    const s = await search(word)
+    const s = await runAsTenant(school.id, () => search(word))
     expect(s.total).toBe(0)
   })
   it('versi terbit lama tetap tampil saat revisi masih draf', async () => {

@@ -9,12 +9,17 @@ import React from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import config from '@/payload.config'
+import type { TenantPayload } from '@/tenancy/scoped'
+import { createTestSchool, dropTestSchool, type TestSchool } from './school'
 import { contactSubmitEndpoint } from '@/endpoints/contact'
 import { RichText } from '@/components/ui/RichText'
 import { lexical } from '@/lib/lexical'
 
 const RUN = `q${Date.now().toString(36)}`
-let payload: Payload
+let raw: Payload
+let school: TestSchool
+/** school-scoped Payload (as used by pages/endpoints) */
+let payload: TenantPayload
 const users: Record<string, any> = {}
 const created: { collection: string; id: number }[] = []
 const track = <T extends { id: number }>(collection: string, doc: T) => (created.push({ collection, id: doc.id }), doc)
@@ -23,7 +28,9 @@ let png: Buffer
 const file = (data: Buffer, mimetype: string, name: string) => ({ data, mimetype, name, size: data.length })
 
 beforeAll(async () => {
-  payload = await getPayload({ config })
+  raw = await getPayload({ config })
+  school = await createTestSchool(raw, RUN)
+  payload = school.payload
   for (const role of ['admin', 'editor', 'contributor'] as const) {
     const u = await payload.create({ collection: 'users', overrideAccess: true, data: { email: `${RUN}-${role}@test.invalid`, password: randomBytes(18).toString('base64url'), name: `QA ${role}`, role } })
     users[role] = { ...u, collection: 'users' }
@@ -36,6 +43,7 @@ afterAll(async () => {
     await payload.delete({ collection: c.collection as 'posts', id: c.id, overrideAccess: true, trash: false, context: { forceMediaDelete: true } } as never).catch(() => {})
   await payload.delete({ collection: 'contact-messages', where: { name: { like: RUN } }, overrideAccess: true }).catch(() => {})
   for (const u of Object.values(users)) await payload.delete({ collection: 'users', id: u.id, overrideAccess: true }).catch(() => {})
+  await dropTestSchool(raw, school.id)
 })
 
 describe('CMS-06 pulihkan revisi', () => {
@@ -112,7 +120,7 @@ describe('SEC-04 berkas privat', () => {
 
 describe('FORM-01 formulir kontak', () => {
   const call = async (body: Record<string, unknown>) => {
-    const req = { payload, headers: new Headers({ 'x-forwarded-for': `10.77.${Math.floor(Math.random() * 250)}.${Math.floor(Math.random() * 250)}` }), json: async () => body } as unknown as PayloadRequest
+    const req = { payload, headers: new Headers({ host: school.domain, 'x-forwarded-for': `10.77.${Math.floor(Math.random() * 250)}.${Math.floor(Math.random() * 250)}` }), json: async () => body } as unknown as PayloadRequest
     const res = await contactSubmitEndpoint.handler(req)
     return { status: res.status, json: await res.json() }
   }

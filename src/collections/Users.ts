@@ -78,8 +78,9 @@ export const Users: CollectionConfig = {
       required: true,
       defaultValue: 'contributor',
       options: ROLE_OPTIONS,
+      // School admins never see the Super Admin role (server code without a user, e.g. scripts, may set it)
       filterOptions: ({ options, req }) =>
-        isSuperAdmin(req.user) ? options : options.filter((o) => (typeof o === 'string' ? o : o.value) !== 'superadmin'),
+        !req.user || isSuperAdmin(req.user) ? options : options.filter((o) => (typeof o === 'string' ? o : o.value) !== 'superadmin'),
       access: { create: fieldAdminOnly, update: fieldAdminOnly },
       saveToJWT: true,
       admin: { description: 'Hanya Admin Teknis yang dapat mengubah peran.' },

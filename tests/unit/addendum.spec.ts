@@ -132,8 +132,9 @@ describe('CAL-01/02 kalender & zona waktu', () => {
   })
   it('ICS: SEQUENCE, UID stabil, DTEND all-day eksklusif', () => {
     const e = { id: 7, slug: 'x', title: 'Libur; umum, sekolah', startAt: '2026-12-24T16:00:00.000Z', endAt: '2026-12-25T16:00:00.000Z', allDay: true, sequence: 3, updatedAt: '2026-10-25T00:00:00.000Z' }
-    const ics = buildIcs(e, 'https://contoh.sch.id')
-    expect(ics).toContain('UID:event-7@smp.kps.sch.id')
+    const ics = buildIcs(e, 'https://contoh.sch.id', { tz: 'Asia/Makassar' })
+    // UID: event id (unique platform-wide) @ the school's host — stable while the school keeps its domain
+    expect(ics).toContain('UID:event-7@contoh.sch.id')
     expect(ics).toContain('SEQUENCE:3')
     expect(ics).toContain('DTSTART;VALUE=DATE:20261225')
     expect(ics).toContain('DTEND;VALUE=DATE:20261227')
@@ -141,7 +142,7 @@ describe('CAL-01/02 kalender & zona waktu', () => {
     expect(ics.split('\r\n').every((l) => Buffer.byteLength(l) <= 75)).toBe(true)
   })
   it('Google Calendar: tanggal sepanjang hari eksklusif', () => {
-    const u = new URL(googleCalendarUrl({ title: 'A', startAt: '2026-12-24T16:00:00.000Z', endAt: '2026-12-25T16:00:00.000Z', allDay: true }))
+    const u = new URL(googleCalendarUrl({ title: 'A', startAt: '2026-12-24T16:00:00.000Z', endAt: '2026-12-25T16:00:00.000Z', allDay: true }, undefined, 'Asia/Makassar'))
     expect(u.hostname).toBe('calendar.google.com')
     expect(u.searchParams.get('dates')).toBe('20261225/20261227')
   })

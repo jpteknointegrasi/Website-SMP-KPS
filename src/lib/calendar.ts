@@ -77,18 +77,22 @@ export const eventDayKeys = (e: { startAt: string; endAt?: string | null }, tz =
 }
 
 /** Google Calendar "add event" link (opens Google's own page; no data sent by us). */
-export const googleCalendarUrl = (e: { title: string; startAt: string; endAt?: string | null; allDay?: boolean | null; location?: string | null; excerpt?: string | null }, pageUrl?: string) => {
+export const googleCalendarUrl = (
+  e: { title: string; startAt: string; endAt?: string | null; allDay?: boolean | null; location?: string | null; excerpt?: string | null },
+  pageUrl?: string,
+  tz = requestTimezone(),
+) => {
   const stamp = (iso: string) => new Date(iso).toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '')
   let dates: string
   if (e.allDay) {
-    const s = localYmd(e.startAt).replace(/-/g, '')
-    const endKey = eventDayKeys(e).at(-1)!
+    const s = localYmd(e.startAt, tz).replace(/-/g, '')
+    const endKey = eventDayKeys(e, tz).at(-1)!
     const next = new Date(new Date(endKey + 'T00:00:00Z').getTime() + 864e5).toISOString().slice(0, 10).replace(/-/g, '')
     dates = `${s}/${next}`
   } else {
     dates = `${stamp(e.startAt)}/${stamp(e.endAt ?? new Date(new Date(e.startAt).getTime() + 3600_000).toISOString())}`
   }
-  const p = new URLSearchParams({ action: 'TEMPLATE', text: e.title, dates, ctz: requestTimezone() })
+  const p = new URLSearchParams({ action: 'TEMPLATE', text: e.title, dates, ctz: tz })
   if (e.location) p.set('location', e.location)
   const details = [e.excerpt, pageUrl].filter(Boolean).join('\n\n')
   if (details) p.set('details', details)

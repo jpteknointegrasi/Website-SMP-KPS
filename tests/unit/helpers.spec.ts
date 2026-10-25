@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { buildIcs, witaDate } from '@/lib/ics'
+import { buildIcs, localDate } from '@/lib/ics'
 import { isSafeUrl } from '@/fields/common'
 import { validateContact, rateLimited } from '@/endpoints/contact'
 import { formatEventWhen } from '@/lib/format'
@@ -7,19 +7,21 @@ import { formatEventWhen } from '@/lib/format'
 describe('ICS & tanggal WITA', () => {
   it('acara seharian memakai tanggal lokal WITA (tidak bergeser)', () => {
     // 7 Nov 2026 00:00 WITA = 6 Nov 16:00 UTC
-    expect(witaDate('2026-11-06T16:00:00.000Z')).toBe('20261107')
-    const ics = buildIcs({ id: 1, slug: 'x', title: 'Latihan', startAt: '2026-11-06T16:00:00.000Z', allDay: true }, 'https://contoh.sch.id')
+    expect(localDate('2026-11-06T16:00:00.000Z', 'Asia/Makassar')).toBe('20261107')
+    const ics = buildIcs({ id: 1, slug: 'x', title: 'Latihan', startAt: '2026-11-06T16:00:00.000Z', allDay: true }, 'https://contoh.sch.id', { tz: 'Asia/Makassar' })
     expect(ics).toContain('DTSTART;VALUE=DATE:20261107')
     expect(ics).toContain('DTEND;VALUE=DATE:20261108')
   })
   it('acara berjam memakai UTC dan meng-escape teks', () => {
-    const ics = buildIcs({ id: 2, slug: 'y', title: 'Rapat, orang tua; kelas 7', startAt: '2026-10-31T01:00:00.000Z', endAt: '2026-10-31T03:00:00.000Z', eventStatus: 'cancelled' }, '')
+    const ics = buildIcs({ id: 2, slug: 'y', title: 'Rapat, orang tua; kelas 7', startAt: '2026-10-31T01:00:00.000Z', endAt: '2026-10-31T03:00:00.000Z', eventStatus: 'cancelled' }, '', { tz: 'Asia/Makassar' })
     expect(ics).toContain('DTSTART:20261031T010000Z')
     expect(ics).toContain('SUMMARY:Rapat\\, orang tua\\; kelas 7')
     expect(ics).toContain('STATUS:CANCELLED')
   })
   it('format waktu tampil dalam WITA', () => {
-    expect(formatEventWhen({ startAt: '2026-10-31T01:00:00.000Z', endAt: '2026-10-31T03:00:00.000Z' })).toContain('09.00–11.00 WITA')
+    expect(formatEventWhen({ startAt: '2026-10-31T01:00:00.000Z', endAt: '2026-10-31T03:00:00.000Z' }, 'Asia/Makassar')).toContain('09.00–11.00 WITA')
+    // another school, another zone: same instant shown in WIB
+    expect(formatEventWhen({ startAt: '2026-10-31T01:00:00.000Z', endAt: '2026-10-31T03:00:00.000Z' }, 'Asia/Jakarta')).toContain('08.00–10.00 WIB')
   })
 })
 

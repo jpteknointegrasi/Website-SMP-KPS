@@ -6,12 +6,17 @@ import { getPayload, type Payload, type PayloadRequest } from 'payload'
 import { randomBytes, randomUUID } from 'crypto'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import config from '@/payload.config'
+import type { TenantPayload } from '@/tenancy/scoped'
+import { createTestSchool, dropTestSchool, type TestSchool } from './school'
 import { interestSubmitEndpoint, leadsExportEndpoint } from '@/endpoints/interest'
 import { visitBookingEndpoint, visitCancelEndpoint, visitAvailabilityEndpoint } from '@/endpoints/visits'
 import { releaseExpiredHolds } from '@/lib/capacity'
 
 const RUN = `t${Date.now().toString(36)}`
-let payload: Payload
+let raw: Payload
+let school: TestSchool
+/** school-scoped Payload (as used by pages/endpoints) */
+let payload: TenantPayload
 const users: Record<string, any> = {}
 const created: { collection: string; id: number }[] = []
 const track = <T extends { id: number }>(collection: string, doc: T) => (created.push({ collection, id: doc.id }), doc)
@@ -22,10 +27,10 @@ let ipSeq = 0
 /** Minimal PayloadRequest for endpoint handlers. Each call gets its own IP so rate limits don't interfere. */
 const req = (body: unknown, user?: unknown, url = 'http://localhost/api/x') =>
   ({
-    payload,
+    payload: raw,
     user: user ?? null,
     url,
-    headers: new Headers({ 'x-forwarded-for': `10.9.${Math.floor(ipSeq / 250)}.${ipSeq++ % 250}` }),
+    headers: new Headers({ host: school.domain, 'x-forwarded-for': `10.9.${Math.floor(ipSeq / 250)}.${ipSeq++ % 250}` }),
     json: async () => body,
   }) as unknown as PayloadRequest
 const call = async (ep: { handler: (r: PayloadRequest) => Promise<Response> | Response }, body?: unknown, user?: unknown, url?: string) => {
@@ -49,7 +54,9 @@ const lead = (extra: Record<string, unknown> = {}) => ({
 const findLeads = (where: object) => payload.find({ collection: 'leads', where: where as never, overrideAccess: true, limit: 50 })
 
 beforeAll(async () => {
-  payload = await getPayload({ config })
+  raw = await getPayload({ config })
+  school = await createTestSchool(raw, RUN)
+  payload = school.payload
   for (const role of ['admin', 'editor', 'contributor', 'admissions'] as const) {
     const u = await payload.create({ collection: 'users', overrideAccess: true, data: { email: `${RUN}-${role}@test.invalid`, password: randomBytes(18).toString('base64url'), name: `Uji ${role}`, role } })
     users[role] = { ...u, collection: 'users' }
@@ -70,6 +77,7 @@ afterAll(async () => {
   for (const u of Object.values(users)) await payload.delete({ collection: 'users', id: u.id, overrideAccess: true }).catch(() => {})
   const { id: _i, globalType: _g, createdAt: _c, updatedAt: _u, ...restore } = flagsBefore as Record<string, unknown>
   await payload.updateGlobal({ slug: 'feature-flags', overrideAccess: true, data: restore as never })
+  await dropTestSchool(raw, school.id)
 })
 
 describe('FLAG-01 fitur mati = API ditolak', () => {
