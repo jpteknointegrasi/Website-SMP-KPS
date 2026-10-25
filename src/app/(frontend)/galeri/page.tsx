@@ -1,3 +1,4 @@
+import { schoolMeta } from '@/lib/meta'
 import Link from 'next/link'
 import { listCollection } from '@/lib/queries'
 import { PageHeader, Container, EmptyState, Pagination, DemoBadge } from '@/components/ui/bits'
@@ -5,7 +6,7 @@ import { Img } from '@/components/ui/Img'
 import { formatDate } from '@/lib/format'
 import type { Album, Media } from '@/payload-types'
 
-export const metadata = { title: 'Galeri', description: 'Album foto kegiatan SMP Nasional KPS.', alternates: { canonical: '/galeri' } }
+export const generateMetadata = schoolMeta(({ name }) => ({ title: 'Galeri', description: `Album foto kegiatan ${name}.`, alternates: { canonical: '/galeri' } }))
 type SP = { searchParams: Promise<{ page?: string }> }
 
 export default async function Page({ searchParams }: SP) {

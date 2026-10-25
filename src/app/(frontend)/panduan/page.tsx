@@ -1,9 +1,10 @@
+import { schoolMeta } from '@/lib/meta'
 import Link from 'next/link'
 import { listCollection } from '@/lib/queries'
 import { PageHeader, Container, EmptyState, DemoBadge } from '@/components/ui/bits'
 import type { Guide } from '@/payload-types'
 
-export const metadata = { title: 'Panduan', description: 'Panduan layanan dan kegiatan SMP Nasional KPS.', alternates: { canonical: '/panduan' } }
+export const generateMetadata = schoolMeta(({ name }) => ({ title: 'Panduan', description: `Panduan layanan dan kegiatan ${name}.`, alternates: { canonical: '/panduan' } }))
 
 export default async function Page() {
   const res = await listCollection('guides', { sort: 'title', limit: 48, depth: 0 })

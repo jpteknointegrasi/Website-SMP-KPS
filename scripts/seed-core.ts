@@ -8,7 +8,7 @@
  */
 import fs from 'fs'
 import path from 'path'
-import type { Payload } from 'payload'
+import type { TenantPayload as Payload } from '../src/tenancy/scoped'
 import { importMedia } from './import-media'
 import { lexical, type Block } from '../src/lib/lexical'
 import { runAddendumSetup } from './addendum-setup'
@@ -63,7 +63,7 @@ export async function runSeed(payload: Payload, log: (m: string) => void = (m) =
     })
     log(`Akun admin dibuat: ${process.env.SEED_ADMIN_EMAIL}`)
   } else if (userCount === 0) {
-    log('Belum ada akun. Buka /admin untuk membuat akun pertama (otomatis Admin Teknis).')
+    log('Belum ada akun di sekolah ini. Super Admin platform membuatnya di Pengguna (pilih sekolah).')
   }
 
   // ---------- 1. media ----------

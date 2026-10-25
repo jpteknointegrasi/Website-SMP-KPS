@@ -3,7 +3,10 @@ import config from '@payload-config'
 import { del, list } from '@vercel/blob'
 import { runSeed } from '../../../../scripts/seed-core'
 import { runAddendumSetup } from '../../../../scripts/addendum-setup'
-import { isAdmin } from '@/access/roles'
+import { isAdmin, isSuperAdmin } from '@/access/roles'
+import { adminSchool } from '@/tenancy/admin'
+import { scopePayload, type TenantPayload } from '@/tenancy/scoped'
+import { CONTENT_PACK_SLUG } from '../../../../scripts/content-pack'
 
 /**
  * Admin-only page that fills the production database with the initial content and photos
@@ -13,6 +16,9 @@ import { isAdmin } from '@/access/roles'
  * POST (from the confirmation button) re-imports the initial photos: it deletes only media that came
  * from the import (sourceId set) plus their blobs, then the GET flow uploads them again.
  * POST-only so a link on another site cannot trigger it (session cookie is SameSite=Lax).
+ *
+ * Platform: the bundled content is the SMP Nasional KPS pack, so this page only works for that school
+ * (opened on its address, by its Admin Teknis or the Super Admin). Other schools start empty.
  */
 export const dynamic = 'force-dynamic'
 export const maxDuration = 60
@@ -40,13 +46,22 @@ const noBlobToken = () =>
     `<h1>Belum bisa mengisi foto</h1><div class="box warn"><p>Variabel <b>BLOB_READ_WRITE_TOKEN</b> belum terpasang di Vercel, jadi foto tidak bisa disimpan.</p><ol><li>Vercel → Storage → <b>kps-files</b> → <i>Show secret</i> → salin nilai <code>vercel_blob_rw_…</code></li><li>Settings → Environment Variables → <b>Add</b>: key <code>BLOB_READ_WRITE_TOKEN</code>, centang Production &amp; Preview → Save</li><li>Deployments → ⋯ → <b>Redeploy</b>, tunggu Ready, lalu buka halaman ini lagi.</li></ol></div>`,
   )
 
-async function authorize(req: Request): Promise<{ payload: Payload } | Response> {
-  const payload = await getPayload({ config })
-  const { user } = await payload.auth({ headers: req.headers })
+const otherSchool = () =>
+  page(
+    'Tidak tersedia',
+    `<h1>Data awal tidak tersedia</h1><div class="box warn">Paket konten awal hanya untuk SMP Nasional KPS. Sekolah lain mulai dari website kosong yang diisi lewat panel admin.</div><p><a class="btn" href="/admin">Buka panel admin</a></p>`,
+  )
+
+async function authorize(req: Request): Promise<{ payload: TenantPayload; raw: Payload } | Response> {
+  const raw = await getPayload({ config })
+  const { user } = await raw.auth({ headers: req.headers })
   if (!user || !isAdmin(user)) return notAdmin()
+  const school = await adminSchool(raw, user)
+  if (!school || school.slug !== CONTENT_PACK_SLUG) return otherSchool()
+  const payload = scopePayload(raw, school.id)
   // On Vercel the server disk is read-only/ephemeral: photos must go to Vercel Blob.
   if (process.env.VERCEL && !process.env.BLOB_READ_WRITE_TOKEN) return noBlobToken()
-  return { payload }
+  return { payload, raw }
 }
 
 export async function GET(req: Request) {
@@ -97,14 +112,14 @@ export async function GET(req: Request) {
 export async function POST(req: Request) {
   const auth = await authorize(req)
   if (auth instanceof Response) return auth
-  const { payload } = auth
+  const { payload, raw } = auth
   const form = await req.formData().catch(() => null)
   if (form?.get('aksi') === 'fitur-tambahan') {
     const lines = await runAddendumSetup(payload, undefined, { deadline: Date.now() + STEP_MS })
     const esc = (t: string) => t.replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' })[c]!)
     return page(
       'Fitur tambahan siap',
-      `<h1>Data fitur tambahan siap ✅</h1><div class="box"><ul>${lines.map((l) => `<li>${esc(l)}</li>`).join('')}</ul><p>Tidak ada konten lama yang ditimpa. Nyalakan fitur di <b>Pengaturan → Fitur Aktif</b> setelah datanya siap.</p></div><p><a class="btn" href="/admin/globals/feature-flags">Buka Fitur Aktif</a> &nbsp; <a href="/">Lihat website</a></p>`,
+      `<h1>Data fitur tambahan siap ✅</h1><div class="box"><ul>${lines.map((l) => `<li>${esc(l)}</li>`).join('')}</ul><p>Tidak ada konten lama yang ditimpa. Nyalakan fitur di <b>Pengaturan → Fitur Aktif</b> setelah datanya siap.</p></div><p><a class="btn" href="/admin/collections/feature-flags">Buka Fitur Aktif</a> &nbsp; <a href="/">Lihat website</a></p>`,
     )
   }
   if (form?.get('aksi') !== 'ulang-foto') return new Response('Permintaan tidak dikenal', { status: 400 })
@@ -141,7 +156,8 @@ export async function POST(req: Request) {
   const token = process.env.BLOB_READ_WRITE_TOKEN
   if (token) {
     const keep = new Set<string>()
-    const staff = await payload.find({ collection: 'media', limit: 1000, depth: 0, overrideAccess: true })
+    // keep every school's files: the blob store is shared by all schools
+    const staff = await raw.find({ collection: 'media', limit: 100000, depth: 0, overrideAccess: true, pagination: false })
     staff.docs.forEach((m) => {
       const doc = m as { url?: string | null; sizes?: Record<string, { url?: string | null }> }
       if (doc.url) keep.add(doc.url)

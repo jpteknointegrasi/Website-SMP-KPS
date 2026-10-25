@@ -1,7 +1,6 @@
 import type { GlobalConfig } from 'payload'
 import { editorialOnly, anyone, isAdmin, isEditorial } from '../access/roles'
 import { safeUrlField } from '../fields/common'
-import { auditGlobal } from '../hooks/audit'
 
 export const SiteSettings: GlobalConfig = {
   slug: 'site-settings',
@@ -9,7 +8,6 @@ export const SiteSettings: GlobalConfig = {
   admin: { group: 'Pengaturan' },
   access: { read: anyone, update: editorialOnly },
   versions: { max: 30 },
-  hooks: { afterChange: [auditGlobal] },
   fields: [
     {
       type: 'tabs',
@@ -17,11 +15,13 @@ export const SiteSettings: GlobalConfig = {
         {
           label: 'Identitas',
           fields: [
-            { name: 'schoolName', type: 'text', label: 'Nama sekolah', required: true, defaultValue: 'SMP Nasional KPS' },
-            { name: 'city', type: 'text', label: 'Kota', defaultValue: 'Balikpapan' },
+            { name: 'schoolName', type: 'text', label: 'Nama sekolah', required: true },
+            { name: 'shortName', type: 'text', label: 'Nama singkat', maxLength: 20, admin: { description: 'Dipakai di teks seperti "Tentang KPS", "Cerita dari KPS". Kosong = "Sekolah".' } },
+            { name: 'city', type: 'text', label: 'Kota' },
             { name: 'logo', type: 'upload', relationTo: 'media', label: 'Logo resmi (PNG transparan)' },
-            { name: 'valuesLine', type: 'text', label: 'Nilai utama', defaultValue: 'Berakhlak Mulia, Berwawasan Lingkungan, dan Berbudaya Nasional' },
-            { name: 'shortProfile', type: 'textarea', label: 'Profil singkat' },
+            { name: 'valuesLine', type: 'text', label: 'Nilai utama' },
+            { name: 'shortProfile', type: 'textarea', label: 'Profil singkat', admin: { description: 'Juga dipakai sebagai deskripsi situs di mesin pencari.' } },
+            { name: 'ogImage', type: 'upload', relationTo: 'media', label: 'Gambar pratinjau tautan (1200×630)', admin: { description: 'Tampil saat tautan website dibagikan di WhatsApp/media sosial.' } },
           ],
         },
         {
@@ -38,9 +38,17 @@ export const SiteSettings: GlobalConfig = {
               label: 'WhatsApp resmi (terverifikasi)',
               admin: { description: 'Jangan isi dari nomor telepon kantor kecuali sudah dipastikan nomor WhatsApp resmi.' },
             },
-            { name: 'serviceHours', type: 'text', label: 'Jam layanan', admin: { description: 'Contoh: Senin–Jumat 07.00–15.00 WITA. Kosongkan bila belum dikonfirmasi.' } },
+            { name: 'serviceHours', type: 'text', label: 'Jam layanan', admin: { description: 'Contoh: Senin–Jumat 07.00–15.00 (zona waktu sekolah). Kosongkan bila belum dikonfirmasi.' } },
             safeUrlField('mapUrl', 'Tautan peta (Google Maps)'),
             { name: 'contactVerified', type: 'checkbox', label: 'Data kontak sudah dikonfirmasi sekolah', defaultValue: false },
+          ],
+        },
+        {
+          label: 'Notifikasi',
+          description: 'Email pemberitahuan (tanpa isi data pribadi). Kosong = tidak mengirim email; data tetap tersimpan di admin. Butuh SMTP platform.',
+          fields: [
+            { name: 'notifyContactEmail', type: 'email', label: 'Email penerima pemberitahuan pesan kontak' },
+            { name: 'notifyAdmissionsEmail', type: 'email', label: 'Email penerima pemberitahuan minat/kunjungan' },
           ],
         },
         {
@@ -69,14 +77,14 @@ export const SiteSettings: GlobalConfig = {
 const sectionTypes = [
   { label: 'Akses cepat', value: 'quickLinks' },
   { label: 'Pencarian', value: 'search' },
-  { label: 'Sekilas KPS (angka otomatis dari CMS)', value: 'highlights' },
+  { label: 'Sekilas sekolah (angka otomatis dari CMS)', value: 'highlights' },
   { label: 'Mengenal sekolah', value: 'schoolIntro' },
   { label: 'Program pembelajaran', value: 'programs' },
   { label: 'Kehidupan siswa', value: 'studentLife' },
   { label: 'Prestasi', value: 'achievements' },
   { label: 'Pengumuman & agenda', value: 'announcementsAgenda' },
   { label: 'Berita terbaru', value: 'latestNews' },
-  { label: 'KPS TV & Cerita Digital (video & media)', value: 'mediaHub' },
+  { label: 'Video & cerita digital (video & media)', value: 'mediaHub' },
   { label: 'Fasilitas', value: 'facilities' },
   { label: 'Komunitas & alumni', value: 'communityAlumni' },
   { label: 'Ajakan pendaftaran', value: 'admissionsCta' },
@@ -92,7 +100,6 @@ export const Homepage: GlobalConfig = {
     update: editorialOnly,
   },
   versions: { drafts: true, max: 30 },
-  hooks: { afterChange: [auditGlobal] },
   fields: [
     {
       name: 'hero',
@@ -132,7 +139,7 @@ export const Homepage: GlobalConfig = {
         {
           type: 'row',
           fields: [
-            { name: 'primaryLabel', type: 'text', label: 'Tombol utama', defaultValue: 'Kenali KPS' },
+            { name: 'primaryLabel', type: 'text', label: 'Tombol utama', defaultValue: 'Kenali Sekolah' },
             safeUrlField('primaryHref', 'Tujuan tombol utama'),
           ],
         },
@@ -143,7 +150,7 @@ export const Homepage: GlobalConfig = {
             safeUrlField('secondaryHref', 'Tujuan tombol kedua'),
           ],
         },
-        { name: 'showLiveClock', type: 'checkbox', label: 'Tampilkan jam & sapaan WITA', defaultValue: true },
+        { name: 'showLiveClock', type: 'checkbox', label: 'Tampilkan jam & sapaan (zona waktu sekolah)', defaultValue: true },
       ],
     },
     {
@@ -163,7 +170,7 @@ export const Homepage: GlobalConfig = {
       label: 'Mengenal sekolah',
       fields: [
         { name: 'eyebrow', type: 'text', label: 'Label kecil', defaultValue: 'Mengenal' },
-        { name: 'heading', type: 'text', defaultValue: 'Mengenal SMP Nasional KPS' },
+        { name: 'heading', type: 'text', defaultValue: 'Mengenal Sekolah Kami' },
         { name: 'text', type: 'textarea' },
         { name: 'introImage', type: 'upload', relationTo: 'media', label: 'Gambar utama kolase' },
         { name: 'collage', type: 'upload', relationTo: 'media', hasMany: true, maxRows: 2, label: 'Foto kecil kolase (maks. 2)' },
@@ -192,15 +199,15 @@ export const Homepage: GlobalConfig = {
         { name: 'ctaEyebrow', type: 'text', label: 'Label kecil ajakan', defaultValue: 'Pendaftaran Siswa Baru' },
         { name: 'studentLifeHeading', type: 'text', defaultValue: 'Ruang untuk Setiap Potensi' },
         { name: 'achievementsHeading', type: 'text', defaultValue: 'Semangat untuk Berprestasi' },
-        { name: 'newsHeading', type: 'text', defaultValue: 'Cerita dari KPS' },
-        { name: 'communityHeading', type: 'text', defaultValue: 'Terhubung dalam Keluarga KPS' },
+        { name: 'newsHeading', type: 'text', defaultValue: 'Cerita dari Sekolah' },
+        { name: 'communityHeading', type: 'text', defaultValue: 'Terhubung dalam Keluarga Sekolah' },
         { name: 'communityText', type: 'textarea' },
         { name: 'communityImage', type: 'upload', relationTo: 'media', label: 'Foto blok komunitas/alumni' },
         { name: 'achievementsAlbum', type: 'relationship', relationTo: 'albums', label: 'Album arsip di blok prestasi', admin: { description: 'Opsional. Tampil sebagai tumpukan foto di blok prestasi.' } },
-        { name: 'mediaEyebrow', type: 'text', label: 'Label kecil KPS TV', defaultValue: 'KPS TV' },
-        { name: 'mediaHeading', type: 'text', label: 'Judul KPS TV', defaultValue: 'KPS TV & Cerita Digital' },
-        { name: 'mediaIntro', type: 'textarea', label: 'Teks KPS TV', maxLength: 200, defaultValue: 'Kenali kehidupan sekolah melalui video, podcast, dan cerita dari komunitas KPS.' },
-        { name: 'ctaHeading', type: 'text', defaultValue: 'Mari Mengenal KPS Lebih Dekat' },
+        { name: 'mediaEyebrow', type: 'text', label: 'Label kecil video sekolah', defaultValue: 'Video Sekolah' },
+        { name: 'mediaHeading', type: 'text', label: 'Judul video sekolah', defaultValue: 'Video & Cerita Digital' },
+        { name: 'mediaIntro', type: 'textarea', label: 'Teks video sekolah', maxLength: 200, defaultValue: 'Kenali kehidupan sekolah melalui video, podcast, dan cerita dari komunitas sekolah.' },
+        { name: 'ctaHeading', type: 'text', defaultValue: 'Mari Mengenal Sekolah Kami Lebih Dekat' },
         { name: 'ctaText', type: 'textarea' },
       ],
     },
@@ -226,7 +233,6 @@ export const Navigation: GlobalConfig = {
   admin: { group: 'Navigasi' },
   access: { read: anyone, update: editorialOnly },
   versions: { max: 20 },
-  hooks: { afterChange: [auditGlobal] },
   fields: [
     {
       name: 'header',

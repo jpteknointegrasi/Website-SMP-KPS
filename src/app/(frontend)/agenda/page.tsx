@@ -1,14 +1,16 @@
+import { schoolMeta } from '@/lib/meta'
 import Link from 'next/link'
 import { listEvents, listEventCategories, listEventsInRange, getFlags } from '@/lib/queries'
 import { PageHeader, Container, EmptyState, Pagination, DemoBadge } from '@/components/ui/bits'
-import { AUDIENCE, EVENT_AUDIENCE, EVENT_STATUS, TZ, dayParts, formatEventWhen, formatTime } from '@/lib/format'
+import { AUDIENCE, EVENT_AUDIENCE, EVENT_STATUS, dayParts, formatEventWhen, formatTime } from '@/lib/format'
+import { requestTimezone, zoneLong } from '@/lib/tz'
 import { eventDayKeys, localYmd, monthGrid, parseMonth, shiftMonth, ymKey } from '@/lib/calendar'
 import type { Event, EventCategory } from '@/payload-types'
 
-export const metadata = { title: 'Agenda & Kalender Akademik', description: 'Kalender kegiatan SMP Nasional KPS (waktu WITA): akademik, ujian, libur, penerimaan dan kegiatan sekolah.', alternates: { canonical: '/agenda' } }
+export const generateMetadata = schoolMeta(({ name }) => ({ title: 'Agenda & Kalender Akademik', description: `Kalender kegiatan ${name}: akademik, ujian, libur, penerimaan dan kegiatan sekolah.`, alternates: { canonical: '/agenda' } }))
 type SP = { searchParams: Promise<{ waktu?: string; status?: string; page?: string; tampilan?: string; bulan?: string; kategori?: string; sasaran?: string }> }
 
-const monthLabel = (iso: string) => new Intl.DateTimeFormat('id-ID', { timeZone: TZ, month: 'long', year: 'numeric' }).format(new Date(iso))
+const monthLabel = (iso: string) => new Intl.DateTimeFormat('id-ID', { timeZone: requestTimezone(), month: 'long', year: 'numeric' }).format(new Date(iso))
 const longDay = (key: string) => new Intl.DateTimeFormat('id-ID', { timeZone: 'UTC', weekday: 'long', day: 'numeric', month: 'long' }).format(new Date(key + 'T00:00:00Z'))
 const WEEKDAYS = ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min']
 
@@ -90,7 +92,7 @@ export default async function Page({ searchParams }: SP) {
     const monthKeys = grid.cells.filter((c) => c.inMonth && byDay.has(c.key)).map((c) => c.key)
     return (
       <>
-        <PageHeader title="Kalender Akademik" lead="Kegiatan sekolah dalam Waktu Indonesia Tengah (WITA). Pilih tanggal atau kegiatan untuk detail dan tombol simpan ke kalender." crumbs={[{ label: 'Informasi', href: '/informasi' }, { label: 'Agenda', href: '/agenda' }, { label: 'Kalender' }]} />
+        <PageHeader title="Kalender Akademik" lead={`Kegiatan sekolah dalam ${zoneLong()}. Pilih tanggal atau kegiatan untuk detail dan tombol simpan ke kalender.`} crumbs={[{ label: 'Informasi', href: '/informasi' }, { label: 'Agenda', href: '/agenda' }, { label: 'Kalender' }]} />
         <section className="section">
           <Container>
             {filters}
@@ -162,7 +164,7 @@ export default async function Page({ searchParams }: SP) {
 
   return (
     <>
-      <PageHeader title="Agenda Sekolah" lead="Jadwal kegiatan dalam Waktu Indonesia Tengah (WITA). Tambahkan ke kalender Anda dari halaman detail." crumbs={[{ label: 'Informasi', href: '/informasi' }, { label: 'Agenda' }]} />
+      <PageHeader title="Agenda Sekolah" lead={`Jadwal kegiatan dalam ${zoneLong()}. Tambahkan ke kalender Anda dari halaman detail.`} crumbs={[{ label: 'Informasi', href: '/informasi' }, { label: 'Agenda' }]} />
       <section className="section">
         <Container>
           {filters}

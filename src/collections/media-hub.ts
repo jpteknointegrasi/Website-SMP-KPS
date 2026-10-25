@@ -1,3 +1,4 @@
+import { scopeToDoc } from '../tenancy/scoped'
 import type { CollectionConfig, Field, Where } from 'payload'
 import { APIError } from 'payload'
 import { defineContent } from './_factory'
@@ -63,7 +64,7 @@ export const SocialAccounts: CollectionConfig = {
   },
   fields: [
     { name: 'platform', type: 'select', required: true, options: PLATFORMS },
-    { name: 'displayName', type: 'text', label: 'Nama tampilan', required: true, admin: { description: 'Contoh: KPS TV SMP Nasional KPS Balikpapan' } },
+    { name: 'displayName', type: 'text', label: 'Nama tampilan', required: true, admin: { description: 'Contoh: Kanal YouTube resmi sekolah' } },
     { name: 'handle', type: 'text', label: 'Nama akun / handle', admin: { description: 'Contoh: @smpnas.kps' } },
     { name: 'profileUrl', type: 'text', label: 'URL profil/kanal', required: true, admin: { description: 'Salin dari tautan asli (https://). Jangan menebak dari tangkapan layar.' } },
     { name: 'profileImage', type: 'upload', relationTo: 'media', label: 'Foto profil (opsional, berizin)' },
@@ -73,7 +74,7 @@ export const SocialAccounts: CollectionConfig = {
       label: 'Pemilik akun',
       defaultValue: 'sekolah',
       options: [
-        { label: 'SMP Nasional KPS', value: 'sekolah' },
+        { label: 'Sekolah (resmi)', value: 'sekolah' },
         { label: 'Yayasan / unit lain (sebutkan di catatan)', value: 'lainnya' },
       ],
       admin: { description: 'Akun yayasan tidak otomatis sama dengan akun sekolah.' },
@@ -124,7 +125,7 @@ const parseIntoDoc: NonNullable<NonNullable<CollectionConfig['hooks']>['beforeVa
   if (!data.aspectRatio && !originalDoc?.aspectRatio) data.aspectRatio = p.contentType === 'short' ? '9:16' : '16:9'
   // duplicate check (platform + id, or normalized URL)
   const id = originalDoc?.id
-  const dup = await req.payload.find({
+  const dup = await scopeToDoc(req.payload, data, originalDoc).find({
     collection: 'media-items',
     where: { and: [{ normalizedUrl: { equals: p.normalizedUrl } }, ...(id ? [{ id: { not_equals: id } }] : [])] },
     limit: 1,
@@ -191,7 +192,7 @@ export const MediaItems = defineContent({
     { name: 'sourceAccount', type: 'relationship', relationTo: 'social-accounts', label: 'Akun sumber (opsional)' },
     { name: 'relatedEvents', type: 'relationship', relationTo: 'events', hasMany: true, label: 'Agenda terkait' },
     { name: 'publishedAt', type: 'date', label: 'Tanggal tampil di website', admin: { position: 'sidebar' } },
-    { name: 'homepageFeatured', type: 'checkbox', label: 'Tampilkan di beranda (KPS TV)', defaultValue: false, index: true, admin: { position: 'sidebar', description: 'Maksimal 3 tampil; urutan kecil di depan.' } },
+    { name: 'homepageFeatured', type: 'checkbox', label: 'Tampilkan di beranda (blok video)', defaultValue: false, index: true, admin: { position: 'sidebar', description: 'Maksimal 3 tampil; urutan kecil di depan.' } },
     { name: 'homepageOrder', type: 'number', label: 'Urutan di beranda', defaultValue: 10, admin: { position: 'sidebar' } },
     {
       name: 'consentStatus',

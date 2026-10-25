@@ -10,6 +10,11 @@ import sharp from 'sharp'
 import { vercelBlobStorage } from '@payloadcms/storage-vercel-blob'
 
 import { Users } from './collections/Users'
+import { Tenants } from './collections/Tenants'
+import { withTenancy } from './tenancy/collection'
+import { asSingleton } from './tenancy/singleton'
+import { PLATFORM_NAME } from './tenancy/config'
+import { scopePayload } from './tenancy/scoped'
 import { Media } from './collections/Media'
 import { PrivateFiles } from './collections/PrivateFiles'
 import { Documents } from './collections/Documents'
@@ -52,15 +57,19 @@ const db = dbUri.startsWith('file:')
   : postgresAdapter({
       pool: { connectionString: dbUri },
       migrationDir: path.resolve(dirname, 'migrations'),
+      // Schema changes only through versioned migrations (npm run migrate), also in development and tests,
+      // so what is tested is exactly what production gets.
+      push: false,
     })
 
 export default buildConfig({
+  // Empty for a multi-school deployment: every school is served on its own domain (relative URLs).
   serverURL: process.env.NEXT_PUBLIC_SERVER_URL || '',
   admin: {
     user: Users.slug,
     importMap: { baseDir: path.resolve(dirname) },
     meta: {
-      titleSuffix: ' · CMS SMP Nasional KPS',
+      titleSuffix: ` · ${PLATFORM_NAME}`,
       robots: 'noindex, nofollow',
     },
     dateFormat: 'dd MMM yyyy HH:mm',
@@ -76,40 +85,50 @@ export default buildConfig({
     supportedLanguages: { id, en },
     fallbackLanguage: 'id',
   },
+  // Every school-owned collection goes through withTenancy (tenant field, isolated access, per-school unique
+  // indexes). Tenants and Users are platform collections with their own rules.
   collections: [
-    Pages,
-    Posts,
-    Categories,
-    Announcements,
-    Events,
-    EventCategories,
-    Faqs,
-    Albums,
-    Documents,
-    Guides,
-    Services,
-    Testimonials,
-    Programs,
-    Extracurriculars,
-    Facilities,
-    Staff,
-    Achievements,
-    StudentWorks,
-    MediaItems,
-    SocialAccounts,
-    AdmissionsCycles,
-    Leads,
-    VisitSessions,
-    VisitBookings,
-    ContactMessages,
-    Media,
-    PrivateFiles,
-    Redirects,
+    ...[
+      Pages,
+      Posts,
+      Categories,
+      Announcements,
+      Events,
+      EventCategories,
+      Faqs,
+      Albums,
+      Documents,
+      Guides,
+      Services,
+      Testimonials,
+      Programs,
+      Extracurriculars,
+      Facilities,
+      Staff,
+      Achievements,
+      StudentWorks,
+      MediaItems,
+      SocialAccounts,
+      AdmissionsCycles,
+      Leads,
+      VisitSessions,
+      VisitBookings,
+      ContactMessages,
+      Media,
+      PrivateFiles,
+      Redirects,
+      AnalyticsDaily,
+      // former globals: one document per school
+      asSingleton(Homepage),
+      asSingleton(SiteSettings, { useAsTitle: 'schoolName' }),
+      asSingleton(Navigation),
+      asSingleton(FeatureFlags),
+    ].map((c) => withTenancy(c)),
+    // platform-level events (e.g. Super Admin changes) have no school
+    withTenancy(AuditLogs, { optional: true }),
+    Tenants,
     Users,
-    AuditLogs,
-    AnalyticsDaily,
   ],
-  globals: [Homepage, SiteSettings, Navigation, FeatureFlags],
   editor: lexicalEditor({
     // Structured rich text only: no raw HTML/script blocks; H1 is reserved for the page title.
     features: ({ defaultFeatures }) => [
@@ -154,8 +173,13 @@ export default buildConfig({
         slug: 'releaseVisitHolds',
         schedule: [{ cron: '0 * * * *', queue: 'default' }],
         handler: async ({ req }) => {
-          if (!(await readFlags(req.payload)).schoolVisits) return { output: { skipped: 'flag off' } }
-          const released = await releaseExpiredHolds(req.payload)
+          // per school: each school's flag decides whether its holds are released
+          let released = 0
+          const schools = await req.payload.find({ collection: 'tenants', where: { status: { not_equals: 'suspended' } }, limit: 1000, depth: 0, overrideAccess: true, pagination: false })
+          for (const t of schools.docs) {
+            const p = scopePayload(req.payload, t.id)
+            if ((await readFlags(p)).schoolVisits) released += await releaseExpiredHolds(p)
+          }
           return { output: { released } }
         },
         outputSchema: [
@@ -167,6 +191,8 @@ export default buildConfig({
     // Serverless (Vercel) has no long-running process: jobs are triggered by cron → /api/payload-jobs/run
     shouldAutoRun: () => process.env.DISABLE_JOB_AUTORUN !== 'true' && !process.env.VERCEL,
   },
-  cors: [process.env.NEXT_PUBLIC_SERVER_URL || ''].filter(Boolean),
-  csrf: [process.env.NEXT_PUBLIC_SERVER_URL || ''].filter(Boolean),
+  // Same-origin only (no cross-origin API clients). CSRF for every school domain is enforced in src/proxy.ts,
+  // because a static origin list cannot name the domains schools add later.
+  cors: [],
+  csrf: [],
 })

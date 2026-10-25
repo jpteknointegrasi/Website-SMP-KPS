@@ -1,3 +1,4 @@
+import { schoolMeta } from '@/lib/meta'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { getFlags, listCollection } from '@/lib/queries'
@@ -6,7 +7,7 @@ import { Img } from '@/components/ui/Img'
 import type { Media, StudentWork } from '@/payload-types'
 import { WORK_CATS } from '@/lib/format'
 
-export const metadata = { title: 'Karya Siswa', description: 'Tulisan, seni, sains, teknologi, video dan proyek sosial siswa SMP Nasional KPS — dipublikasikan dengan persetujuan.', alternates: { canonical: '/karya-siswa' } }
+export const generateMetadata = schoolMeta(({ name }) => ({ title: 'Karya Siswa', description: `Tulisan, seni, sains, teknologi, video dan proyek sosial siswa ${name} — dipublikasikan dengan persetujuan.`, alternates: { canonical: '/karya-siswa' } }))
 type SP = { searchParams: Promise<{ kategori?: string; page?: string }> }
 
 export default async function Page({ searchParams }: SP) {

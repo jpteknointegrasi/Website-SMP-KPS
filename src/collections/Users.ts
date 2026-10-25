@@ -1,11 +1,23 @@
-import type { CollectionConfig } from 'payload'
-import { ROLE_OPTIONS, adminOnly, fieldAdminOnly, isAdmin } from '../access/roles'
+import { APIError, type Access, type CollectionConfig, type Where } from 'payload'
+import { ROLE_OPTIONS, fieldAdminOnly, isAdmin, isSuperAdmin } from '../access/roles'
 import { auditAfterChange, auditAfterDelete } from '../hooks/audit'
+import { tenantOfUser } from '../tenancy/access'
+import { idOf, isLive, tenantByHost, tenantById } from '../tenancy/resolve'
+
+/** Super Admin: every account. School Admin Teknis: accounts of their own school. Others: themselves. */
+const manageUsers =
+  (selfToo: boolean): Access =>
+  ({ req: { user } }) => {
+    if (isSuperAdmin(user)) return true
+    const own = tenantOfUser(user)
+    if (isAdmin(user) && own) return { tenant: { equals: own } } as Where
+    return selfToo && user ? ({ id: { equals: user.id } } as Where) : false
+  }
 
 export const Users: CollectionConfig = {
   slug: 'users',
   labels: { singular: 'Pengguna', plural: 'Pengguna' },
-  admin: { useAsTitle: 'name', group: 'Pengguna & Akses', defaultColumns: ['name', 'email', 'role', 'active'] },
+  admin: { useAsTitle: 'name', group: 'Pengguna & Akses', defaultColumns: ['name', 'email', 'role', 'tenant', 'active'] },
   auth: {
     maxLoginAttempts: 5,
     lockTime: 15 * 60 * 1000,
@@ -14,24 +26,45 @@ export const Users: CollectionConfig = {
     useAPIKey: false,
   },
   access: {
-    // Users see themselves; admin sees all
-    read: ({ req: { user } }) => (isAdmin(user) ? true : user ? { id: { equals: user.id } } : false),
-    create: adminOnly,
-    update: ({ req: { user } }) => (isAdmin(user) ? true : user ? { id: { equals: user.id } } : false),
-    delete: adminOnly,
+    read: manageUsers(true),
+    create: ({ req: { user } }) => isSuperAdmin(user) || (isAdmin(user) && Boolean(tenantOfUser(user))),
+    update: manageUsers(true),
+    delete: manageUsers(false),
     admin: ({ req: { user } }) => Boolean(user && (user as { active?: boolean }).active !== false),
   },
   hooks: {
     afterChange: [auditAfterChange],
     afterDelete: [auditAfterDelete],
+    beforeLogin: [
+      // School staff sign in only on their own school's address, and not while the school is suspended.
+      async ({ req, user }) => {
+        if (isSuperAdmin({ ...user, collection: 'users' } as never)) return user
+        const own = await tenantById(req.payload, idOf(user.tenant))
+        if (!isLive(own)) throw new APIError('Akun ini tidak terhubung ke sekolah yang aktif. Hubungi pengelola platform.', 403, null, true)
+        const host = req.headers?.get?.('host')
+        const here = host ? await tenantByHost(req.payload, host) : null
+        if (here && here.id !== own.id) throw new APIError('Akun ini milik sekolah lain. Masuk lewat alamat website sekolah Anda.', 403, null, true)
+        return user
+      },
+    ],
     beforeChange: [
-      async ({ data, req, operation }) => {
-        // The very first account (Payload "create first user") becomes Admin Teknis.
+      async ({ data, req, operation, originalDoc }) => {
+        const actor = req.user
         if (operation === 'create') {
           const { totalDocs } = await req.payload.count({ collection: 'users', overrideAccess: true, req })
-          if (totalDocs === 0) data.role = 'admin'
-          else if (!isAdmin(req.user) && req.user) data.role = 'contributor'
+          // The very first account on a fresh platform ("create first user") becomes the platform Super Admin.
+          if (totalDocs === 0) data.role = 'superadmin'
+          else if (actor && !isAdmin(actor)) data.role = 'contributor'
         }
+        // Only a Super Admin (or server code without a user) can grant or keep the Super Admin role.
+        if (actor && !isSuperAdmin(actor) && data.role === 'superadmin' && originalDoc?.role !== 'superadmin')
+          throw new APIError('Hanya Super Admin platform yang dapat memberi peran Super Admin.', 403, null, true)
+        // School admins always create/keep accounts in their own school.
+        const own = tenantOfUser(actor)
+        if (own) data.tenant = operation === 'update' ? (idOf(originalDoc?.tenant) ?? own) : own
+        const role = data.role ?? originalDoc?.role
+        if (role === 'superadmin') data.tenant = null
+        else if (!idOf(data.tenant ?? originalDoc?.tenant)) throw new APIError('Pilih sekolah untuk akun ini.', 400, null, true)
         return data
       },
     ],
@@ -45,9 +78,27 @@ export const Users: CollectionConfig = {
       required: true,
       defaultValue: 'contributor',
       options: ROLE_OPTIONS,
+      filterOptions: ({ options, req }) =>
+        isSuperAdmin(req.user) ? options : options.filter((o) => (typeof o === 'string' ? o : o.value) !== 'superadmin'),
       access: { create: fieldAdminOnly, update: fieldAdminOnly },
       saveToJWT: true,
       admin: { description: 'Hanya Admin Teknis yang dapat mengubah peran.' },
+    },
+    {
+      name: 'tenant',
+      type: 'relationship',
+      relationTo: 'tenants',
+      label: 'Sekolah',
+      index: true,
+      maxDepth: 0,
+      saveToJWT: true,
+      access: { update: ({ req: { user } }) => isSuperAdmin(user) },
+      admin: {
+        position: 'sidebar',
+        condition: (data, _s, { user }) => isSuperAdmin(user as never) && data?.role !== 'superadmin',
+        description: 'Sekolah tempat akun ini bekerja. Super Admin tidak terikat sekolah.',
+      },
+      defaultValue: ({ user }: { user: never }) => tenantOfUser(user) ?? undefined,
     },
     {
       name: 'canPublishAdmissions',

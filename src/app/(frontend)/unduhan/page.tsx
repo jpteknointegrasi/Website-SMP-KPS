@@ -1,3 +1,4 @@
+import { schoolMeta } from '@/lib/meta'
 import Link from 'next/link'
 import type { Where } from 'payload'
 import { listCollection } from '@/lib/queries'
@@ -5,7 +6,7 @@ import { PageHeader, Container, EmptyState, Pagination } from '@/components/ui/b
 import { DOC_CATEGORY, DocumentList } from '@/components/content/DocumentList'
 import type { Document } from '@/payload-types'
 
-export const metadata = { title: 'Unduhan', description: 'Dokumen publik SMP Nasional KPS: kalender, panduan, e-buletin dan laporan.', alternates: { canonical: '/unduhan' } }
+export const generateMetadata = schoolMeta(({ name }) => ({ title: 'Unduhan', description: `Dokumen publik ${name}: kalender, panduan, e-buletin dan laporan.`, alternates: { canonical: '/unduhan' } }))
 type SP = { searchParams: Promise<{ kategori?: string; periode?: string; page?: string }> }
 
 export default async function Page({ searchParams }: SP) {

@@ -1,4 +1,5 @@
 import type { Endpoint } from 'payload'
+import { endpointPayload, noSchool, notifyAddress } from '../tenancy/endpoint'
 import { randomBytes } from 'crypto'
 
 const WINDOW_MS = 10 * 60 * 1000
@@ -50,13 +51,15 @@ export const validateContact = (b: ContactInput) => {
 const makeRef = () => {
   const d = new Date()
   const ymd = d.toISOString().slice(0, 10).replace(/-/g, '')
-  return `KPS-${ymd}-${randomBytes(3).toString('hex').toUpperCase()}`
+  return `PSN-${ymd}-${randomBytes(3).toString('hex').toUpperCase()}`
 }
 
 export const contactSubmitEndpoint: Endpoint = {
   path: '/submit',
   method: 'post',
   handler: async (req) => {
+    const p = await endpointPayload(req)
+    if (!p) return noSchool()
     const ip =
       req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || req.headers.get('x-real-ip') || 'local'
     if (rateLimited(ip)) {
@@ -77,25 +80,25 @@ export const contactSubmitEndpoint: Endpoint = {
     if (Object.keys(errors).length) return Response.json({ ok: false, errors }, { status: 400 })
 
     const reference = makeRef()
-    const doc = await req.payload.create({
+    const doc = await p.create({
       collection: 'contact-messages',
       overrideAccess: true,
       data: { ...value, category: value.category as 'umum', reference, consent: true, status: 'new' },
     })
 
     // Optional email notification — failure never loses the stored message.
-    const to = process.env.CONTACT_NOTIFY_EMAIL
+    const { to, schoolName } = await notifyAddress(p, 'contact')
     if (to && process.env.SMTP_HOST) {
       try {
-        await req.payload.sendEmail({
+        await p.sendEmail({
           to,
-          subject: `[Website KPS] Pesan baru ${reference}`,
+          subject: `[Website ${schoolName}] Pesan baru ${reference}`,
           // no message content in the notification (privacy): staff reads it in the admin inbox
           text: `Ada pesan baru (${value.category}) dengan nomor ${reference}. Buka panel admin untuk membaca.`,
         })
-        await req.payload.update({ collection: 'contact-messages', id: doc.id, data: { emailNotified: true }, overrideAccess: true })
+        await p.update({ collection: 'contact-messages', id: doc.id, data: { emailNotified: true }, overrideAccess: true })
       } catch (e) {
-        req.payload.logger.warn(`Notifikasi email gagal untuk ${reference}; pesan tetap tersimpan.`)
+        p.logger.warn(`Notifikasi email gagal untuk ${reference}; pesan tetap tersimpan.`)
       }
     }
     return Response.json({ ok: true, reference })

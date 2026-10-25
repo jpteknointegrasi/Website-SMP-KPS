@@ -1,3 +1,4 @@
+import { schoolMeta } from '@/lib/meta'
 import Link from 'next/link'
 import { listCollection } from '@/lib/queries'
 import { PageHeader, Container, EmptyState, DemoBadge } from '@/components/ui/bits'
@@ -5,7 +6,7 @@ import { Img } from '@/components/ui/Img'
 import { HexPlaceholder } from '@/components/sections/home'
 import type { Program, Media } from '@/payload-types'
 
-export const metadata = { title: 'Pembelajaran', description: 'Pendekatan dan program pembelajaran SMP Nasional KPS.', alternates: { canonical: '/pembelajaran' } }
+export const generateMetadata = schoolMeta(({ name }) => ({ title: 'Pembelajaran', description: `Pendekatan dan program pembelajaran ${name}.`, alternates: { canonical: '/pembelajaran' } }))
 
 export default async function Page() {
   const res = await listCollection('programs', { sort: 'order', limit: 24 })

@@ -1,4 +1,10 @@
-import type { CollectionAfterChangeHook, CollectionAfterDeleteHook, GlobalAfterChangeHook } from 'payload'
+import type { CollectionAfterChangeHook, CollectionAfterDeleteHook, PayloadRequest } from 'payload'
+import { contextTenant, tenantOfUser } from '../tenancy/access'
+import { idOf } from '../tenancy/resolve'
+
+/** School an audit entry belongs to (null = platform-level, visible to the Super Admin only). */
+const auditTenant = (req: PayloadRequest, collectionSlug: string, doc?: Record<string, unknown>) =>
+  (collectionSlug === 'tenants' ? idOf(doc?.id) : idOf(doc?.tenant)) ?? contextTenant(req) ?? tenantOfUser(req.user) ?? null
 
 // Private records (leads, bookings, messages) carry a random `reference`: use it so no name/email lands in the log.
 const titleOf = (doc: Record<string, unknown> | undefined) =>
@@ -30,6 +36,7 @@ export const auditAfterChange: CollectionAfterChangeHook = async ({ doc, previou
     overrideAccess: true,
     req,
     data: {
+      tenant: auditTenant(req, collection.slug, doc),
       action,
       collectionSlug: collection.slug,
       docId: String(doc.id),
@@ -50,6 +57,7 @@ export const auditAction = async (req: import('payload').PayloadRequest, action:
     collection: 'audit-logs',
     overrideAccess: true,
     data: {
+      tenant: auditTenant(req, collectionSlug),
       action,
       collectionSlug,
       docId: '-',
@@ -67,29 +75,11 @@ export const auditAfterDelete: CollectionAfterDeleteHook = async ({ doc, req, co
     overrideAccess: true,
     req,
     data: {
+      tenant: auditTenant(req, collection.slug, doc),
       action: 'delete',
       collectionSlug: collection.slug,
       docId: String(doc.id),
       docTitle: titleOf(doc),
-      actor: req.user && req.user.collection === 'users' ? req.user.id : null,
-      actorEmail: (req.user as { email?: string } | null)?.email ?? 'sistem',
-    },
-  })
-  return doc
-}
-
-export const auditGlobal: GlobalAfterChangeHook = async ({ doc, req, global }) => {
-  if (req.context?.skipAudit) return doc
-  await req.payload.create({
-    collection: 'audit-logs',
-    overrideAccess: true,
-    req,
-    data: {
-      action: doc?._status === 'published' ? 'publish' : 'update',
-      collectionSlug: `global:${global.slug}`,
-      docId: global.slug,
-      docTitle: global.label ? String(global.label) : global.slug,
-      status: (doc?._status as string) ?? null,
       actor: req.user && req.user.collection === 'users' ? req.user.id : null,
       actorEmail: (req.user as { email?: string } | null)?.email ?? 'sistem',
     },

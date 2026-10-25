@@ -2,11 +2,12 @@
 import React, { useEffect, useState } from 'react'
 
 type Info = { reference: string; status: string; session: { title: string; startAt: string } | null }
-const fmt = (iso: string) =>
-  new Intl.DateTimeFormat('id-ID', { timeZone: process.env.NEXT_PUBLIC_SCHOOL_TIMEZONE || 'Asia/Makassar', dateStyle: 'full', timeStyle: 'short' }).format(new Date(iso))
+import { tzAbbr } from '@/tenancy/config'
+
+const fmt = (iso: string, tz: string) => new Intl.DateTimeFormat('id-ID', { timeZone: tz, dateStyle: 'full', timeStyle: 'short' }).format(new Date(iso))
 
 /** The token lives in the URL fragment (#t=…), which browsers never send to servers or put in access logs. */
-export const CancelVisit = () => {
+export const CancelVisit = ({ tz }: { tz: string }) => {
   const [token, setToken] = useState<string | null>(null)
   const [info, setInfo] = useState<Info | null>(null)
   const [msg, setMsg] = useState<string>('Memeriksa tautan…')
@@ -51,7 +52,7 @@ export const CancelVisit = () => {
         {info.session ? (
           <>
             <dt>Jadwal</dt>
-            <dd>{info.session.title}, {fmt(info.session.startAt)} WITA</dd>
+            <dd>{info.session.title}, {fmt(info.session.startAt, tz)} {tzAbbr(tz)}</dd>
           </>
         ) : null}
         <dt>Status</dt>

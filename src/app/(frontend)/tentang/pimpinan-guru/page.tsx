@@ -1,3 +1,4 @@
+import { getSchoolNames } from '@/lib/queries'
 import { listCollection } from '@/lib/queries'
 import { PageHeader, Container, EmptyState } from '@/components/ui/bits'
 import { Img } from '@/components/ui/Img'
@@ -13,6 +14,7 @@ const cutout = (m: Staff['photo']) => Boolean(m && typeof m === 'object' && (m a
 type SP = { searchParams: Promise<{ kelompok?: string; mapel?: string }> }
 
 export default async function Page({ searchParams }: SP) {
+  const { name, short } = await getSchoolNames()
   const sp = await searchParams
   const res = await listCollection('staff', { sort: 'order', limit: 48 })
   const all = res.docs as unknown as Staff[]
@@ -28,7 +30,7 @@ export default async function Page({ searchParams }: SP) {
   }
   return (
     <>
-      <PageHeader title="Pimpinan & Guru" lead="Pendidik yang mendampingi siswa SMP Nasional KPS." crumbs={[{ label: 'Tentang KPS', href: '/tentang' }, { label: 'Pimpinan & Guru' }]} />
+      <PageHeader title="Pimpinan & Guru" lead={`Pendidik yang mendampingi siswa ${name}.`} crumbs={[{ label: `Tentang ${short}`, href: '/tentang' }, { label: 'Pimpinan & Guru' }]} />
       <section className="section">
         <Container>
           {all.length > 3 ? (

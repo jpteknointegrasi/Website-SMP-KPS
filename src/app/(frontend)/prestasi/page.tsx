@@ -1,3 +1,4 @@
+import { schoolMeta } from '@/lib/meta'
 import Link from 'next/link'
 import type { Where } from 'payload'
 import { listCollection, findBySlug, listPosts } from '@/lib/queries'
@@ -6,7 +7,7 @@ import { PageHeader, Container, EmptyState, Pagination } from '@/components/ui/b
 import { Img } from '@/components/ui/Img'
 import type { Achievement, Album, Media, Post } from '@/payload-types'
 
-export const metadata = { title: 'Prestasi', description: 'Capaian siswa SMP Nasional KPS yang telah diverifikasi.', alternates: { canonical: '/prestasi' } }
+export const generateMetadata = schoolMeta(({ name }) => ({ title: 'Prestasi', description: `Capaian siswa ${name} yang telah diverifikasi.`, alternates: { canonical: '/prestasi' } }))
 const LEVELS: Record<string, string> = { sekolah: 'Sekolah', kota: 'Kota', provinsi: 'Provinsi', nasional: 'Nasional', internasional: 'Internasional' }
 const CATS: Record<string, string> = { akademik: 'Akademik', olahraga: 'Olahraga', seni: 'Seni & Budaya', keagamaan: 'Keagamaan', lainnya: 'Lainnya' }
 

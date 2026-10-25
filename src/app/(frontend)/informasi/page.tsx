@@ -5,7 +5,7 @@ export const metadata = { title: 'Informasi', alternates: { canonical: '/informa
 const HUB = [
   ['/berita', 'Berita', 'Cerita kegiatan dan kabar sekolah'],
   ['/pengumuman', 'Pengumuman', 'Informasi resmi yang sedang berlaku'],
-  ['/agenda', 'Agenda', 'Kalender kegiatan sekolah (WITA)'],
+  ['/agenda', 'Agenda', 'Kalender kegiatan sekolah'],
   ['/galeri', 'Galeri', 'Album foto kegiatan'],
   ['/unduhan', 'Unduhan', 'Dokumen publik, kalender dan formulir'],
   ['/transparansi-bos', 'Transparansi BOS', 'Laporan dana BOS yang disetujui publikasi'],

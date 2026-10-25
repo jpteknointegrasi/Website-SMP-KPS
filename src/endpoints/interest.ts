@@ -1,4 +1,5 @@
 import type { Endpoint, Where } from 'payload'
+import { endpointPayload, noSchool, notifyAddress } from '../tenancy/endpoint'
 import { rateLimited } from './contact'
 import { readFlags, flagOff } from '../lib/flags'
 import { canExportLeads } from '../access/roles'
@@ -56,7 +57,9 @@ export const interestSubmitEndpoint: Endpoint = {
   path: '/submit',
   method: 'post',
   handler: async (req) => {
-    const flags = await readFlags(req.payload)
+    const p = await endpointPayload(req)
+    if (!p) return noSchool()
+    const flags = await readFlags(p)
     if (!flags.interestForm) return flagOff()
     if (rateLimited(`interest:${clientIp(req)}`)) return json({ ok: false, error: 'Terlalu banyak pengiriman. Coba lagi beberapa menit lagi.' }, 429)
     let body: InterestInput = {}
@@ -68,7 +71,7 @@ export const interestSubmitEndpoint: Endpoint = {
     if (looksLikeBot(body)) return json({ ok: true, reference: makeReference('MNT') })
 
     // the cycle must be published and allow the interest form
-    const cycles = await req.payload.find({ collection: 'admissions-cycles', sort: '-academicYear', limit: 5, depth: 0, overrideAccess: false, draft: false })
+    const cycles = await p.find({ collection: 'admissions-cycles', sort: '-academicYear', limit: 5, depth: 0, overrideAccess: false, draft: false })
     const allowed = cycles.docs.filter((c) => c.interestFormEnabled || c.mode === 'interest_form')
     if (!allowed.length) return json({ ok: false, error: 'Form minat sedang tidak dibuka. Silakan hubungi sekolah.' }, 403)
     const wanted = body.cycle === 'undecided' ? null : allowed.find((c) => String(c.id) === String(body.cycle)) ?? allowed[0]
@@ -78,7 +81,7 @@ export const interestSubmitEndpoint: Endpoint = {
 
     const idempotencyKey = idempotencyKeyOf(body.idempotencyKey)
     if (!idempotencyKey) return json({ ok: false, error: 'Muat ulang halaman lalu kirim lagi.' }, 400)
-    const existing = await req.payload.find({ collection: 'leads', where: { idempotencyKey: { equals: idempotencyKey } }, limit: 1, depth: 0, overrideAccess: true })
+    const existing = await p.find({ collection: 'leads', where: { idempotencyKey: { equals: idempotencyKey } }, limit: 1, depth: 0, overrideAccess: true })
     if (existing.docs[0]) return json({ ok: true, reference: existing.docs[0].reference, repeated: true })
 
     // soft duplicate: same contact, same cycle, still open → flag for review (siblings share parent contacts)
@@ -86,7 +89,7 @@ export const interestSubmitEndpoint: Endpoint = {
     if (value.email) contactOr.push({ email: { equals: value.email } })
     if (value.phoneNormalized) contactOr.push({ phoneNormalized: { equals: value.phoneNormalized } })
     const dup = contactOr.length
-      ? await req.payload.find({
+      ? await p.find({
           collection: 'leads',
           where: { and: [{ or: contactOr }, { status: { not_equals: 'closed' } }, wanted ? { cycle: { equals: wanted.id } } : { cycle: { exists: false } }] },
           limit: 1,
@@ -97,7 +100,7 @@ export const interestSubmitEndpoint: Endpoint = {
 
     const reference = makeReference('MNT')
     try {
-      await req.payload.create({
+      await p.create({
         collection: 'leads',
         overrideAccess: true,
         data: {
@@ -114,22 +117,22 @@ export const interestSubmitEndpoint: Endpoint = {
       })
     } catch (e) {
       // a concurrent duplicate submit with the same key won the race → answer with its reference
-      const again = await waitForKey(async () => (await req.payload.find({ collection: 'leads', where: { idempotencyKey: { equals: idempotencyKey } }, limit: 1, depth: 0, overrideAccess: true })).docs[0])
+      const again = await waitForKey(async () => (await p.find({ collection: 'leads', where: { idempotencyKey: { equals: idempotencyKey } }, limit: 1, depth: 0, overrideAccess: true })).docs[0])
       if (again) return json({ ok: true, reference: again.reference, repeated: true })
-      req.payload.logger.error(`Gagal menyimpan minat: ${(e as Error).message}`)
+      p.logger.error(`Gagal menyimpan minat: ${(e as Error).message}`)
       return json({ ok: false, error: 'Maaf, data belum tersimpan. Coba lagi beberapa saat lagi.' }, 500)
     }
 
     // optional notification: never contains personal data; failure never loses the stored lead
-    const to = process.env.ADMISSIONS_NOTIFY_EMAIL
+    const { to, schoolName } = await notifyAddress(p, 'admissions')
     if (to && process.env.SMTP_HOST) {
       try {
-        await req.payload.sendEmail({ to, subject: `[Website KPS] Minat baru ${reference}`, text: `Ada data minat baru (${reference}). Buka panel admin → Pendaftaran → Minat Calon Orang Tua.` })
+        await p.sendEmail({ to, subject: `[Website ${schoolName}] Minat baru ${reference}`, text: `Ada data minat baru (${reference}). Buka panel admin → Pendaftaran → Minat Calon Orang Tua.` })
       } catch {
-        req.payload.logger.warn(`Notifikasi minat ${reference} gagal; data tetap tersimpan.`)
+        p.logger.warn(`Notifikasi minat ${reference} gagal; data tetap tersimpan.`)
       }
     }
-    if (flags.visitorAnalytics) await recordEvent(req.payload, 'form_success', 'minat')
+    if (flags.visitorAnalytics) await recordEvent(p, 'form_success', 'minat')
     return json({ ok: true, reference })
   },
 }
@@ -139,12 +142,14 @@ export const leadsExportEndpoint: Endpoint = {
   path: '/export',
   method: 'get',
   handler: async (req) => {
+    const p = await endpointPayload(req)
+    if (!p) return noSchool()
     if (!canExportLeads(req.user)) return json({ ok: false, error: 'Tidak diizinkan.' }, 403)
     const url = new URL(req.url ?? 'http://x')
     const and: Where[] = [{ isTest: { not_equals: true } }]
     const status = url.searchParams.get('status')
     if (status && /^[a-z_]{2,20}$/.test(status)) and.push({ status: { equals: status } })
-    const res = await req.payload.find({ collection: 'leads', where: { and }, limit: 5000, depth: 1, sort: '-createdAt', overrideAccess: false, user: req.user })
+    const res = await p.find({ collection: 'leads', where: { and }, limit: 5000, depth: 1, sort: '-createdAt', overrideAccess: false, user: req.user })
     const header = ['Referensi', 'Masuk', 'Status', 'Nama wali', 'Email', 'Telepon', 'Tahun ajaran', 'Minat', 'Petugas', 'Tindak lanjut', 'Sumber']
     const rows = res.docs.map((l) => [
       l.reference,

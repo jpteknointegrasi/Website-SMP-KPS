@@ -1,3 +1,4 @@
+import { schoolMeta } from '@/lib/meta'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { getFlags, listCollection } from '@/lib/queries'
@@ -5,7 +6,7 @@ import { PageHeader, Container, EmptyState } from '@/components/ui/bits'
 import { InterestForm } from '@/components/forms/InterestForm'
 import type { AdmissionsCycle } from '@/payload-types'
 
-export const metadata = { title: 'Titipkan Minat', description: 'Sampaikan minat Anda pada SMP Nasional KPS; petugas penerimaan akan menghubungi Anda.', alternates: { canonical: '/pendaftaran/minat' }, robots: { index: false } }
+export const generateMetadata = schoolMeta(({ name }) => ({ title: 'Titipkan Minat', description: `Sampaikan minat Anda pada ${name}; petugas penerimaan akan menghubungi Anda.`, alternates: { canonical: '/pendaftaran/minat' }, robots: { index: false } }))
 
 export default async function Page() {
   if (!(await getFlags()).interestForm) notFound()

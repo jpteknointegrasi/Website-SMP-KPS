@@ -1,3 +1,4 @@
+import { schoolTimezone } from '../tenancy/timezone'
 import type { CollectionBeforeChangeHook, CollectionAfterChangeHook, CollectionConfig, Field } from 'payload'
 import { APIError } from 'payload'
 import { adminOnly, admissionsStaff, canSeeLeads, isStaff, leadsAccess, nobody } from '../access/roles'
@@ -208,12 +209,12 @@ export const VisitSessions: CollectionConfig = {
       ] },
     ] },
     { type: 'row', fields: [
-      { name: 'startAt', type: 'date', label: 'Mulai', required: true, index: true, timezone: { defaultTimezone: 'Asia/Makassar', supportedTimezones: [{ label: 'WITA (Balikpapan)', value: 'Asia/Makassar' }] }, admin: { date: { pickerAppearance: 'dayAndTime' } } },
+      { name: 'startAt', type: 'date', label: 'Mulai', required: true, index: true, timezone: schoolTimezone, admin: { date: { pickerAppearance: 'dayAndTime' } } },
       {
         name: 'endAt',
         type: 'date',
         label: 'Selesai',
-        timezone: { defaultTimezone: 'Asia/Makassar', supportedTimezones: [{ label: 'WITA (Balikpapan)', value: 'Asia/Makassar' }] },
+        timezone: schoolTimezone,
         admin: { date: { pickerAppearance: 'dayAndTime' } },
         validate: (v: unknown, { siblingData }: { siblingData?: { startAt?: string } }) =>
           !v || !siblingData?.startAt || new Date(String(v)) > new Date(siblingData.startAt) ? true : 'Selesai harus sesudah mulai.',

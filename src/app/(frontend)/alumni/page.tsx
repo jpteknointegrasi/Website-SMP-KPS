@@ -1,3 +1,5 @@
+import { getSchoolNames } from '@/lib/queries'
+import { schoolMeta } from '@/lib/meta'
 import Link from 'next/link'
 import { findBySlug, getGlobals, getHomepage, listCollection } from '@/lib/queries'
 import { PageHeader, Container } from '@/components/ui/bits'
@@ -5,9 +7,10 @@ import { PageBlocks } from '@/components/content/PageBlocks'
 import { Img } from '@/components/ui/Img'
 import type { Page as CmsPage, Testimonial, Media } from '@/payload-types'
 
-export const metadata = { title: 'Alumni', description: 'Jejaring alumni SMP Nasional KPS.', alternates: { canonical: '/alumni' } }
+export const generateMetadata = schoolMeta(({ name }) => ({ title: 'Alumni', description: `Jejaring alumni ${name}.`, alternates: { canonical: '/alumni' } }))
 
 export default async function Page() {
+  const { name, short } = await getSchoolNames()
   const [page, { settings }, stories, home] = await Promise.all([
     findBySlug<CmsPage>('pages', 'alumni'),
     getGlobals(),
@@ -16,11 +19,11 @@ export default async function Page() {
     getHomepage(),
   ])
   // photo: the alumni page's own cover, else the community/alumni photo chosen for the homepage
-  const photo = (page?.cover && typeof page.cover === 'object' ? (page.cover as Media) : null) ?? (home.texts?.communityImage && typeof home.texts.communityImage === 'object' ? (home.texts.communityImage as Media) : null)
+  const photo = (page?.cover && typeof page.cover === 'object' ? (page.cover as Media) : null) ?? (home?.texts?.communityImage && typeof home.texts.communityImage === 'object' ? (home.texts.communityImage as Media) : null)
   const items = stories.docs as unknown as Testimonial[]
   return (
     <>
-      <PageHeader title={page?.title ?? 'Keluarga Alumni KPS'} lead={page?.excerpt ?? 'Alumni adalah bagian dari keluarga besar SMP Nasional KPS. Tetap terhubung dengan sekolah dan sesama alumni.'} crumbs={[{ label: 'Alumni' }]} />
+      <PageHeader title={page?.title ?? `Keluarga Alumni ${short}`} lead={page?.excerpt ?? `Alumni adalah bagian dari keluarga besar ${name}. Tetap terhubung dengan sekolah dan sesama alumni.`} crumbs={[{ label: 'Alumni' }]} />
       <section className="section">
         <Container>
           {photo ? (

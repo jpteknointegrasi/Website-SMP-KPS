@@ -9,8 +9,10 @@ import 'dotenv/config'
 import { getPayload } from 'payload'
 import config from '../src/payload.config'
 import { runSeed } from './seed-core'
+import { contentPackSchool } from './content-pack'
 
-const payload = await getPayload({ config })
+// Content pack of SMP Nasional KPS → only into that school (see content-pack.ts)
+const payload = await contentPackSchool(await getPayload({ config }))
 runSeed(payload)
   .then((r) => process.exit(r.done ? 0 : 1))
   .catch((e) => {

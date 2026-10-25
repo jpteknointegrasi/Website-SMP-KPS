@@ -1,4 +1,5 @@
 import { APIError, type CollectionBeforeDeleteHook, type Where } from 'payload'
+import { scopeToDoc, type TenantPayload } from '../tenancy/scoped'
 
 /** (collection, field path) pairs that reference the media collection. */
 export const MEDIA_REFERENCES: [string, string][] = [
@@ -40,7 +41,8 @@ const scan = (node: unknown, id: number | string, hits: string[], path: string) 
   }
 }
 
-export const findMediaUsage = async (payload: import('payload').Payload, id: number | string) => {
+/** Where a media file is used, within its own school (cross-school references are impossible by design). */
+export const findMediaUsage = async (payload: TenantPayload, id: number | string) => {
   const usages: string[] = []
   for (const [collection, path] of MEDIA_REFERENCES) {
     const where: Where = { [path]: { equals: id } }
@@ -66,7 +68,9 @@ export const findMediaUsage = async (payload: import('payload').Payload, id: num
 
 export const blockDeleteIfUsed: CollectionBeforeDeleteHook = async ({ id, req }) => {
   if (req.context?.forceMediaDelete) return
-  const usages = await findMediaUsage(req.payload, id)
+  const media = await req.payload.findByID({ collection: 'media', id, depth: 0, overrideAccess: true, trash: true, disableErrors: true, req })
+  if (!media) return
+  const usages = await findMediaUsage(scopeToDoc(req.payload, media as never), id)
   if (usages.length) {
     throw new APIError(
       `Media masih dipakai (${usages.slice(0, 5).join('; ')}${usages.length > 5 ? '; …' : ''}). Ganti gambar di konten tersebut terlebih dahulu.`,

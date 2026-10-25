@@ -1,4 +1,5 @@
-import type { Payload, Where } from 'payload'
+import type { Where } from 'payload'
+import type { TenantPayload } from '@/tenancy/scoped'
 import React from 'react'
 import { readFlags } from '@/lib/flags'
 
@@ -16,9 +17,9 @@ const n = async (p: Promise<{ totalDocs: number }>) => {
  * Operational panels. Definitions follow the addendum §11: test/spam excluded, denominators and periods are stated,
  * nothing is shown without data. Lead numbers only for users allowed to see leads.
  */
-export async function DashboardOps({ payload, user }: { payload: Payload; user: U }) {
+export async function DashboardOps({ payload, user, timezone }: { payload: TenantPayload; user: U; timezone: string }) {
   const role = user?.role ?? ''
-  const editorial = role === 'admin' || role === 'editor'
+  const editorial = role === 'superadmin' || role === 'admin' || role === 'editor'
   const leadsOk = role === 'admissions' || Boolean(user?.canAccessLeads)
   const flags = await readFlags(payload)
   const now = new Date()
@@ -94,7 +95,7 @@ export async function DashboardOps({ payload, user }: { payload: Payload; user: 
     )
 
     if (flags.visitorAnalytics) {
-      const since = new Intl.DateTimeFormat('en-CA', { timeZone: process.env.NEXT_PUBLIC_SCHOOL_TIMEZONE || 'Asia/Makassar' }).format(new Date(d30))
+      const since = new Intl.DateTimeFormat('en-CA', { timeZone: timezone }).format(new Date(d30))
       const rows = await payload.find({ collection: 'analytics-daily', where: { day: { greater_than_equal: since } }, limit: 5000, depth: 0, ...o }).catch(() => ({ docs: [] as { kind: string; key: string; count: number }[] }))
       const sum = (kind: string) => rows.docs.filter((r) => r.kind === kind).reduce((a, r) => a + Number(r.count), 0)
       const top = (kind: string) => {

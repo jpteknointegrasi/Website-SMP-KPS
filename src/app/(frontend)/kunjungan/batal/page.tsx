@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation'
 import { getFlags } from '@/lib/queries'
+import { requestTimezone } from '@/lib/tz'
 import { PageHeader, Container } from '@/components/ui/bits'
 import { CancelVisit } from '@/components/forms/CancelVisit'
 
@@ -12,7 +13,7 @@ export default async function Page() {
       <PageHeader title="Batalkan Kunjungan" crumbs={[{ label: 'Kunjungan', href: '/kunjungan' }, { label: 'Batalkan' }]} />
       <section className="section">
         <Container className="layout-form">
-          <CancelVisit />
+          <CancelVisit tz={requestTimezone()} />
         </Container>
       </section>
     </>

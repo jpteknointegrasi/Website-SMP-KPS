@@ -1,3 +1,4 @@
+import { getSchoolNames } from '@/lib/queries'
 import Link from 'next/link'
 import { listCollection } from '@/lib/queries'
 import { PageHeader, Container, EmptyState } from '@/components/ui/bits'
@@ -9,11 +10,12 @@ export const metadata = { title: 'Fasilitas', alternates: { canonical: '/tentang
 const AV: Record<string, string> = { available: 'Tersedia', renovation: 'Sedang direnovasi', planned: 'Rencana' }
 
 export default async function Page() {
+  const { name, short } = await getSchoolNames()
   const res = await listCollection('facilities', { sort: 'order', limit: 48 })
   const items = res.docs as Facility[]
   return (
     <>
-      <PageHeader title="Fasilitas" lead="Ruang belajar dan kegiatan di SMP Nasional KPS." crumbs={[{ label: 'Tentang KPS', href: '/tentang' }, { label: 'Fasilitas' }]} />
+      <PageHeader title="Fasilitas" lead={`Ruang belajar dan kegiatan di ${name}.`} crumbs={[{ label: `Tentang ${short}`, href: '/tentang' }, { label: 'Fasilitas' }]} />
       <section className="section">
         <Container>
           {items.length ? (

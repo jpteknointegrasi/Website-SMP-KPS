@@ -1,3 +1,4 @@
+import { requestTimezone } from '@/lib/tz'
 import Link from 'next/link'
 import React from 'react'
 import { MediaCard, MediaEmbed } from '../media/MediaCard'
@@ -56,7 +57,7 @@ export const PriorityStrip = ({ a }: { a: Announcement | null }) =>
 export const Hero = ({ hero: heroIn, settings }: { hero?: Homepage['hero'] | null; settings: SiteSetting }) => {
   // Empty database (fresh install): fall back to safe defaults instead of crashing.
   const hero = (heroIn ?? {}) as Homepage['hero']
-  const words = (hero.title || settings.schoolName || 'SMP Nasional KPS').split(' ')
+  const words = (hero.title || settings.schoolName || '').split(' ')
   const img = m(hero.image)
   const mobile = m(hero.imageMobile)
   const slides = ((hero.slides ?? []).map(m).filter((s) => s?.url) as Media[])
@@ -75,7 +76,7 @@ export const Hero = ({ hero: heroIn, settings }: { hero?: Homepage['hero'] | nul
       <HexField className="hero__hex" cols={12} rows={8} />
       <div className="container hero__inner">
         <div className="hero__copy">
-          {hero.showLiveClock ? <LiveClock city={settings.city ?? 'Balikpapan'} /> : null}
+          {hero.showLiveClock ? <LiveClock city={settings.city} tz={requestTimezone()} /> : null}
           <Eyebrow>{hero.eyebrow}</Eyebrow>
           <h1 id="hero-title" className="hero__title">
             {words.map((w, i) => (
@@ -392,7 +393,7 @@ export const LatestNews = ({ eyebrow, heading, posts }: { eyebrow?: string | nul
     </section>
   ) : null
 
-/* ---------- 11b KPS TV & Cerita Digital (curated media; hidden when empty) ---------- */
+/* ---------- 11b Video & Cerita Digital (curated media; hidden when empty) ---------- */
 export const MediaHubSection = ({
   eyebrow,
   heading,
@@ -412,8 +413,8 @@ export const MediaHubSection = ({
     <section className="section section--ivory mhub">
       <div className="container">
         <Head
-          eyebrow={eyebrow ?? 'KPS TV'}
-          title={heading ?? 'KPS TV & Cerita Digital'}
+          eyebrow={eyebrow ?? 'Video Sekolah'}
+          title={heading ?? 'Video & Cerita Digital'}
           aside={
             <div className="mhub__links">
               <MoreLink href="/media">Lihat Semua Media</MoreLink>
@@ -557,16 +558,16 @@ export const STATUS_LABEL: Record<string, string> = {
   closed: 'pendaftaran sudah ditutup',
 }
 
-/* ---------- optional: Sekilas KPS (live counts from CMS) ---------- */
+/* ---------- optional: Sekilas sekolah (live counts from CMS) ---------- */
 export type Highlight = { label: string; value: number; href: string; icon: string; note?: string }
 
-export const Highlights = ({ items }: { items: Highlight[] }) => {
+export const Highlights = ({ items, short = 'Sekolah' }: { items: Highlight[]; short?: string }) => {
   const shown = items.filter((i) => i.value > 0)
   if (!shown.length) return null
   return (
     <section className="section section--tight highlights" aria-labelledby="hl-title">
       <div className="container">
-        <Head eyebrow="Sekilas" title="Sekilas KPS" id="hl-title" aside={<p className="section__intro">Dihitung otomatis dari konten yang sudah terbit.</p>} />
+        <Head eyebrow="Sekilas" title={`Sekilas ${short}`} id="hl-title" aside={<p className="section__intro">Dihitung otomatis dari konten yang sudah terbit.</p>} />
         <Reveal as="ul" className="highlights__grid">
           {shown.map((h, i) => (
             <li key={h.label} style={{ ['--i' as string]: i }}>

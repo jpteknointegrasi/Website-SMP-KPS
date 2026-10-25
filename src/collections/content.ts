@@ -1,3 +1,4 @@
+import { schoolTimezone } from '../tenancy/timezone'
 import type { CollectionConfig, Field } from 'payload'
 import { defineContent } from './_factory'
 import { safeUrlField, seoFields, slugField } from '../fields/common'
@@ -215,17 +216,17 @@ export const Events = defineContent({
         {
           name: 'startAt',
           type: 'date',
-          label: 'Mulai (WITA)',
+          label: 'Mulai',
           required: true,
           index: true,
-          timezone: { defaultTimezone: 'Asia/Makassar', supportedTimezones: [{ label: 'WITA (Balikpapan)', value: 'Asia/Makassar' }] },
+          timezone: schoolTimezone,
           admin: { date: { pickerAppearance: 'dayAndTime' } },
         },
         {
           name: 'endAt',
           type: 'date',
-          label: 'Selesai (WITA)',
-          timezone: { defaultTimezone: 'Asia/Makassar', supportedTimezones: [{ label: 'WITA (Balikpapan)', value: 'Asia/Makassar' }] },
+          label: 'Selesai',
+          timezone: schoolTimezone,
           admin: { date: { pickerAppearance: 'dayAndTime' } },
           validate: (val: unknown, { siblingData }: { siblingData?: { startAt?: string } }) =>
             !val || !siblingData?.startAt || new Date(String(val)) >= new Date(siblingData.startAt)
@@ -592,7 +593,7 @@ const blocks = [
     slug: 'admissionsCta',
     labels: { singular: 'Ajakan pendaftaran', plural: 'Ajakan pendaftaran' },
     fields: [
-      { name: 'heading', type: 'text', defaultValue: 'Mari Mengenal KPS Lebih Dekat' },
+      { name: 'heading', type: 'text', defaultValue: 'Mari Mengenal Kami Lebih Dekat' },
       { name: 'text', type: 'textarea' },
     ],
   },

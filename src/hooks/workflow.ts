@@ -19,7 +19,7 @@ export const enforceWorkflow =
     const user = req.user
     if (user && user.collection === 'users') {
       const role = roleOf(user)
-      let canPublish = role === 'admin' || role === 'editor'
+      let canPublish = role === 'superadmin' || role === 'admin' || role === 'editor'
       if (opts.admissions && role === 'admissions' && (user as { canPublishAdmissions?: boolean }).canPublishAdmissions) {
         canPublish = true
       }

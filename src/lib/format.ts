@@ -1,30 +1,34 @@
-/** School time zone for display. Reusable for other schools via NEXT_PUBLIC_SCHOOL_TIMEZONE; default WITA (KPS). */
-export const TZ = process.env.NEXT_PUBLIC_SCHOOL_TIMEZONE || 'Asia/Makassar'
+import { requestTimezone, zone } from './tz'
 
-const fmt = (opts: Intl.DateTimeFormatOptions) => new Intl.DateTimeFormat('id-ID', { timeZone: TZ, ...opts })
+/**
+ * Date formatting in the school's time zone. `tz` defaults to the zone of the school serving the request
+ * (see lib/tz.ts); client components pass it explicitly.
+ */
+const fmt = (opts: Intl.DateTimeFormatOptions, tz = requestTimezone()) => new Intl.DateTimeFormat('id-ID', { timeZone: tz, ...opts })
 
-export const formatDate = (iso?: string | null) => (iso ? fmt({ day: 'numeric', month: 'long', year: 'numeric' }).format(new Date(iso)) : '')
-export const formatDateShort = (iso?: string | null) => (iso ? fmt({ day: 'numeric', month: 'short', year: 'numeric' }).format(new Date(iso)) : '')
-export const formatTime = (iso?: string | null) => (iso ? fmt({ hour: '2-digit', minute: '2-digit', hour12: false }).format(new Date(iso)).replace(':', '.') : '')
-export const dayParts = (iso: string) => {
+export const formatDate = (iso?: string | null, tz?: string) => (iso ? fmt({ day: 'numeric', month: 'long', year: 'numeric' }, tz).format(new Date(iso)) : '')
+export const formatDateShort = (iso?: string | null, tz?: string) => (iso ? fmt({ day: 'numeric', month: 'short', year: 'numeric' }, tz).format(new Date(iso)) : '')
+export const formatTime = (iso?: string | null, tz?: string) => (iso ? fmt({ hour: '2-digit', minute: '2-digit', hour12: false }, tz).format(new Date(iso)).replace(':', '.') : '')
+export const dayParts = (iso: string, tz?: string) => {
   const d = new Date(iso)
   return {
-    day: fmt({ day: '2-digit' }).format(d),
-    month: fmt({ month: 'short' }).format(d),
-    weekday: fmt({ weekday: 'long' }).format(d),
+    day: fmt({ day: '2-digit' }, tz).format(d),
+    month: fmt({ month: 'short' }, tz).format(d),
+    weekday: fmt({ weekday: 'long' }, tz).format(d),
   }
 }
 
-export const formatEventWhen = (e: { startAt: string; endAt?: string | null; allDay?: boolean | null }) => {
+export const formatEventWhen = (e: { startAt: string; endAt?: string | null; allDay?: boolean | null }, tz = requestTimezone()) => {
   if (e.allDay) {
-    const s = formatDate(e.startAt)
-    const en = e.endAt ? formatDate(e.endAt) : ''
+    const s = formatDate(e.startAt, tz)
+    const en = e.endAt ? formatDate(e.endAt, tz) : ''
     return en && en !== s ? `${s} – ${en}` : `${s} (sepanjang hari)`
   }
-  const sameDay = e.endAt && formatDate(e.endAt) === formatDate(e.startAt)
-  if (e.endAt && sameDay) return `${formatDate(e.startAt)}, ${formatTime(e.startAt)}–${formatTime(e.endAt)} WITA`
-  if (e.endAt) return `${formatDate(e.startAt)} ${formatTime(e.startAt)} – ${formatDate(e.endAt)} ${formatTime(e.endAt)} WITA`
-  return `${formatDate(e.startAt)}, ${formatTime(e.startAt)} WITA`
+  const z = zone(tz)
+  const sameDay = e.endAt && formatDate(e.endAt, tz) === formatDate(e.startAt, tz)
+  if (e.endAt && sameDay) return `${formatDate(e.startAt, tz)}, ${formatTime(e.startAt, tz)}–${formatTime(e.endAt, tz)} ${z}`
+  if (e.endAt) return `${formatDate(e.startAt, tz)} ${formatTime(e.startAt, tz)} – ${formatDate(e.endAt, tz)} ${formatTime(e.endAt, tz)} ${z}`
+  return `${formatDate(e.startAt, tz)}, ${formatTime(e.startAt, tz)} ${z}`
 }
 
 export const EVENT_STATUS: Record<string, string> = {

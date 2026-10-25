@@ -1,13 +1,16 @@
+import { getSchoolNames } from '@/lib/queries'
+import { schoolMeta } from '@/lib/meta'
 import Link from 'next/link'
 import { listPosts, listCollection } from '@/lib/queries'
 import { PageHeader, Container, EmptyState, Pagination } from '@/components/ui/bits'
 import { PostCard } from '@/components/sections/home'
 import type { Post, Category } from '@/payload-types'
 
-export const metadata = { title: 'Berita', description: 'Cerita dan kabar kegiatan SMP Nasional KPS.', alternates: { canonical: '/berita' } }
+export const generateMetadata = schoolMeta(({ name }) => ({ title: 'Berita', description: `Cerita dan kabar kegiatan ${name}.`, alternates: { canonical: '/berita' } }))
 type SP = { searchParams: Promise<{ kategori?: string; q?: string; page?: string }> }
 
 export default async function Page({ searchParams }: SP) {
+  const { short } = await getSchoolNames()
   const sp = await searchParams
   const page = Math.max(1, Number(sp.page) || 1)
   const q = sp.q?.trim().slice(0, 80) || undefined
@@ -15,7 +18,7 @@ export default async function Page({ searchParams }: SP) {
   const posts = res.docs as Post[]
   return (
     <>
-      <PageHeader title="Cerita dari KPS" lead="Kabar kegiatan, pembelajaran dan kehidupan sekolah." crumbs={[{ label: 'Informasi', href: '/informasi' }, { label: 'Berita' }]} />
+      <PageHeader title={`Cerita dari ${short}`} lead="Kabar kegiatan, pembelajaran dan kehidupan sekolah." crumbs={[{ label: 'Informasi', href: '/informasi' }, { label: 'Berita' }]} />
       <section className="section">
         <Container>
           <form className="filter-form" method="get" role="search">

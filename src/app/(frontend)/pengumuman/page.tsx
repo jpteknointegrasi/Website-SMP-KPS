@@ -1,10 +1,11 @@
+import { schoolMeta } from '@/lib/meta'
 import Link from 'next/link'
 import { listAnnouncements } from '@/lib/queries'
 import { PageHeader, Container, EmptyState, Pagination, DemoBadge } from '@/components/ui/bits'
 import { AUDIENCE, formatDate } from '@/lib/format'
 import type { Announcement } from '@/payload-types'
 
-export const metadata = { title: 'Pengumuman', description: 'Informasi resmi SMP Nasional KPS yang sedang berlaku dan arsipnya.', alternates: { canonical: '/pengumuman' } }
+export const generateMetadata = schoolMeta(({ name }) => ({ title: 'Pengumuman', description: `Informasi resmi ${name} yang sedang berlaku dan arsipnya.`, alternates: { canonical: '/pengumuman' } }))
 type SP = { searchParams: Promise<{ arsip?: string; page?: string }> }
 
 

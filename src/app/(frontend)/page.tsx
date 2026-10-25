@@ -1,3 +1,4 @@
+import { siteUrl } from '@/lib/payload'
 import React from 'react'
 import type { Metadata } from 'next'
 import { getCurrentAdmissions, getFlags, getGlobals, getHomepage, getPriorityAnnouncement, listAnnouncements, listCollection, listMediaItems, listPosts, listSocialAccounts, listUpcomingEvents } from '@/lib/queries'
@@ -27,6 +28,16 @@ export const metadata: Metadata = { alternates: { canonical: '/' } }
 
 export default async function Home() {
   const [home, { settings }, priority] = await Promise.all([getHomepage(), getGlobals(), getPriorityAnnouncement()])
+  // A new school whose homepage is not published yet: neutral placeholder instead of an empty hero.
+  if (!home)
+    return (
+      <section className="section">
+        <div style={{ maxWidth: 640, margin: '0 auto', padding: '12vh 16px', textAlign: 'center' }}>
+          <h1>{settings.schoolName || 'Website sekolah'}</h1>
+          <p>Website ini sedang disiapkan. Silakan kembali beberapa saat lagi.</p>
+        </div>
+      </section>
+    )
   const sections = (home.sections ?? []).filter((s) => s.enabled)
   const lim = (type: string, d: number) => sections.find((s) => s.type === type)?.limit ?? d
   const has = (t: string) => sections.some((s) => s.type === t)
@@ -71,7 +82,7 @@ export default async function Home() {
   }
 
   const t = home.texts ?? {}
-  const SITE = process.env.NEXT_PUBLIC_SERVER_URL || ''
+  const SITE = await siteUrl()
   const ld = {
     '@context': 'https://schema.org',
     '@type': 'MiddleSchool',
@@ -90,7 +101,7 @@ export default async function Home() {
       case 'search':
         return <SearchBand />
       case 'highlights':
-        return <Highlights items={highlights} />
+        return <Highlights items={highlights} short={(settings as { shortName?: string | null }).shortName || undefined} />
       case 'schoolIntro':
         return <SchoolIntro intro={home.intro} />
       case 'programs':

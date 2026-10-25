@@ -1,3 +1,5 @@
+import { getSchoolNames } from '@/lib/queries'
+import { schoolMeta } from '@/lib/meta'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { getFlags, listMediaItems, listSocialAccounts } from '@/lib/queries'
@@ -7,12 +9,13 @@ import { Icon } from '@/components/ui/Icon'
 import { PLATFORM_ICON } from '@/components/layout/Footer'
 import type { MediaItem } from '@/payload-types'
 
-export const metadata = { title: 'Video & Media Sosial', description: 'KPS TV, podcast, dokumentasi kegiatan dan kanal resmi SMP Nasional KPS.', alternates: { canonical: '/media' } }
+export const generateMetadata = schoolMeta(({ name }) => ({ title: 'Video & Media Sosial', description: `video, podcast, dokumentasi kegiatan dan kanal resmi ${name}.`, alternates: { canonical: '/media' } }))
 type SP = { searchParams: Promise<{ jenis?: string; page?: string }> }
 
 const TYPES: Record<string, string> = { video: 'Video', podcast: 'Podcast', short: 'Video pendek', playlist: 'Playlist', social_post: 'Postingan', external_article: 'Liputan' }
 
 export default async function Page({ searchParams }: SP) {
+  const { short } = await getSchoolNames()
   if (!(await getFlags()).mediaHub) notFound()
   const sp = await searchParams
   const type = sp.jenis && sp.jenis in TYPES ? sp.jenis : undefined
@@ -21,7 +24,7 @@ export default async function Page({ searchParams }: SP) {
   const items = res.docs as MediaItem[]
   return (
     <>
-      <PageHeader title="Video & Media Sosial" lead="Kenali kehidupan sekolah melalui video, podcast, dan cerita dari komunitas KPS. Video tetap diputar dari platform asalnya." crumbs={[{ label: 'Informasi', href: '/informasi' }, { label: 'Video & Media' }]} />
+      <PageHeader title="Video & Media Sosial" lead={`Kenali kehidupan sekolah melalui video, podcast, dan cerita dari komunitas ${short}. Video tetap diputar dari platform asalnya.`} crumbs={[{ label: 'Informasi', href: '/informasi' }, { label: 'Video & Media' }]} />
       <section className="section">
         <Container>
           {accounts.length ? (

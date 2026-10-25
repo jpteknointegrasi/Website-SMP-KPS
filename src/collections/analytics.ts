@@ -1,3 +1,4 @@
+import { endpointPayload, noSchool } from '../tenancy/endpoint'
 import type { CollectionConfig, Endpoint } from 'payload'
 import { isEditorial, nobody } from '../access/roles'
 import { readFlags, flagOff } from '../lib/flags'
@@ -20,7 +21,9 @@ const trackEndpoint: Endpoint = {
   path: '/track',
   method: 'post',
   handler: async (req) => {
-    if (!(await readFlags(req.payload)).visitorAnalytics) return flagOff()
+    const p = await endpointPayload(req)
+    if (!p) return noSchool()
+    if (!(await readFlags(p)).visitorAnalytics) return flagOff()
     if (limited(clientIp(req))) return new Response(null, { status: 204 })
     let body: { kind?: unknown; key?: unknown } = {}
     try {
@@ -31,7 +34,7 @@ const trackEndpoint: Endpoint = {
     const kind = body.kind as AnalyticKind
     if (kind !== 'pageview' && kind !== 'cta_click') return new Response(null, { status: 204 })
     const key = sanitizeKey(kind, body.key)
-    if (key) await recordEvent(req.payload, kind, key)
+    if (key) await recordEvent(p, kind, key)
     return new Response(null, { status: 204, headers: { 'cache-control': 'no-store' } })
   },
 }

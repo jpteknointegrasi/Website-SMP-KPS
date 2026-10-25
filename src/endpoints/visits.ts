@@ -1,4 +1,6 @@
 import type { Endpoint, Where } from 'payload'
+import { endpointPayload, noSchool } from '../tenancy/endpoint'
+import type { TenantPayload } from '../tenancy/scoped'
 import { createHash } from 'crypto'
 import { rateLimited } from './contact'
 import { readFlags, flagOff } from '../lib/flags'
@@ -47,7 +49,7 @@ export type PublicSession = {
 }
 
 /** Aggregate availability only — never names, contacts or the guide. Used by the page and the API. */
-export async function listPublicSessions(payload: import('payload').Payload): Promise<PublicSession[]> {
+export async function listPublicSessions(payload: TenantPayload): Promise<PublicSession[]> {
   const res = await payload.find({ collection: 'visit-sessions', where: bookableWhere(), sort: 'startAt', limit: 30, depth: 0, overrideAccess: true })
   // lazily free expired holds so availability is right even if the scheduler did not run
   if (res.docs.length) await releaseExpiredHolds(payload)
@@ -75,8 +77,10 @@ export const visitAvailabilityEndpoint: Endpoint = {
   path: '/available',
   method: 'get',
   handler: async (req) => {
-    if (!(await readFlags(req.payload)).schoolVisits) return flagOff()
-    return json({ ok: true, sessions: await listPublicSessions(req.payload) })
+    const p = await endpointPayload(req)
+    if (!p) return noSchool()
+    if (!(await readFlags(p)).schoolVisits) return flagOff()
+    return json({ ok: true, sessions: await listPublicSessions(p) })
   },
 }
 
@@ -85,11 +89,13 @@ export const visitReconcileEndpoint: Endpoint = {
   path: '/reconcile',
   method: 'post',
   handler: async (req) => {
+    const p = await endpointPayload(req)
+    if (!p) return noSchool()
     if (!canSeeLeads(req.user)) return json({ ok: false, error: 'Tidak diizinkan.' }, 403)
-    await releaseExpiredHolds(req.payload)
-    const sessions = await req.payload.find({ collection: 'visit-sessions', where: { startAt: { greater_than: new Date(Date.now() - 30 * 864e5).toISOString() } }, limit: 200, depth: 0, overrideAccess: true })
+    await releaseExpiredHolds(p)
+    const sessions = await p.find({ collection: 'visit-sessions', where: { startAt: { greater_than: new Date(Date.now() - 30 * 864e5).toISOString() } }, limit: 200, depth: 0, overrideAccess: true })
     const out: Record<number, number> = {}
-    for (const s of sessions.docs) out[s.id] = await recomputeBooked(req.payload, s.id)
+    for (const s of sessions.docs) out[s.id] = await recomputeBooked(p, s.id)
     return json({ ok: true, sessions: out })
   },
 }
@@ -120,7 +126,9 @@ export const visitBookingEndpoint: Endpoint = {
   path: '/submit',
   method: 'post',
   handler: async (req) => {
-    const flags = await readFlags(req.payload)
+    const p = await endpointPayload(req)
+    if (!p) return noSchool()
+    const flags = await readFlags(p)
     if (!flags.schoolVisits) return flagOff()
     if (rateLimited(`visit:${clientIp(req)}`)) return json({ ok: false, error: 'Terlalu banyak pengiriman. Coba lagi beberapa menit lagi.' }, 429)
     let body: Record<string, unknown> = {}
@@ -135,16 +143,16 @@ export const visitBookingEndpoint: Endpoint = {
     const idempotencyKey = idempotencyKeyOf(body.idempotencyKey)
     if (!idempotencyKey) return json({ ok: false, error: 'Muat ulang halaman lalu kirim lagi.' }, 400)
 
-    const byKey = async () => (await req.payload.find({ collection: 'visit-bookings', where: { idempotencyKey: { equals: idempotencyKey } }, limit: 1, depth: 0, overrideAccess: true })).docs[0]
+    const byKey = async () => (await p.find({ collection: 'visit-bookings', where: { idempotencyKey: { equals: idempotencyKey } }, limit: 1, depth: 0, overrideAccess: true })).docs[0]
     const prior = await byKey()
     if (prior) return json({ ok: true, reference: prior.reference, status: prior.status, repeated: true })
 
-    const session = (await req.payload.find({ collection: 'visit-sessions', where: { and: [{ id: { equals: value.sessionId } }, bookableWhere()] }, limit: 1, depth: 0, overrideAccess: true })).docs[0]
+    const session = (await p.find({ collection: 'visit-sessions', where: { and: [{ id: { equals: value.sessionId } }, bookableWhere()] }, limit: 1, depth: 0, overrideAccess: true })).docs[0]
     if (!session) return json({ ok: false, errors: { session: 'Jadwal ini sudah tidak tersedia. Pilih jadwal lain.' } }, 409)
-    await releaseExpiredHolds(req.payload, session.id)
+    await releaseExpiredHolds(p, session.id)
 
     const seats = seatsFor(session.capacityUnit, value.participants)
-    if (!(await tryReserve(req.payload, session.id, seats)))
+    if (!(await tryReserve(p, session.id, seats)))
       return json({ ok: false, errors: { session: 'Kuota jadwal ini sudah penuh. Silakan pilih jadwal lain.' } }, 409)
 
     const status = session.requiresConfirmation ? 'pending' : 'confirmed'
@@ -155,11 +163,11 @@ export const visitBookingEndpoint: Endpoint = {
     if (value.email) contactOr.push({ email: { equals: value.email } })
     if (value.phoneNormalized) contactOr.push({ phoneNormalized: { equals: value.phoneNormalized } })
     const lead = contactOr.length
-      ? (await req.payload.find({ collection: 'leads', where: { and: [{ or: contactOr }, { status: { not_equals: 'closed' } }] }, sort: '-createdAt', limit: 1, depth: 0, overrideAccess: true })).docs[0]
+      ? (await p.find({ collection: 'leads', where: { and: [{ or: contactOr }, { status: { not_equals: 'closed' } }] }, sort: '-createdAt', limit: 1, depth: 0, overrideAccess: true })).docs[0]
       : undefined
     try {
       const { sessionId, ...rest } = value
-      await req.payload.create({
+      await p.create({
         collection: 'visit-bookings',
         overrideAccess: true,
         context: { capacityReserved: true },
@@ -178,13 +186,13 @@ export const visitBookingEndpoint: Endpoint = {
         },
       })
     } catch (e) {
-      await release(req.payload, session.id, seats) // give the seat back
+      await release(p, session.id, seats) // give the seat back
       const again = await waitForKey(byKey)
       if (again) return json({ ok: true, reference: again.reference, status: again.status, repeated: true })
-      req.payload.logger.error(`Gagal menyimpan kunjungan: ${(e as Error).message}`)
+      p.logger.error(`Gagal menyimpan kunjungan: ${(e as Error).message}`)
       return json({ ok: false, error: 'Maaf, pemesanan belum tersimpan. Coba lagi.' }, 500)
     }
-    if (flags.visitorAnalytics) await recordEvent(req.payload, 'form_success', 'kunjungan')
+    if (flags.visitorAnalytics) await recordEvent(p, 'form_success', 'kunjungan')
     return json({ ok: true, reference, status, cancelToken: token, session: { title: session.title, startAt: session.startAt, endAt: session.endAt, location: session.location } })
   },
 }
@@ -198,7 +206,9 @@ export const visitCancelEndpoint: Endpoint = {
   path: '/cancel',
   method: 'post',
   handler: async (req) => {
-    if (!(await readFlags(req.payload)).schoolVisits) return flagOff()
+    const p = await endpointPayload(req)
+    if (!p) return noSchool()
+    if (!(await readFlags(p)).schoolVisits) return flagOff()
     if (rateLimited(`cancel:${clientIp(req)}`)) return json({ ok: false, error: 'Terlalu banyak percobaan. Coba lagi nanti.' }, 429)
     let body: Record<string, unknown> = {}
     try {
@@ -210,13 +220,13 @@ export const visitCancelEndpoint: Endpoint = {
     const invalid = json({ ok: false, error: 'Tautan pembatalan tidak berlaku atau sudah kedaluwarsa. Hubungi sekolah bila perlu bantuan.' }, 404)
     if (!token) return invalid
     const b = (
-      await req.payload.find({ collection: 'visit-bookings', where: { cancelTokenHash: { equals: sha256(token) } }, limit: 1, depth: 1, overrideAccess: true })
+      await p.find({ collection: 'visit-bookings', where: { cancelTokenHash: { equals: sha256(token) } }, limit: 1, depth: 1, overrideAccess: true })
     ).docs[0]
     if (!b || !consumes(b.status) || !b.cancelTokenExpiresAt || new Date(b.cancelTokenExpiresAt).getTime() <= Date.now()) return invalid
     const s = b.session && typeof b.session === 'object' ? b.session : null
     const info = { reference: b.reference, status: b.status, session: s ? { title: s.title, startAt: s.startAt } : null }
     if (!truthy(body.confirm)) return json({ ok: true, booking: info })
-    await req.payload.update({
+    await p.update({
       collection: 'visit-bookings',
       id: b.id,
       overrideAccess: true,

@@ -1,3 +1,4 @@
+import { scopeToDoc } from '../tenancy/scoped'
 import type { CollectionConfig } from 'payload'
 import { APIError } from 'payload'
 import { adminOnly, isAdmin, isEditorial, hasRole, nobody, editorialOnly, anyone, admissionsStaff, isStaff } from '../access/roles'
@@ -252,7 +253,7 @@ export const Redirects: CollectionConfig = {
         for (let i = 0; i < 10 && cursor; i++) {
           if (seen.has(cursor)) throw new APIError('Pengalihan membentuk loop. Periksa tujuan.', 400, null, true)
           seen.add(cursor)
-          const next = await req.payload.find({
+          const next = await scopeToDoc(req.payload, data, originalDoc).find({
             collection: 'redirects',
             where: { oldPath: { equals: cursor }, id: { not_equals: originalDoc?.id ?? 0 } },
             limit: 1,

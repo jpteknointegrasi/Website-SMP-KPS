@@ -1,5 +1,8 @@
-import { TZ } from '@/lib/format'
 import type { Payload } from 'payload'
+import { adminSchool } from '@/tenancy/admin'
+import { scopePayload } from '@/tenancy/scoped'
+import { tzAbbr } from '@/tenancy/config'
+import { PlatformOverview } from './PlatformOverview'
 import React from 'react'
 import { CountUp } from './CountUp'
 import { AdminClock, AdminCountdown } from './Live'
@@ -9,13 +12,14 @@ import './dashboard.scss'
 type Props = { payload: Payload; user?: { name?: string; role?: string; canAccessLeads?: boolean; canExportLeads?: boolean } | null }
 
 const ROLE_LABEL: Record<string, string> = {
+  superadmin: 'Super Admin Platform',
   admin: 'Admin Teknis',
   editor: 'Editor / Humas',
   contributor: 'Kontributor',
   admissions: 'Petugas Pendaftaran',
 }
 
-const greeting = () => {
+const greeting = (TZ: string) => {
   const h = Number(new Intl.DateTimeFormat('en-GB', { hour: '2-digit', hour12: false, timeZone: TZ }).format(new Date()))
   if (h < 11) return 'Selamat pagi'
   if (h < 15) return 'Selamat siang'
@@ -23,7 +27,14 @@ const greeting = () => {
   return 'Selamat malam'
 }
 
-export async function Dashboard({ payload, user }: Props) {
+export async function Dashboard({ payload: raw, user }: Props) {
+  // Every number below is for one school only: the user's own (or, for the Super Admin, the school whose address
+  // the panel is opened on). On the platform's own address the Super Admin sees the school list instead.
+  const school = await adminSchool(raw, user)
+  if (!school) return <PlatformOverview payload={raw} user={user} />
+  const payload = scopePayload(raw, school.id)
+  const TZ = school.timezone
+  const ZONE = tzAbbr(TZ)
   const now = new Date().toISOString()
   const safeCount = async (fn: () => Promise<{ totalDocs: number }>) => {
     try {
@@ -47,7 +58,7 @@ export async function Dashboard({ payload, user }: Props) {
   ])
 
   const role = user?.role ?? ''
-  const editorial = role === 'admin' || role === 'editor'
+  const editorial = role === 'superadmin' || role === 'admin' || role === 'editor'
   const in7 = new Date(Date.now() + 7 * 864e5).toISOString()
   const safeFind = async <T,>(fn: () => Promise<{ docs: unknown[] }>) => {
     try {
@@ -92,7 +103,7 @@ export async function Dashboard({ payload, user }: Props) {
     { label: 'Tulis berita', href: '/admin/collections/posts/create', icon: '✎' },
     { label: 'Buat pengumuman', href: '/admin/collections/announcements/create', icon: '📣' },
     { label: 'Tambah agenda', href: '/admin/collections/events/create', icon: '📅' },
-    { label: 'Ganti hero beranda', href: '/admin/globals/homepage', icon: '🖼' },
+    { label: 'Ganti hero beranda', href: '/admin/collections/homepage', icon: '🖼' },
     { label: 'Info pendaftaran', href: '/admin/collections/admissions-cycles', icon: '🎓' },
     { label: 'Tambah video/media', href: '/admin/collections/media-items/create', icon: '▶' },
     { label: 'Tambah FAQ', href: '/admin/collections/faqs/create', icon: '?' },
@@ -112,9 +123,9 @@ export async function Dashboard({ payload, user }: Props) {
           })}
         </svg>
         <div className="kps-dash__hero-inner">
-          <AdminClock />
-          <p className="kps-dash__eyebrow">{greeting()},</p>
-          <h2 className="kps-dash__title">{user?.name ?? 'Tim KPS'} 👋</h2>
+          <AdminClock tz={TZ} zone={ZONE} />
+          <p className="kps-dash__eyebrow">{greeting(TZ)}, · {school.name}</p>
+          <h2 className="kps-dash__title">{user?.name ?? 'Tim Sekolah'} 👋</h2>
           <p className="kps-dash__sub">
             Peran: <strong>{ROLE_LABEL[user?.role ?? ''] ?? '-'}</strong> · Alur: Draf → Review → Terbit → Arsip
           </p>
@@ -138,7 +149,7 @@ export async function Dashboard({ payload, user }: Props) {
               {nextEvents.map((e) => (
                 <li key={e.id}>
                   <a href={`/admin/collections/events/${e.id}`}>{e.title}</a>
-                  <span>{fmt(e.startAt, !e.allDay)} WITA</span>
+                  <span>{fmt(e.startAt, !e.allDay)} {ZONE}</span>
                   <AdminCountdown to={e.startAt} />
                 </li>
               ))}
@@ -154,7 +165,7 @@ export async function Dashboard({ payload, user }: Props) {
               {expiring.map((a) => (
                 <li key={a.id}>
                   <a href={`/admin/collections/announcements/${a.id}`}>{a.title}</a>
-                  <span>Berakhir {fmt(a.displayEnd)} WITA — otomatis hilang dari publik</span>
+                  <span>Berakhir {fmt(a.displayEnd)} {ZONE} — otomatis hilang dari publik</span>
                 </li>
               ))}
             </ul>
@@ -184,7 +195,7 @@ export async function Dashboard({ payload, user }: Props) {
           </div>
         ) : null}
       </div>
-      <DashboardOps payload={payload} user={user} />
+      <DashboardOps payload={payload} user={user} timezone={TZ} />
       <div className="kps-dash__actions">
         {actions.map((a) => (
           <a key={a.label} href={a.href} className="kps-dash__action">

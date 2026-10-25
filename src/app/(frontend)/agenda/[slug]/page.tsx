@@ -1,3 +1,5 @@
+import { getSchoolNames } from '@/lib/queries'
+import { siteUrl } from '@/lib/payload'
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { findBySlug } from '@/lib/queries'
@@ -20,11 +22,12 @@ export async function generateMetadata({ params }: P): Promise<Metadata> {
 }
 
 export default async function Page({ params }: P) {
+  const { name } = await getSchoolNames()
   const e = await findBySlug<Event>('events', (await params).slug, 1)
   if (!e) notFound()
   const cover = e.cover && typeof e.cover === 'object' ? (e.cover as Media) : null
   const upcoming = new Date(e.startAt).getTime() > Date.now() && e.eventStatus === 'scheduled'
-  const SITE = process.env.NEXT_PUBLIC_SERVER_URL || ''
+  const SITE = await siteUrl()
   const cat = e.category && typeof e.category === 'object' ? (e.category as EventCategory) : null
   const audience = (e.audience ?? []).filter((a) => a !== 'semua')
   const docs = (e.attachments ?? []).filter((d): d is Document => typeof d === 'object' && d !== null)
@@ -36,7 +39,7 @@ export default async function Page({ params }: P) {
     endDate: e.endAt ?? undefined,
     eventStatus: `https://schema.org/Event${{ scheduled: 'Scheduled', postponed: 'Postponed', cancelled: 'Cancelled', completed: 'Scheduled' }[e.eventStatus]}`,
     location: e.location ? { '@type': 'Place', name: e.location } : undefined,
-    organizer: { '@type': 'Organization', name: e.organizer || 'SMP Nasional KPS' },
+    organizer: { '@type': 'Organization', name: e.organizer || name },
     url: SITE ? `${SITE}/agenda/${e.slug}` : undefined,
   }
   return (

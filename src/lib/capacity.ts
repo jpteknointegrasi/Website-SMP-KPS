@@ -1,4 +1,10 @@
-import type { Payload } from 'payload'
+import type { Payload as RawPayload } from 'payload'
+import type { TenantPayload } from '../tenancy/scoped'
+
+/** Query helpers take a school-scoped Payload: a session id from one school can never touch another's. */
+type Payload = TenantPayload
+/** Raw counter updates only need the database handle; callers pass session ids already checked for the school. */
+type Db = Pick<RawPayload, 'db'>
 import { sql } from '@payloadcms/db-postgres'
 
 /**
@@ -18,9 +24,9 @@ export const seatsFor = (unit: string | null | undefined, participants: number |
   unit === 'people' ? Math.max(1, Math.min(20, Number(participants) || 1)) : 1
 
 type Row = { id: number }
-const isPg = (payload: Payload) => payload.db.name === 'postgres'
+const isPg = (payload: Db) => payload.db.name === 'postgres'
 
-async function exec(payload: Payload, q: ReturnType<typeof sql>): Promise<Row[]> {
+async function exec(payload: Db, q: ReturnType<typeof sql>): Promise<Row[]> {
   const db = payload.db.drizzle as unknown as {
     execute?: (q: unknown) => Promise<{ rows: Row[] }>
     all?: (q: unknown) => Promise<Row[]>
@@ -30,7 +36,7 @@ async function exec(payload: Payload, q: ReturnType<typeof sql>): Promise<Row[]>
 }
 
 /** Atomically takes `seats` from a session. Returns false when it would exceed capacity. */
-export async function tryReserve(payload: Payload, sessionId: number, seats: number) {
+export async function tryReserve(payload: Db, sessionId: number, seats: number) {
   const rows = await exec(
     payload,
     sql`UPDATE visit_sessions SET booked_count = COALESCE(booked_count, 0) + ${seats}
@@ -41,7 +47,7 @@ export async function tryReserve(payload: Payload, sessionId: number, seats: num
 }
 
 /** Gives seats back (never below zero). */
-export async function release(payload: Payload, sessionId: number, seats: number) {
+export async function release(payload: Db, sessionId: number, seats: number) {
   if (isPg(payload)) {
     await exec(payload, sql`UPDATE visit_sessions SET booked_count = GREATEST(COALESCE(booked_count, 0) - ${seats}, 0) WHERE id = ${sessionId} RETURNING id`)
   } else {

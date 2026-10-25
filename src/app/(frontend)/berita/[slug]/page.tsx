@@ -1,3 +1,5 @@
+import { getSchoolNames } from '@/lib/queries'
+import { siteUrl } from '@/lib/payload'
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
@@ -19,19 +21,20 @@ export async function generateMetadata({ params }: P): Promise<Metadata> {
     title: p.seo?.title ?? p.title,
     description: p.seo?.description ?? p.excerpt ?? undefined,
     alternates: { canonical: `/berita/${p.slug}` },
-    openGraph: { type: 'article', publishedTime: p.publishedAt ?? undefined, locale: 'id_ID', siteName: 'SMP Nasional KPS', images: [cover?.sizes?.large?.url ?? '/og-image.jpg'] },
+    openGraph: { type: 'article', publishedTime: p.publishedAt ?? undefined, locale: 'id_ID', siteName: (await getSchoolNames()).name, images: cover?.sizes?.large?.url ? [cover.sizes.large.url] : undefined },
     twitter: { card: 'summary_large_image', images: [cover?.sizes?.large?.url ?? '/og-image.jpg'] },
   }
 }
 
 export default async function Page({ params }: P) {
+  const { name } = await getSchoolNames()
   const p = await findBySlug<Post>('posts', (await params).slug)
   if (!p) notFound()
   const cover = p.cover && typeof p.cover === 'object' ? (p.cover as Media) : null
   const related = await relatedPosts(p)
   const cats = (p.categories ?? []).filter((c): c is Category => typeof c === 'object')
   const gallery = (p.gallery ?? []).filter((g): g is Media => typeof g === 'object')
-  const SITE = process.env.NEXT_PUBLIC_SERVER_URL || ''
+  const SITE = await siteUrl()
   const url = `${SITE}/berita/${p.slug}`
   const ld = {
     '@context': 'https://schema.org',
@@ -40,7 +43,7 @@ export default async function Page({ params }: P) {
     datePublished: p.publishedAt,
     dateModified: p.updatedAt,
     image: cover?.sizes?.large?.url ? [`${SITE}${cover.sizes.large.url}`] : undefined,
-    publisher: { '@type': 'Organization', name: 'SMP Nasional KPS' },
+    publisher: { '@type': 'Organization', name },
   }
   return (
     <>

@@ -22,6 +22,7 @@ import { BoldFeatureClient as BoldFeatureClient_e70f5e05f09f93e00b997edb1ef0c864
 import { ItalicFeatureClient as ItalicFeatureClient_e70f5e05f09f93e00b997edb1ef0c864 } from '@payloadcms/richtext-lexical/client'
 import { EndDateWarning as EndDateWarning_a16031f6828e140728bbdec069e8b4ab } from '@/components/admin/EndDateWarning'
 import { MediaUrlHint as MediaUrlHint_12906bbcc5cd8215c3b131910d37711e } from '@/components/admin/MediaUrlHint'
+import { SingletonList as SingletonList_c0edf81a217d02c6d8946c009e854af1 } from '@/components/admin/SingletonList'
 import { AdminIcon as AdminIcon_066c562e10ad4e70ff0de1a39f9b91f6 } from '@/components/admin/Brand'
 import { AdminLogo as AdminLogo_066c562e10ad4e70ff0de1a39f9b91f6 } from '@/components/admin/Brand'
 import { Dashboard as Dashboard_0e7b23c75ea046975e1784ba01f82886 } from '@/components/admin/Dashboard'
@@ -54,6 +55,7 @@ export const importMap = {
   "@payloadcms/richtext-lexical/client#ItalicFeatureClient": ItalicFeatureClient_e70f5e05f09f93e00b997edb1ef0c864,
   "@/components/admin/EndDateWarning#EndDateWarning": EndDateWarning_a16031f6828e140728bbdec069e8b4ab,
   "@/components/admin/MediaUrlHint#MediaUrlHint": MediaUrlHint_12906bbcc5cd8215c3b131910d37711e,
+  "@/components/admin/SingletonList#SingletonList": SingletonList_c0edf81a217d02c6d8946c009e854af1,
   "@/components/admin/Brand#AdminIcon": AdminIcon_066c562e10ad4e70ff0de1a39f9b91f6,
   "@/components/admin/Brand#AdminLogo": AdminLogo_066c562e10ad4e70ff0de1a39f9b91f6,
   "@/components/admin/Dashboard#Dashboard": Dashboard_0e7b23c75ea046975e1784ba01f82886,

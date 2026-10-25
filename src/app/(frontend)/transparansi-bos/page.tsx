@@ -1,10 +1,11 @@
+import { schoolMeta } from '@/lib/meta'
 import Link from 'next/link'
 import { listCollection } from '@/lib/queries'
 import { PageHeader, Container, EmptyState } from '@/components/ui/bits'
 import { DocumentList } from '@/components/content/DocumentList'
 import type { Document } from '@/payload-types'
 
-export const metadata = { title: 'Transparansi BOS', description: 'Laporan penggunaan Dana BOS SMP Nasional KPS yang disetujui untuk publikasi.', alternates: { canonical: '/transparansi-bos' } }
+export const generateMetadata = schoolMeta(({ name }) => ({ title: 'Transparansi BOS', description: `Laporan penggunaan Dana BOS ${name} yang disetujui untuk publikasi.`, alternates: { canonical: '/transparansi-bos' } }))
 type SP = { searchParams: Promise<{ periode?: string }> }
 
 export default async function Page({ searchParams }: SP) {

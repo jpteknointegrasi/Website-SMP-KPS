@@ -1,9 +1,10 @@
 import type { Access, FieldAccess, PayloadRequest, Where } from 'payload'
 
-export type Role = 'admin' | 'editor' | 'contributor' | 'admissions'
+export type Role = 'superadmin' | 'admin' | 'editor' | 'contributor' | 'admissions'
 
 export const ROLE_OPTIONS: { label: string; value: Role }[] = [
-  { label: 'Admin Teknis', value: 'admin' },
+  { label: 'Super Admin Platform', value: 'superadmin' },
+  { label: 'Admin Teknis Sekolah', value: 'admin' },
   { label: 'Editor / Humas', value: 'editor' },
   { label: 'Kontributor', value: 'contributor' },
   { label: 'Petugas Pendaftaran', value: 'admissions' },
@@ -16,11 +17,19 @@ export const roleOf = (user: MaybeUser): Role | null => {
   return ((user as { role?: Role }).role ?? null) as Role | null
 }
 
+/**
+ * Role check. The platform Super Admin passes every check that admits a school's Admin Teknis
+ * (but not checks for other roles only, e.g. `admissions`: private family data stays opt-in).
+ */
 export const hasRole = (user: MaybeUser, ...roles: Role[]) => {
   const r = roleOf(user)
-  return r !== null && roles.includes(r)
+  if (r === null) return false
+  if (r === 'superadmin' && roles.includes('admin')) return true
+  return roles.includes(r)
 }
 
+/** Platform operator: manages schools and can act inside any school. Has no `tenant`. */
+export const isSuperAdmin = (user: MaybeUser) => roleOf(user) === 'superadmin'
 export const isAdmin = (user: MaybeUser) => hasRole(user, 'admin')
 export const isEditorial = (user: MaybeUser) => hasRole(user, 'admin', 'editor')
 export const isStaff = (user: MaybeUser) => roleOf(user) !== null
@@ -30,6 +39,7 @@ export const demoAllowed = () => process.env.SHOW_DEMO_CONTENT === 'true'
 
 // ---------- collection access ----------
 export const adminOnly: Access = ({ req: { user } }) => isAdmin(user)
+export const superAdminOnly: Access = ({ req: { user } }) => isSuperAdmin(user)
 export const editorialOnly: Access = ({ req: { user } }) => isEditorial(user)
 export const staffOnly: Access = ({ req: { user } }) => isStaff(user)
 export const anyone: Access = () => true
@@ -75,4 +85,5 @@ export const admissionsStaff: Access = ({ req: { user } }) =>
 // ---------- field access ----------
 export const fieldStaffOnly: FieldAccess = ({ req: { user } }) => isStaff(user)
 export const fieldAdminOnly: FieldAccess = ({ req: { user } }) => isAdmin(user)
+export const fieldSuperAdminOnly: FieldAccess = ({ req: { user } }) => isSuperAdmin(user)
 export const fieldEditorialOnly: FieldAccess = ({ req: { user } }) => isEditorial(user)

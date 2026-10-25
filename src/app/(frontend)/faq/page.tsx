@@ -1,3 +1,4 @@
+import { schoolMeta } from '@/lib/meta'
 import Link from 'next/link'
 import { listFaqs } from '@/lib/queries'
 import { PageHeader, Container, EmptyState } from '@/components/ui/bits'
@@ -5,7 +6,7 @@ import { FaqList } from '@/components/content/FaqList'
 import { FAQ_CATEGORIES } from '@/collections/extra'
 import type { Faq } from '@/payload-types'
 
-export const metadata = { title: 'Pertanyaan Umum (FAQ)', description: 'Jawaban resmi atas pertanyaan seputar pendaftaran, pembelajaran, kegiatan, administrasi dan penggunaan website SMP Nasional KPS.', alternates: { canonical: '/faq' } }
+export const generateMetadata = schoolMeta(({ name }) => ({ title: 'Pertanyaan Umum (FAQ)', description: `Jawaban resmi atas pertanyaan seputar pendaftaran, pembelajaran, kegiatan, administrasi dan penggunaan website ${name}.`, alternates: { canonical: '/faq' } }))
 type SP = { searchParams: Promise<{ kategori?: string; q?: string }> }
 
 export default async function Page({ searchParams }: SP) {

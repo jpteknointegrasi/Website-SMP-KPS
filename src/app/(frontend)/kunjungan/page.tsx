@@ -1,3 +1,5 @@
+import { getSchoolNames } from '@/lib/queries'
+import { schoolMeta } from '@/lib/meta'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { getFlags, listFaqs } from '@/lib/queries'
@@ -8,15 +10,16 @@ import { VisitForm } from '@/components/forms/VisitForm'
 import { FaqList } from '@/components/content/FaqList'
 import { formatEventWhen } from '@/lib/format'
 
-export const metadata = { title: 'Kunjungan Sekolah & Open House', description: 'Pesan jadwal kunjungan atau open house SMP Nasional KPS.', alternates: { canonical: '/kunjungan' } }
+export const generateMetadata = schoolMeta(({ name }) => ({ title: 'Kunjungan Sekolah & Open House', description: `Pesan jadwal kunjungan atau open house ${name}.`, alternates: { canonical: '/kunjungan' } }))
 export const dynamic = 'force-dynamic'
 
 export default async function Page() {
+  const { name } = await getSchoolNames()
   if (!(await getFlags()).schoolVisits) notFound()
   const [sessions, faqs] = await Promise.all([listPublicSessions(await payloadClient()), listFaqs({ category: 'pendaftaran', limit: 6, featured: true })])
   return (
     <>
-      <PageHeader title="Kunjungan Sekolah" lead="Lihat langsung suasana belajar SMP Nasional KPS. Pilih jadwal yang tersedia; kuota dihitung otomatis." crumbs={[{ label: 'Pendaftaran', href: '/pendaftaran' }, { label: 'Kunjungan' }]} />
+      <PageHeader title="Kunjungan Sekolah" lead={`Lihat langsung suasana belajar ${name}. Pilih jadwal yang tersedia; kuota dihitung otomatis.`} crumbs={[{ label: 'Pendaftaran', href: '/pendaftaran' }, { label: 'Kunjungan' }]} />
       <section className="section">
         <Container className="layout-form">
           {sessions.length ? (

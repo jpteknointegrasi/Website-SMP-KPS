@@ -179,7 +179,7 @@ export async function PageBlocks({ blocks }: { blocks?: Page['layout'] }) {
         case 'admissionsCta':
           return (
             <div className="block cta-block" key={i}>
-              <h2>{b.heading ?? 'Mari Mengenal KPS Lebih Dekat'}</h2>
+              <h2>{b.heading ?? 'Mari Mengenal Kami Lebih Dekat'}</h2>
               {b.text ? <p>{b.text}</p> : null}
               <SmartLink href="/pendaftaran" className="btn btn--gold" data-cta="blok-pendaftaran">Informasi Pendaftaran</SmartLink>
             </div>

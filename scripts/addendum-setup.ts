@@ -1,4 +1,4 @@
-import type { Payload } from 'payload'
+import type { TenantPayload as Payload } from '../src/tenancy/scoped'
 import { lexical } from '../src/lib/lexical'
 import { importMedia } from './import-media'
 

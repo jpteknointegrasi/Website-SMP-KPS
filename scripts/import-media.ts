@@ -6,7 +6,7 @@ import 'dotenv/config'
 import { createHash } from 'crypto'
 import fs from 'fs'
 import path from 'path'
-import type { Payload } from 'payload'
+import type { TenantPayload as Payload } from '../src/tenancy/scoped'
 
 type Asset = {
   id: string
@@ -128,7 +128,8 @@ const isMain = process.argv[1] && path.resolve(process.argv[1]).endsWith('import
 if (isMain) {
   const { getPayload } = await import('payload')
   const config = (await import('../src/payload.config')).default
-  const payload = await getPayload({ config })
+  const { contentPackSchool } = await import('./content-pack')
+  const payload = await contentPackSchool(await getPayload({ config }))
   const res = await importMedia(payload)
   fs.writeFileSync(path.resolve('content/media-import-report.json'), JSON.stringify(res, null, 2))
   process.exit(res.failed ? 1 : 0)

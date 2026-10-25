@@ -1,6 +1,6 @@
 import 'server-only'
 import type { Where } from 'payload'
-import { payloadClient } from './payload'
+import { currentTenant, payloadClient } from './payload'
 import type {
   Homepage,
   Navigation,
@@ -23,18 +23,31 @@ const nowIso = () => new Date().toISOString()
 /** Archive filtering is enforced by collection read access (see access/roles.ts publishedOrStaff). */
 export const notArchived: Where = { id: { exists: true } }
 
-export async function getGlobals() {
+/** The school's settings and menus (one read per request). A school without them yet gets safe empty values. */
+export const getGlobals = cache(async () => {
   const payload = await payloadClient()
-  const [settings, nav] = await Promise.all([
-    payload.findGlobal({ slug: 'site-settings', depth: 1, ...pub }) as Promise<SiteSetting>,
-    payload.findGlobal({ slug: 'navigation', depth: 0, ...pub }) as Promise<Navigation>,
+  const [settings, nav, school] = await Promise.all([
+    payload.findGlobal({ slug: 'site-settings', depth: 1, ...pub }) as Promise<SiteSetting | null>,
+    payload.findGlobal({ slug: 'navigation', depth: 0, ...pub }) as Promise<Navigation | null>,
+    currentTenant(),
   ])
-  return { settings, nav }
-}
+  return {
+    settings: settings ?? ({ id: 0, schoolName: school?.name ?? '', updatedAt: '', createdAt: '' } as unknown as SiteSetting),
+    nav: nav ?? ({ id: 0, header: [], footer: [], updatedAt: '', createdAt: '' } as unknown as Navigation),
+  }
+})
 
+/** School name for texts: full ("SMP Nasional KPS") and short ("KPS", falls back to "Sekolah"). */
+export const getSchoolNames = cache(async () => {
+  const { settings } = await getGlobals()
+  const s = settings as SiteSetting & { shortName?: string | null }
+  return { name: s.schoolName || 'Sekolah', short: s.shortName || 'Sekolah', city: s.city || '' }
+})
+
+/** Published homepage of the school, or null while it is still a draft (new school). */
 export async function getHomepage() {
   const payload = await payloadClient()
-  return (await payload.findGlobal({ slug: 'homepage', depth: 1, ...pub })) as Homepage
+  return (await payload.findGlobal({ slug: 'homepage', depth: 1, ...pub })) as Homepage | null
 }
 
 export const activeAnnouncementWhere = (): Where => ({

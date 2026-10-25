@@ -1,10 +1,11 @@
+import { schoolMeta } from '@/lib/meta'
 import { getGlobals, listSocialAccounts } from '@/lib/queries'
 import { PLATFORM_ICON } from '@/components/layout/Footer'
 import { PageHeader, Container } from '@/components/ui/bits'
 import { Icon } from '@/components/ui/Icon'
 import { ContactForm } from '@/components/forms/ContactForm'
 
-export const metadata = { title: 'Kontak', description: 'Alamat, email, telepon dan formulir pesan SMP Nasional KPS Balikpapan.', alternates: { canonical: '/kontak' } }
+export const generateMetadata = schoolMeta(({ full }) => ({ title: 'Kontak', description: `Alamat, email, telepon dan formulir pesan ${full}.`, alternates: { canonical: '/kontak' } }))
 type SP = { searchParams: Promise<{ kategori?: string; topik?: string }> }
 const CATS = ['umum', 'pendaftaran', 'akademik', 'saran', 'alumni', 'kegiatan', 'kunjungan']
 

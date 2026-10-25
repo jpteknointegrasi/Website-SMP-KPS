@@ -1,3 +1,5 @@
+import { getSchoolNames } from '@/lib/queries'
+import { schoolMeta } from '@/lib/meta'
 import Link from 'next/link'
 import { getCurrentAdmissions, getFlags, getGlobals, getLinkFlags, listFaqs } from '@/lib/queries'
 import { PageHeader, Container, EmptyState } from '@/components/ui/bits'
@@ -10,7 +12,7 @@ import { MediaEmbed } from '@/components/media/MediaCard'
 import { FaqList } from '@/components/content/FaqList'
 import type { Document, MediaItem } from '@/payload-types'
 
-export const metadata = { title: 'Pendaftaran', description: 'Informasi penerimaan siswa baru SMP Nasional KPS: status, jadwal, alur, persyaratan, minat dan kunjungan sekolah.', alternates: { canonical: '/pendaftaran' } }
+export const generateMetadata = schoolMeta(({ name }) => ({ title: 'Pendaftaran', description: `Informasi penerimaan siswa baru ${name}: status, jadwal, alur, persyaratan, minat dan kunjungan sekolah.`, alternates: { canonical: '/pendaftaran' } }))
 
 const STATUS_TEXT: Record<string, string> = {
   unconfirmed: 'Informasi penerimaan untuk tahun ajaran ini sedang dikonfirmasi sekolah. Jadwal dan ketentuan akan diumumkan di halaman ini.',
@@ -20,6 +22,7 @@ const STATUS_TEXT: Record<string, string> = {
 }
 
 export default async function Page() {
+  const { name, city } = await getSchoolNames()
   const [cycle, { settings }, flags, linkFlags, faqs] = await Promise.all([getCurrentAdmissions(), getGlobals(), getFlags(), getLinkFlags(), listFaqs({ category: 'pendaftaran', limit: 12 })])
   const visitsOn = linkFlags.schoolVisits // only when an open visit slot exists
   const mode = cycle?.mode === 'full_admissions' ? 'information_only' : (cycle?.mode ?? 'information_only') // P2 not available
@@ -38,7 +41,7 @@ export default async function Page() {
 
   return (
     <>
-      <PageHeader title="Informasi Pendaftaran" lead="Penerimaan siswa baru SMP Nasional KPS Balikpapan." crumbs={[{ label: 'Pendaftaran' }]} />
+      <PageHeader title="Informasi Pendaftaran" lead={`Penerimaan siswa baru ${city ? `${name} ${city}` : name}.`} crumbs={[{ label: 'Pendaftaran' }]} />
       <section className="section">
         <Container className="layout-2">
           <div>

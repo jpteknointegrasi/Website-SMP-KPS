@@ -1,4 +1,4 @@
-import { TZ } from './format'
+import { requestTimezone } from './tz'
 
 type IcsEvent = {
   id: number | string
@@ -17,9 +17,9 @@ type IcsEvent = {
 const esc = (s: string) => s.replace(/\\/g, '\\\\').replace(/\n/g, '\\n').replace(/,/g, '\\,').replace(/;/g, '\\;')
 const utcStamp = (iso: string) => new Date(iso).toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '')
 
-/** Local (WITA) calendar date as YYYYMMDD — all-day events must not shift across the date line. */
-export const witaDate = (iso: string) => {
-  const p = new Intl.DateTimeFormat('en-CA', { timeZone: TZ, year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date(iso))
+/** Calendar date in the school's zone as YYYYMMDD — all-day events must not shift across the date line. */
+export const localDate = (iso: string, tz = requestTimezone()) => {
+  const p = new Intl.DateTimeFormat('en-CA', { timeZone: tz, year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date(iso))
   return p.replace(/-/g, '')
 }
 const nextDay = (yyyymmdd: string) => {
@@ -40,16 +40,25 @@ const fold = (line: string) => {
   return out.join('\r\n')
 }
 
-export function buildIcs(e: IcsEvent, siteUrl: string) {
-  const lines = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//SMP Nasional KPS//Agenda//ID', 'CALSCALE:GREGORIAN', 'METHOD:PUBLISH', 'BEGIN:VEVENT']
-  lines.push(`UID:event-${e.id}@smp.kps.sch.id`)
+export function buildIcs(e: IcsEvent, siteUrl: string, opts: { tz?: string; schoolName?: string } = {}) {
+  const tz = opts.tz ?? requestTimezone()
+  const host = (() => {
+    try {
+      return new URL(siteUrl).host
+    } catch {
+      return 'sekolah.local'
+    }
+  })()
+  const lines = ['BEGIN:VCALENDAR', 'VERSION:2.0', `PRODID:-//${esc(opts.schoolName ?? host)}//Agenda//ID`, 'CALSCALE:GREGORIAN', 'METHOD:PUBLISH', 'BEGIN:VEVENT']
+  // event ids are unique platform-wide, so the school's host keeps UIDs unique and stable
+  lines.push(`UID:event-${e.id}@${host}`)
   lines.push(`DTSTAMP:${utcStamp(e.updatedAt ?? new Date().toISOString())}`)
   // revision counter: calendar apps replace the stored copy when SEQUENCE increases
   lines.push(`SEQUENCE:${Math.max(0, Math.floor(Number(e.sequence ?? 0)))}`)
   if (e.updatedAt) lines.push(`LAST-MODIFIED:${utcStamp(e.updatedAt)}`)
   if (e.allDay) {
-    const s = witaDate(e.startAt)
-    const end = e.endAt ? witaDate(e.endAt) : s
+    const s = localDate(e.startAt, tz)
+    const end = e.endAt ? localDate(e.endAt, tz) : s
     lines.push(`DTSTART;VALUE=DATE:${s}`, `DTEND;VALUE=DATE:${nextDay(end)}`)
   } else {
     lines.push(`DTSTART:${utcStamp(e.startAt)}`)

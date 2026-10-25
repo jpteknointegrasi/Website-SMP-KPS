@@ -95,9 +95,14 @@ export interface Config {
     media: Media;
     'private-files': PrivateFile;
     redirects: Redirect;
-    users: User;
-    'audit-logs': AuditLog;
     'analytics-daily': AnalyticsDaily;
+    homepage: Homepage;
+    'site-settings': SiteSetting;
+    navigation: Navigation;
+    'feature-flags': FeatureFlag;
+    'audit-logs': AuditLog;
+    tenants: Tenant;
+    users: User;
     'payload-kv': PayloadKv;
     'payload-jobs': PayloadJob;
     'payload-locked-documents': PayloadLockedDocument;
@@ -134,9 +139,14 @@ export interface Config {
     media: MediaSelect<false> | MediaSelect<true>;
     'private-files': PrivateFilesSelect<false> | PrivateFilesSelect<true>;
     redirects: RedirectsSelect<false> | RedirectsSelect<true>;
-    users: UsersSelect<false> | UsersSelect<true>;
-    'audit-logs': AuditLogsSelect<false> | AuditLogsSelect<true>;
     'analytics-daily': AnalyticsDailySelect<false> | AnalyticsDailySelect<true>;
+    homepage: HomepageSelect<false> | HomepageSelect<true>;
+    'site-settings': SiteSettingsSelect<false> | SiteSettingsSelect<true>;
+    navigation: NavigationSelect<false> | NavigationSelect<true>;
+    'feature-flags': FeatureFlagsSelect<false> | FeatureFlagsSelect<true>;
+    'audit-logs': AuditLogsSelect<false> | AuditLogsSelect<true>;
+    tenants: TenantsSelect<false> | TenantsSelect<true>;
+    users: UsersSelect<false> | UsersSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-jobs': PayloadJobsSelect<false> | PayloadJobsSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
@@ -148,17 +158,9 @@ export interface Config {
   };
   fallbackLocale: null;
   globals: {
-    homepage: Homepage;
-    'site-settings': SiteSetting;
-    navigation: Navigation;
-    'feature-flags': FeatureFlag;
     'payload-jobs-stats': PayloadJobsStat;
   };
   globalsSelect: {
-    homepage: HomepageSelect<false> | HomepageSelect<true>;
-    'site-settings': SiteSettingsSelect<false> | SiteSettingsSelect<true>;
-    navigation: NavigationSelect<false> | NavigationSelect<true>;
-    'feature-flags': FeatureFlagsSelect<false> | FeatureFlagsSelect<true>;
     'payload-jobs-stats': PayloadJobsStatsSelect<false> | PayloadJobsStatsSelect<true>;
   };
   locale: null;
@@ -360,6 +362,10 @@ export interface Page {
   archivedAt?: string | null;
   createdBy?: (number | null) | User;
   updatedBy?: (number | null) | User;
+  /**
+   * Hanya Super Admin platform. Staf sekolah selalu bekerja di sekolahnya sendiri.
+   */
+  tenant?: (number | null) | Tenant;
   updatedAt: string;
   createdAt: string;
   deletedAt?: string | null;
@@ -389,6 +395,10 @@ export interface Media {
   consent?: ('unknown' | 'approved' | 'not_required') | null;
   reviewStatus?: ('pending' | 'approved' | 'blocked') | null;
   editorialNote?: string | null;
+  /**
+   * Hanya Super Admin platform. Staf sekolah selalu bekerja di sekolahnya sendiri.
+   */
+  tenant?: (number | null) | Tenant;
   prefix?: string | null;
   _objectKey?: string | null;
   updatedAt: string;
@@ -436,6 +446,45 @@ export interface Media {
       filename?: string | null;
     };
   };
+}
+/**
+ * Setiap sekolah punya data, pengguna, pengaturan dan domainnya sendiri. Hanya Super Admin platform.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "tenants".
+ */
+export interface Tenant {
+  id: number;
+  name: string;
+  /**
+   * Huruf kecil, angka, tanda hubung. Dipakai sebagai <kode>.domain-platform. Jangan diubah setelah tayang.
+   */
+  slug: string;
+  status: 'active' | 'trial' | 'suspended';
+  /**
+   * Fitur yang boleh dinyalakan sekolah (lihat Fitur Aktif).
+   */
+  plan: 'basic' | 'pro';
+  /**
+   * Dipakai untuk jam di situs, agenda, kalender (ICS) dan dasbor.
+   */
+  timezone: 'Asia/Jakarta' | 'Asia/Makassar' | 'Asia/Jayapura';
+  /**
+   * Domain milik sekolah, mis. www.smpkps.sch.id. Arahkan DNS-nya ke platform lalu tambahkan juga di Vercel → Domains.
+   */
+  domains?:
+    | {
+        domain: string;
+        primary?: boolean | null;
+        id?: string | null;
+      }[]
+    | null;
+  contactName?: string | null;
+  contactEmail?: string | null;
+  contactPhone?: string | null;
+  notes?: string | null;
+  updatedAt: string;
+  createdAt: string;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -500,6 +549,10 @@ export interface Post {
   archivedAt?: string | null;
   createdBy?: (number | null) | User;
   updatedBy?: (number | null) | User;
+  /**
+   * Hanya Super Admin platform. Staf sekolah selalu bekerja di sekolahnya sendiri.
+   */
+  tenant?: (number | null) | Tenant;
   updatedAt: string;
   createdAt: string;
   deletedAt?: string | null;
@@ -591,6 +644,10 @@ export interface MediaItem {
   archivedAt?: string | null;
   createdBy?: (number | null) | User;
   updatedBy?: (number | null) | User;
+  /**
+   * Hanya Super Admin platform. Staf sekolah selalu bekerja di sekolahnya sendiri.
+   */
+  tenant?: (number | null) | Tenant;
   updatedAt: string;
   createdAt: string;
   deletedAt?: string | null;
@@ -606,7 +663,7 @@ export interface SocialAccount {
   id: number;
   platform: 'youtube' | 'instagram' | 'tiktok' | 'facebook' | 'whatsapp' | 'web';
   /**
-   * Contoh: KPS TV SMP Nasional KPS Balikpapan
+   * Contoh: Kanal YouTube resmi sekolah
    */
   displayName: string;
   /**
@@ -634,6 +691,10 @@ export interface SocialAccount {
   verifiedAt?: string | null;
   verifiedBy?: (number | null) | User;
   order?: number | null;
+  /**
+   * Hanya Super Admin platform. Staf sekolah selalu bekerja di sekolahnya sendiri.
+   */
+  tenant?: (number | null) | Tenant;
   updatedAt: string;
   createdAt: string;
 }
@@ -647,7 +708,11 @@ export interface User {
   /**
    * Hanya Admin Teknis yang dapat mengubah peran.
    */
-  role: 'admin' | 'editor' | 'contributor' | 'admissions';
+  role: 'superadmin' | 'admin' | 'editor' | 'contributor' | 'admissions';
+  /**
+   * Sekolah tempat akun ini bekerja. Super Admin tidak terikat sekolah.
+   */
+  tenant?: (number | null) | Tenant;
   canPublishAdmissions?: boolean | null;
   /**
    * Petugas Pendaftaran otomatis boleh. Peran lain hanya bila dicentang Admin Teknis (tercatat di audit).
@@ -687,9 +752,9 @@ export interface Event {
    */
   slug: string;
   startAt: string;
-  startAt_tz: 'Asia/Makassar';
+  startAt_tz: 'Asia/Jakarta' | 'Asia/Makassar' | 'Asia/Jayapura';
   endAt?: string | null;
-  endAt_tz?: 'Asia/Makassar' | null;
+  endAt_tz?: ('Asia/Jakarta' | 'Asia/Makassar' | 'Asia/Jayapura') | null;
   /**
    * Tanggal dibaca dalam zona waktu sekolah; jam diabaikan. ICS memakai DTEND eksklusif (hari berikutnya).
    */
@@ -747,6 +812,10 @@ export interface Event {
   archivedAt?: string | null;
   createdBy?: (number | null) | User;
   updatedBy?: (number | null) | User;
+  /**
+   * Hanya Super Admin platform. Staf sekolah selalu bekerja di sekolahnya sendiri.
+   */
+  tenant?: (number | null) | Tenant;
   updatedAt: string;
   createdAt: string;
   deletedAt?: string | null;
@@ -765,6 +834,10 @@ export interface EventCategory {
   slug: string;
   color?: ('teal' | 'gold' | 'navy' | 'red' | 'green' | 'purple' | 'grey') | null;
   order?: number | null;
+  /**
+   * Hanya Super Admin platform. Staf sekolah selalu bekerja di sekolahnya sendiri.
+   */
+  tenant?: (number | null) | Tenant;
   updatedAt: string;
   createdAt: string;
 }
@@ -805,6 +878,10 @@ export interface Document {
   archivedAt?: string | null;
   createdBy?: (number | null) | User;
   updatedBy?: (number | null) | User;
+  /**
+   * Hanya Super Admin platform. Staf sekolah selalu bekerja di sekolahnya sendiri.
+   */
+  tenant?: (number | null) | Tenant;
   prefix?: string | null;
   _objectKey?: string | null;
   updatedAt: string;
@@ -832,6 +909,10 @@ export interface Category {
    * Huruf kecil, angka dan tanda hubung. Dibuat otomatis dari judul bila kosong.
    */
   slug: string;
+  /**
+   * Hanya Super Admin platform. Staf sekolah selalu bekerja di sekolahnya sendiri.
+   */
+  tenant?: (number | null) | Tenant;
   updatedAt: string;
   createdAt: string;
 }
@@ -883,6 +964,10 @@ export interface Faq {
   archivedAt?: string | null;
   createdBy?: (number | null) | User;
   updatedBy?: (number | null) | User;
+  /**
+   * Hanya Super Admin platform. Staf sekolah selalu bekerja di sekolahnya sendiri.
+   */
+  tenant?: (number | null) | Tenant;
   updatedAt: string;
   createdAt: string;
   deletedAt?: string | null;
@@ -948,6 +1033,10 @@ export interface StudentWork {
   archivedAt?: string | null;
   createdBy?: (number | null) | User;
   updatedBy?: (number | null) | User;
+  /**
+   * Hanya Super Admin platform. Staf sekolah selalu bekerja di sekolahnya sendiri.
+   */
+  tenant?: (number | null) | Tenant;
   updatedAt: string;
   createdAt: string;
   deletedAt?: string | null;
@@ -964,6 +1053,10 @@ export interface PrivateFile {
   title: string;
   originalFilename?: string | null;
   note?: string | null;
+  /**
+   * Hanya Super Admin platform. Staf sekolah selalu bekerja di sekolahnya sendiri.
+   */
+  tenant?: (number | null) | Tenant;
   prefix?: string | null;
   _objectKey?: string | null;
   updatedAt: string;
@@ -1030,6 +1123,10 @@ export interface Guide {
   archivedAt?: string | null;
   createdBy?: (number | null) | User;
   updatedBy?: (number | null) | User;
+  /**
+   * Hanya Super Admin platform. Staf sekolah selalu bekerja di sekolahnya sendiri.
+   */
+  tenant?: (number | null) | Tenant;
   updatedAt: string;
   createdAt: string;
   deletedAt?: string | null;
@@ -1101,6 +1198,10 @@ export interface Announcement {
   archivedAt?: string | null;
   createdBy?: (number | null) | User;
   updatedBy?: (number | null) | User;
+  /**
+   * Hanya Super Admin platform. Staf sekolah selalu bekerja di sekolahnya sendiri.
+   */
+  tenant?: (number | null) | Tenant;
   updatedAt: string;
   createdAt: string;
   deletedAt?: string | null;
@@ -1143,6 +1244,10 @@ export interface Album {
   archivedAt?: string | null;
   createdBy?: (number | null) | User;
   updatedBy?: (number | null) | User;
+  /**
+   * Hanya Super Admin platform. Staf sekolah selalu bekerja di sekolahnya sendiri.
+   */
+  tenant?: (number | null) | Tenant;
   updatedAt: string;
   createdAt: string;
   deletedAt?: string | null;
@@ -1189,6 +1294,10 @@ export interface Service {
   archivedAt?: string | null;
   createdBy?: (number | null) | User;
   updatedBy?: (number | null) | User;
+  /**
+   * Hanya Super Admin platform. Staf sekolah selalu bekerja di sekolahnya sendiri.
+   */
+  tenant?: (number | null) | Tenant;
   updatedAt: string;
   createdAt: string;
   deletedAt?: string | null;
@@ -1225,6 +1334,10 @@ export interface Testimonial {
   archivedAt?: string | null;
   createdBy?: (number | null) | User;
   updatedBy?: (number | null) | User;
+  /**
+   * Hanya Super Admin platform. Staf sekolah selalu bekerja di sekolahnya sendiri.
+   */
+  tenant?: (number | null) | Tenant;
   updatedAt: string;
   createdAt: string;
   deletedAt?: string | null;
@@ -1296,6 +1409,10 @@ export interface Program {
   archivedAt?: string | null;
   createdBy?: (number | null) | User;
   updatedBy?: (number | null) | User;
+  /**
+   * Hanya Super Admin platform. Staf sekolah selalu bekerja di sekolahnya sendiri.
+   */
+  tenant?: (number | null) | Tenant;
   updatedAt: string;
   createdAt: string;
   deletedAt?: string | null;
@@ -1364,6 +1481,10 @@ export interface Extracurricular {
   archivedAt?: string | null;
   createdBy?: (number | null) | User;
   updatedBy?: (number | null) | User;
+  /**
+   * Hanya Super Admin platform. Staf sekolah selalu bekerja di sekolahnya sendiri.
+   */
+  tenant?: (number | null) | Tenant;
   updatedAt: string;
   createdAt: string;
   deletedAt?: string | null;
@@ -1431,6 +1552,10 @@ export interface Facility {
   archivedAt?: string | null;
   createdBy?: (number | null) | User;
   updatedBy?: (number | null) | User;
+  /**
+   * Hanya Super Admin platform. Staf sekolah selalu bekerja di sekolahnya sendiri.
+   */
+  tenant?: (number | null) | Tenant;
   updatedAt: string;
   createdAt: string;
   deletedAt?: string | null;
@@ -1479,6 +1604,10 @@ export interface Staff {
   archivedAt?: string | null;
   createdBy?: (number | null) | User;
   updatedBy?: (number | null) | User;
+  /**
+   * Hanya Super Admin platform. Staf sekolah selalu bekerja di sekolahnya sendiri.
+   */
+  tenant?: (number | null) | Tenant;
   updatedAt: string;
   createdAt: string;
   deletedAt?: string | null;
@@ -1548,6 +1677,10 @@ export interface Achievement {
   archivedAt?: string | null;
   createdBy?: (number | null) | User;
   updatedBy?: (number | null) | User;
+  /**
+   * Hanya Super Admin platform. Staf sekolah selalu bekerja di sekolahnya sendiri.
+   */
+  tenant?: (number | null) | Tenant;
   updatedAt: string;
   createdAt: string;
   deletedAt?: string | null;
@@ -1647,6 +1780,10 @@ export interface AdmissionsCycle {
   archivedAt?: string | null;
   createdBy?: (number | null) | User;
   updatedBy?: (number | null) | User;
+  /**
+   * Hanya Super Admin platform. Staf sekolah selalu bekerja di sekolahnya sendiri.
+   */
+  tenant?: (number | null) | Tenant;
   updatedAt: string;
   createdAt: string;
   deletedAt?: string | null;
@@ -1712,6 +1849,10 @@ export interface Lead {
         id?: string | null;
       }[]
     | null;
+  /**
+   * Hanya Super Admin platform. Staf sekolah selalu bekerja di sekolahnya sendiri.
+   */
+  tenant?: (number | null) | Tenant;
   updatedAt: string;
   createdAt: string;
 }
@@ -1730,9 +1871,9 @@ export interface VisitSession {
   kind: 'open_house' | 'individual';
   sessionStatus: 'draft' | 'open' | 'closed' | 'cancelled';
   startAt: string;
-  startAt_tz: 'Asia/Makassar';
+  startAt_tz: 'Asia/Jakarta' | 'Asia/Makassar' | 'Asia/Jayapura';
   endAt?: string | null;
-  endAt_tz?: 'Asia/Makassar' | null;
+  endAt_tz?: ('Asia/Jakarta' | 'Asia/Makassar' | 'Asia/Jayapura') | null;
   location?: string | null;
   capacity: number;
   capacityUnit: 'families' | 'people';
@@ -1746,6 +1887,10 @@ export interface VisitSession {
   instructions?: string | null;
   guide?: (number | null) | User;
   cycle?: (number | null) | AdmissionsCycle;
+  /**
+   * Hanya Super Admin platform. Staf sekolah selalu bekerja di sekolahnya sendiri.
+   */
+  tenant?: (number | null) | Tenant;
   updatedAt: string;
   createdAt: string;
 }
@@ -1788,6 +1933,10 @@ export interface VisitBooking {
         id?: string | null;
       }[]
     | null;
+  /**
+   * Hanya Super Admin platform. Staf sekolah selalu bekerja di sekolahnya sendiri.
+   */
+  tenant?: (number | null) | Tenant;
   updatedAt: string;
   createdAt: string;
 }
@@ -1815,6 +1964,10 @@ export interface ContactMessage {
    */
   linkedLead?: (number | null) | Lead;
   emailNotified?: boolean | null;
+  /**
+   * Hanya Super Admin platform. Staf sekolah selalu bekerja di sekolahnya sendiri.
+   */
+  tenant?: (number | null) | Tenant;
   updatedAt: string;
   createdAt: string;
 }
@@ -1828,6 +1981,317 @@ export interface Redirect {
   newPath: string;
   active?: boolean | null;
   note?: string | null;
+  /**
+   * Hanya Super Admin platform. Staf sekolah selalu bekerja di sekolahnya sendiri.
+   */
+  tenant?: (number | null) | Tenant;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Agregat harian tanpa data pribadi (tanpa IP, cookie, isi form). Aktif bila fitur Statistik pengunjung dinyalakan.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "analytics-daily".
+ */
+export interface AnalyticsDaily {
+  id: number;
+  day: string;
+  kind: 'pageview' | 'cta_click' | 'form_success';
+  key: string;
+  count: number;
+  /**
+   * Hanya Super Admin platform. Staf sekolah selalu bekerja di sekolahnya sendiri.
+   */
+  tenant?: (number | null) | Tenant;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Atur hero, urutan blok dan teks beranda. Perubahan tampil setelah Terbitkan. Satu dokumen untuk setiap sekolah.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "homepage".
+ */
+export interface Homepage {
+  id: number;
+  hero: {
+    eyebrow?: string | null;
+    title: string;
+    description?: string | null;
+    /**
+     * Gunakan foto horizontal resmi. Atur titik fokus di Media agar wajah tidak terpotong.
+     */
+    image: number | Media;
+    imageMobile?: (number | null) | Media;
+    /**
+     * Bila diisi, foto-foto ini tampil bergantian (crossfade). Gunakan foto horizontal lebar; atur titik fokus di Media. Kosongkan untuk memakai satu foto utama.
+     */
+    slides?: (number | Media)[] | null;
+    slideInterval?: number | null;
+    accentImages?: (number | Media)[] | null;
+    primaryLabel?: string | null;
+    /**
+     * Gunakan https://… atau tautan internal yang diawali "/".
+     */
+    primaryHref?: string | null;
+    secondaryLabel?: string | null;
+    /**
+     * Gunakan https://… atau tautan internal yang diawali "/".
+     */
+    secondaryHref?: string | null;
+    showLiveClock?: boolean | null;
+  };
+  quickLinks?:
+    | {
+        label: string;
+        icon?:
+          | ('link' | 'book' | 'report' | 'calendar' | 'megaphone' | 'users' | 'grid' | 'pencil' | 'file' | 'school')
+          | null;
+        /**
+         * Gunakan https://… atau tautan internal yang diawali "/".
+         */
+        href: string;
+        id?: string | null;
+      }[]
+    | null;
+  intro?: {
+    eyebrow?: string | null;
+    heading?: string | null;
+    text?: string | null;
+    introImage?: (number | null) | Media;
+    collage?: (number | Media)[] | null;
+    pillars?:
+      | {
+          title: string;
+          text?: string | null;
+          id?: string | null;
+        }[]
+      | null;
+  };
+  texts?: {
+    programsEyebrow?: string | null;
+    programsHeading?: string | null;
+    programsIntro?: string | null;
+    studentLifeEyebrow?: string | null;
+    achievementsEyebrow?: string | null;
+    achievementsText?: string | null;
+    infoEyebrow?: string | null;
+    newsEyebrow?: string | null;
+    communityEyebrow?: string | null;
+    alumniTitle?: string | null;
+    alumniText?: string | null;
+    ctaEyebrow?: string | null;
+    studentLifeHeading?: string | null;
+    achievementsHeading?: string | null;
+    newsHeading?: string | null;
+    communityHeading?: string | null;
+    communityText?: string | null;
+    communityImage?: (number | null) | Media;
+    /**
+     * Opsional. Tampil sebagai tumpukan foto di blok prestasi.
+     */
+    achievementsAlbum?: (number | null) | Album;
+    mediaEyebrow?: string | null;
+    mediaHeading?: string | null;
+    mediaIntro?: string | null;
+    ctaHeading?: string | null;
+    ctaText?: string | null;
+  };
+  /**
+   * Seret untuk mengubah urutan. Nonaktifkan blok yang belum memiliki konten layak.
+   */
+  sections?:
+    | {
+        type:
+          | 'quickLinks'
+          | 'search'
+          | 'highlights'
+          | 'schoolIntro'
+          | 'programs'
+          | 'studentLife'
+          | 'achievements'
+          | 'announcementsAgenda'
+          | 'latestNews'
+          | 'mediaHub'
+          | 'facilities'
+          | 'communityAlumni'
+          | 'admissionsCta';
+        enabled?: boolean | null;
+        limit?: number | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Hanya Super Admin platform. Staf sekolah selalu bekerja di sekolahnya sendiri.
+   */
+  tenant?: (number | null) | Tenant;
+  updatedAt: string;
+  createdAt: string;
+  _status?: ('draft' | 'published') | null;
+}
+/**
+ * Satu dokumen untuk setiap sekolah.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "site-settings".
+ */
+export interface SiteSetting {
+  id: number;
+  schoolName: string;
+  /**
+   * Dipakai di teks seperti "Tentang KPS", "Cerita dari KPS". Kosong = "Sekolah".
+   */
+  shortName?: string | null;
+  city?: string | null;
+  logo?: (number | null) | Media;
+  valuesLine?: string | null;
+  /**
+   * Juga dipakai sebagai deskripsi situs di mesin pencari.
+   */
+  shortProfile?: string | null;
+  /**
+   * Tampil saat tautan website dibagikan di WhatsApp/media sosial.
+   */
+  ogImage?: (number | null) | Media;
+  address?: string | null;
+  email?: string | null;
+  phone?: string | null;
+  fax?: string | null;
+  /**
+   * Jangan isi dari nomor telepon kantor kecuali sudah dipastikan nomor WhatsApp resmi.
+   */
+  whatsapp?: string | null;
+  /**
+   * Contoh: Senin–Jumat 07.00–15.00 (zona waktu sekolah). Kosongkan bila belum dikonfirmasi.
+   */
+  serviceHours?: string | null;
+  /**
+   * Gunakan https://… atau tautan internal yang diawali "/".
+   */
+  mapUrl?: string | null;
+  contactVerified?: boolean | null;
+  notifyContactEmail?: string | null;
+  notifyAdmissionsEmail?: string | null;
+  /**
+   * Kosong = tombol Portal Sekolah disembunyikan.
+   */
+  portalUrl?: string | null;
+  /**
+   * Kosong = tombol portal alumni disembunyikan.
+   */
+  alumniUrl?: string | null;
+  /**
+   * Digantikan oleh Video & Media Sosial → Akun Media Sosial Resmi. Dipakai hanya bila koleksi itu kosong.
+   */
+  socials?:
+    | {
+        platform: 'instagram' | 'youtube' | 'facebook' | 'tiktok';
+        handle?: string | null;
+        /**
+         * Gunakan https://… atau tautan internal yang diawali "/".
+         */
+        url: string;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Hanya Super Admin platform. Staf sekolah selalu bekerja di sekolahnya sendiri.
+   */
+  tenant?: (number | null) | Tenant;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Satu dokumen untuk setiap sekolah.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "navigation".
+ */
+export interface Navigation {
+  id: number;
+  header?:
+    | {
+        label: string;
+        /**
+         * Gunakan https://… atau tautan internal yang diawali "/".
+         */
+        href: string;
+        children?:
+          | {
+              label: string;
+              /**
+               * Gunakan https://… atau tautan internal yang diawali "/".
+               */
+              href: string;
+              description?: string | null;
+              id?: string | null;
+            }[]
+          | null;
+        id?: string | null;
+      }[]
+    | null;
+  footer?:
+    | {
+        label: string;
+        /**
+         * Gunakan https://… atau tautan internal yang diawali "/".
+         */
+        href: string;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Hanya Super Admin platform. Staf sekolah selalu bekerja di sekolahnya sendiri.
+   */
+  tenant?: (number | null) | Tenant;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Hanya Admin Teknis. Mematikan fitur menutup halaman, API dan job terkait — bukan hanya menyembunyikan tombol. Satu dokumen untuk setiap sekolah.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "feature-flags".
+ */
+export interface FeatureFlag {
+  id: number;
+  /**
+   * Tab "Kalender" (grid bulan). Mati = hanya daftar.
+   */
+  calendarMonthView?: boolean | null;
+  /**
+   * Aktifkan setelah petugas penerimaan siap menindaklanjuti. Mati = /pendaftaran/minat dan API ditutup.
+   */
+  interestForm?: boolean | null;
+  /**
+   * Aktifkan setelah slot kunjungan disetujui. Mati = /kunjungan, API pemesanan dan job pelepasan kuota ditutup.
+   */
+  schoolVisits?: boolean | null;
+  /**
+   * Aktifkan setelah ada karya dengan persetujuan publikasi.
+   */
+  studentWorks?: boolean | null;
+  /**
+   * Halaman /media, section beranda dan blok media. Section otomatis tersembunyi bila belum ada konten terbit.
+   */
+  mediaHub?: boolean | null;
+  /**
+   * Belum diimplementasikan (butuh API resmi & kredensial). Tetap mati.
+   */
+  socialAutoImport?: boolean | null;
+  /**
+   * Hitungan halaman & klik tombol tanpa data pribadi.
+   */
+  visitorAnalytics?: boolean | null;
+  /**
+   * Belum dibangun. Lihat P2_ADMISSIONS_BACKLOG.md. Tetap mati.
+   */
+  fullAdmissions?: boolean | null;
+  /**
+   * Hanya Super Admin platform. Staf sekolah selalu bekerja di sekolahnya sendiri.
+   */
+  tenant?: (number | null) | Tenant;
   updatedAt: string;
   createdAt: string;
 }
@@ -1846,21 +2310,10 @@ export interface AuditLog {
   changedFields?: string | null;
   actor?: (number | null) | User;
   actorEmail?: string | null;
-  updatedAt: string;
-  createdAt: string;
-}
-/**
- * Agregat harian tanpa data pribadi (tanpa IP, cookie, isi form). Aktif bila fitur Statistik pengunjung dinyalakan.
- *
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "analytics-daily".
- */
-export interface AnalyticsDaily {
-  id: number;
-  day: string;
-  kind: 'pageview' | 'cta_click' | 'form_success';
-  key: string;
-  count: number;
+  /**
+   * Hanya Super Admin platform. Staf sekolah selalu bekerja di sekolahnya sendiri.
+   */
+  tenant?: (number | null) | Tenant;
   updatedAt: string;
   createdAt: string;
 }
@@ -2102,16 +2555,36 @@ export interface PayloadLockedDocument {
         value: number | Redirect;
       } | null)
     | ({
-        relationTo: 'users';
-        value: number | User;
+        relationTo: 'analytics-daily';
+        value: number | AnalyticsDaily;
+      } | null)
+    | ({
+        relationTo: 'homepage';
+        value: number | Homepage;
+      } | null)
+    | ({
+        relationTo: 'site-settings';
+        value: number | SiteSetting;
+      } | null)
+    | ({
+        relationTo: 'navigation';
+        value: number | Navigation;
+      } | null)
+    | ({
+        relationTo: 'feature-flags';
+        value: number | FeatureFlag;
       } | null)
     | ({
         relationTo: 'audit-logs';
         value: number | AuditLog;
       } | null)
     | ({
-        relationTo: 'analytics-daily';
-        value: number | AnalyticsDaily;
+        relationTo: 'tenants';
+        value: number | Tenant;
+      } | null)
+    | ({
+        relationTo: 'users';
+        value: number | User;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -2282,6 +2755,7 @@ export interface PagesSelect<T extends boolean = true> {
   archivedAt?: T;
   createdBy?: T;
   updatedBy?: T;
+  tenant?: T;
   updatedAt?: T;
   createdAt?: T;
   deletedAt?: T;
@@ -2316,6 +2790,7 @@ export interface PostsSelect<T extends boolean = true> {
   archivedAt?: T;
   createdBy?: T;
   updatedBy?: T;
+  tenant?: T;
   updatedAt?: T;
   createdAt?: T;
   deletedAt?: T;
@@ -2328,6 +2803,7 @@ export interface PostsSelect<T extends boolean = true> {
 export interface CategoriesSelect<T extends boolean = true> {
   title?: T;
   slug?: T;
+  tenant?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -2362,6 +2838,7 @@ export interface AnnouncementsSelect<T extends boolean = true> {
   archivedAt?: T;
   createdBy?: T;
   updatedBy?: T;
+  tenant?: T;
   updatedAt?: T;
   createdAt?: T;
   deletedAt?: T;
@@ -2402,6 +2879,7 @@ export interface EventsSelect<T extends boolean = true> {
   archivedAt?: T;
   createdBy?: T;
   updatedBy?: T;
+  tenant?: T;
   updatedAt?: T;
   createdAt?: T;
   deletedAt?: T;
@@ -2416,6 +2894,7 @@ export interface EventCategoriesSelect<T extends boolean = true> {
   slug?: T;
   color?: T;
   order?: T;
+  tenant?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -2438,6 +2917,7 @@ export interface FaqsSelect<T extends boolean = true> {
   archivedAt?: T;
   createdBy?: T;
   updatedBy?: T;
+  tenant?: T;
   updatedAt?: T;
   createdAt?: T;
   deletedAt?: T;
@@ -2467,6 +2947,7 @@ export interface AlbumsSelect<T extends boolean = true> {
   archivedAt?: T;
   createdBy?: T;
   updatedBy?: T;
+  tenant?: T;
   updatedAt?: T;
   createdAt?: T;
   deletedAt?: T;
@@ -2493,6 +2974,7 @@ export interface DocumentsSelect<T extends boolean = true> {
   archivedAt?: T;
   createdBy?: T;
   updatedBy?: T;
+  tenant?: T;
   prefix?: T;
   _objectKey?: T;
   updatedAt?: T;
@@ -2534,6 +3016,7 @@ export interface GuidesSelect<T extends boolean = true> {
   archivedAt?: T;
   createdBy?: T;
   updatedBy?: T;
+  tenant?: T;
   updatedAt?: T;
   createdAt?: T;
   deletedAt?: T;
@@ -2560,6 +3043,7 @@ export interface ServicesSelect<T extends boolean = true> {
   archivedAt?: T;
   createdBy?: T;
   updatedBy?: T;
+  tenant?: T;
   updatedAt?: T;
   createdAt?: T;
   deletedAt?: T;
@@ -2583,6 +3067,7 @@ export interface TestimonialsSelect<T extends boolean = true> {
   archivedAt?: T;
   createdBy?: T;
   updatedBy?: T;
+  tenant?: T;
   updatedAt?: T;
   createdAt?: T;
   deletedAt?: T;
@@ -2626,6 +3111,7 @@ export interface ProgramsSelect<T extends boolean = true> {
   archivedAt?: T;
   createdBy?: T;
   updatedBy?: T;
+  tenant?: T;
   updatedAt?: T;
   createdAt?: T;
   deletedAt?: T;
@@ -2666,6 +3152,7 @@ export interface ExtracurricularsSelect<T extends boolean = true> {
   archivedAt?: T;
   createdBy?: T;
   updatedBy?: T;
+  tenant?: T;
   updatedAt?: T;
   createdAt?: T;
   deletedAt?: T;
@@ -2705,6 +3192,7 @@ export interface FacilitiesSelect<T extends boolean = true> {
   archivedAt?: T;
   createdBy?: T;
   updatedBy?: T;
+  tenant?: T;
   updatedAt?: T;
   createdAt?: T;
   deletedAt?: T;
@@ -2731,6 +3219,7 @@ export interface StaffSelect<T extends boolean = true> {
   archivedAt?: T;
   createdBy?: T;
   updatedBy?: T;
+  tenant?: T;
   updatedAt?: T;
   createdAt?: T;
   deletedAt?: T;
@@ -2769,6 +3258,7 @@ export interface AchievementsSelect<T extends boolean = true> {
   archivedAt?: T;
   createdBy?: T;
   updatedBy?: T;
+  tenant?: T;
   updatedAt?: T;
   createdAt?: T;
   deletedAt?: T;
@@ -2804,6 +3294,7 @@ export interface StudentWorksSelect<T extends boolean = true> {
   archivedAt?: T;
   createdBy?: T;
   updatedBy?: T;
+  tenant?: T;
   updatedAt?: T;
   createdAt?: T;
   deletedAt?: T;
@@ -2845,6 +3336,7 @@ export interface MediaItemsSelect<T extends boolean = true> {
   archivedAt?: T;
   createdBy?: T;
   updatedBy?: T;
+  tenant?: T;
   updatedAt?: T;
   createdAt?: T;
   deletedAt?: T;
@@ -2870,6 +3362,7 @@ export interface SocialAccountsSelect<T extends boolean = true> {
   verifiedAt?: T;
   verifiedBy?: T;
   order?: T;
+  tenant?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -2928,6 +3421,7 @@ export interface AdmissionsCyclesSelect<T extends boolean = true> {
   archivedAt?: T;
   createdBy?: T;
   updatedBy?: T;
+  tenant?: T;
   updatedAt?: T;
   createdAt?: T;
   deletedAt?: T;
@@ -2978,6 +3472,7 @@ export interface LeadsSelect<T extends boolean = true> {
         event?: T;
         id?: T;
       };
+  tenant?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -3003,6 +3498,7 @@ export interface VisitSessionsSelect<T extends boolean = true> {
   instructions?: T;
   guide?: T;
   cycle?: T;
+  tenant?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -3039,6 +3535,7 @@ export interface VisitBookingsSelect<T extends boolean = true> {
         event?: T;
         id?: T;
       };
+  tenant?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -3060,6 +3557,7 @@ export interface ContactMessagesSelect<T extends boolean = true> {
   internalNote?: T;
   linkedLead?: T;
   emailNotified?: T;
+  tenant?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -3081,6 +3579,7 @@ export interface MediaSelect<T extends boolean = true> {
   consent?: T;
   reviewStatus?: T;
   editorialNote?: T;
+  tenant?: T;
   prefix?: T;
   _objectKey?: T;
   updatedAt?: T;
@@ -3147,6 +3646,7 @@ export interface PrivateFilesSelect<T extends boolean = true> {
   title?: T;
   originalFilename?: T;
   note?: T;
+  tenant?: T;
   prefix?: T;
   _objectKey?: T;
   updatedAt?: T;
@@ -3170,52 +3670,7 @@ export interface RedirectsSelect<T extends boolean = true> {
   newPath?: T;
   active?: T;
   note?: T;
-  updatedAt?: T;
-  createdAt?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "users_select".
- */
-export interface UsersSelect<T extends boolean = true> {
-  name?: T;
-  role?: T;
-  canPublishAdmissions?: T;
-  canAccessLeads?: T;
-  canExportLeads?: T;
-  active?: T;
-  updatedAt?: T;
-  createdAt?: T;
-  email?: T;
-  resetPasswordToken?: T;
-  resetPasswordExpiration?: T;
-  salt?: T;
-  hash?: T;
-  resetPasswordRequestedAt?: T;
-  loginAttempts?: T;
-  lockUntil?: T;
-  sessions?:
-    | T
-    | {
-        id?: T;
-        createdAt?: T;
-        expiresAt?: T;
-      };
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "audit-logs_select".
- */
-export interface AuditLogsSelect<T extends boolean = true> {
-  action?: T;
-  collectionSlug?: T;
-  docId?: T;
-  docTitle?: T;
-  status?: T;
-  workflowStatus?: T;
-  changedFields?: T;
-  actor?: T;
-  actorEmail?: T;
+  tenant?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -3228,353 +3683,9 @@ export interface AnalyticsDailySelect<T extends boolean = true> {
   kind?: T;
   key?: T;
   count?: T;
+  tenant?: T;
   updatedAt?: T;
   createdAt?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "payload-kv_select".
- */
-export interface PayloadKvSelect<T extends boolean = true> {
-  key?: T;
-  data?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "payload-jobs_select".
- */
-export interface PayloadJobsSelect<T extends boolean = true> {
-  input?: T;
-  taskStatus?: T;
-  completedAt?: T;
-  totalTried?: T;
-  hasError?: T;
-  error?: T;
-  log?:
-    | T
-    | {
-        executedAt?: T;
-        completedAt?: T;
-        taskSlug?: T;
-        taskID?: T;
-        input?: T;
-        output?: T;
-        state?: T;
-        error?: T;
-        id?: T;
-      };
-  taskSlug?: T;
-  queue?: T;
-  waitUntil?: T;
-  processing?: T;
-  meta?: T;
-  updatedAt?: T;
-  createdAt?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "payload-locked-documents_select".
- */
-export interface PayloadLockedDocumentsSelect<T extends boolean = true> {
-  document?: T;
-  globalSlug?: T;
-  user?: T;
-  updatedAt?: T;
-  createdAt?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "payload-preferences_select".
- */
-export interface PayloadPreferencesSelect<T extends boolean = true> {
-  user?: T;
-  key?: T;
-  value?: T;
-  updatedAt?: T;
-  createdAt?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "payload-migrations_select".
- */
-export interface PayloadMigrationsSelect<T extends boolean = true> {
-  name?: T;
-  batch?: T;
-  updatedAt?: T;
-  createdAt?: T;
-}
-/**
- * Atur hero, urutan blok dan teks beranda. Perubahan tampil setelah Terbitkan.
- *
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "homepage".
- */
-export interface Homepage {
-  id: number;
-  hero: {
-    eyebrow?: string | null;
-    title: string;
-    description?: string | null;
-    /**
-     * Gunakan foto horizontal resmi. Atur titik fokus di Media agar wajah tidak terpotong.
-     */
-    image: number | Media;
-    imageMobile?: (number | null) | Media;
-    /**
-     * Bila diisi, foto-foto ini tampil bergantian (crossfade). Gunakan foto horizontal lebar; atur titik fokus di Media. Kosongkan untuk memakai satu foto utama.
-     */
-    slides?: (number | Media)[] | null;
-    slideInterval?: number | null;
-    accentImages?: (number | Media)[] | null;
-    primaryLabel?: string | null;
-    /**
-     * Gunakan https://… atau tautan internal yang diawali "/".
-     */
-    primaryHref?: string | null;
-    secondaryLabel?: string | null;
-    /**
-     * Gunakan https://… atau tautan internal yang diawali "/".
-     */
-    secondaryHref?: string | null;
-    showLiveClock?: boolean | null;
-  };
-  quickLinks?:
-    | {
-        label: string;
-        icon?:
-          | ('link' | 'book' | 'report' | 'calendar' | 'megaphone' | 'users' | 'grid' | 'pencil' | 'file' | 'school')
-          | null;
-        /**
-         * Gunakan https://… atau tautan internal yang diawali "/".
-         */
-        href: string;
-        id?: string | null;
-      }[]
-    | null;
-  intro?: {
-    eyebrow?: string | null;
-    heading?: string | null;
-    text?: string | null;
-    introImage?: (number | null) | Media;
-    collage?: (number | Media)[] | null;
-    pillars?:
-      | {
-          title: string;
-          text?: string | null;
-          id?: string | null;
-        }[]
-      | null;
-  };
-  texts?: {
-    programsEyebrow?: string | null;
-    programsHeading?: string | null;
-    programsIntro?: string | null;
-    studentLifeEyebrow?: string | null;
-    achievementsEyebrow?: string | null;
-    achievementsText?: string | null;
-    infoEyebrow?: string | null;
-    newsEyebrow?: string | null;
-    communityEyebrow?: string | null;
-    alumniTitle?: string | null;
-    alumniText?: string | null;
-    ctaEyebrow?: string | null;
-    studentLifeHeading?: string | null;
-    achievementsHeading?: string | null;
-    newsHeading?: string | null;
-    communityHeading?: string | null;
-    communityText?: string | null;
-    communityImage?: (number | null) | Media;
-    /**
-     * Opsional. Tampil sebagai tumpukan foto di blok prestasi.
-     */
-    achievementsAlbum?: (number | null) | Album;
-    mediaEyebrow?: string | null;
-    mediaHeading?: string | null;
-    mediaIntro?: string | null;
-    ctaHeading?: string | null;
-    ctaText?: string | null;
-  };
-  /**
-   * Seret untuk mengubah urutan. Nonaktifkan blok yang belum memiliki konten layak.
-   */
-  sections?:
-    | {
-        type:
-          | 'quickLinks'
-          | 'search'
-          | 'highlights'
-          | 'schoolIntro'
-          | 'programs'
-          | 'studentLife'
-          | 'achievements'
-          | 'announcementsAgenda'
-          | 'latestNews'
-          | 'mediaHub'
-          | 'facilities'
-          | 'communityAlumni'
-          | 'admissionsCta';
-        enabled?: boolean | null;
-        limit?: number | null;
-        id?: string | null;
-      }[]
-    | null;
-  _status?: ('draft' | 'published') | null;
-  updatedAt?: string | null;
-  createdAt?: string | null;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "site-settings".
- */
-export interface SiteSetting {
-  id: number;
-  schoolName: string;
-  city?: string | null;
-  logo?: (number | null) | Media;
-  valuesLine?: string | null;
-  shortProfile?: string | null;
-  address?: string | null;
-  email?: string | null;
-  phone?: string | null;
-  fax?: string | null;
-  /**
-   * Jangan isi dari nomor telepon kantor kecuali sudah dipastikan nomor WhatsApp resmi.
-   */
-  whatsapp?: string | null;
-  /**
-   * Contoh: Senin–Jumat 07.00–15.00 WITA. Kosongkan bila belum dikonfirmasi.
-   */
-  serviceHours?: string | null;
-  /**
-   * Gunakan https://… atau tautan internal yang diawali "/".
-   */
-  mapUrl?: string | null;
-  contactVerified?: boolean | null;
-  /**
-   * Kosong = tombol Portal Sekolah disembunyikan.
-   */
-  portalUrl?: string | null;
-  /**
-   * Kosong = tombol portal alumni disembunyikan.
-   */
-  alumniUrl?: string | null;
-  /**
-   * Digantikan oleh Video & Media Sosial → Akun Media Sosial Resmi. Dipakai hanya bila koleksi itu kosong.
-   */
-  socials?:
-    | {
-        platform: 'instagram' | 'youtube' | 'facebook' | 'tiktok';
-        handle?: string | null;
-        /**
-         * Gunakan https://… atau tautan internal yang diawali "/".
-         */
-        url: string;
-        id?: string | null;
-      }[]
-    | null;
-  updatedAt?: string | null;
-  createdAt?: string | null;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "navigation".
- */
-export interface Navigation {
-  id: number;
-  header?:
-    | {
-        label: string;
-        /**
-         * Gunakan https://… atau tautan internal yang diawali "/".
-         */
-        href: string;
-        children?:
-          | {
-              label: string;
-              /**
-               * Gunakan https://… atau tautan internal yang diawali "/".
-               */
-              href: string;
-              description?: string | null;
-              id?: string | null;
-            }[]
-          | null;
-        id?: string | null;
-      }[]
-    | null;
-  footer?:
-    | {
-        label: string;
-        /**
-         * Gunakan https://… atau tautan internal yang diawali "/".
-         */
-        href: string;
-        id?: string | null;
-      }[]
-    | null;
-  updatedAt?: string | null;
-  createdAt?: string | null;
-}
-/**
- * Hanya Admin Teknis. Mematikan fitur menutup halaman, API dan job terkait — bukan hanya menyembunyikan tombol.
- *
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "feature-flags".
- */
-export interface FeatureFlag {
-  id: number;
-  /**
-   * Tab "Kalender" (grid bulan). Mati = hanya daftar.
-   */
-  calendarMonthView?: boolean | null;
-  /**
-   * Aktifkan setelah petugas penerimaan siap menindaklanjuti. Mati = /pendaftaran/minat dan API ditutup.
-   */
-  interestForm?: boolean | null;
-  /**
-   * Aktifkan setelah slot kunjungan disetujui. Mati = /kunjungan, API pemesanan dan job pelepasan kuota ditutup.
-   */
-  schoolVisits?: boolean | null;
-  /**
-   * Aktifkan setelah ada karya dengan persetujuan publikasi.
-   */
-  studentWorks?: boolean | null;
-  /**
-   * Halaman /media, section beranda dan blok media. Section otomatis tersembunyi bila belum ada konten terbit.
-   */
-  mediaHub?: boolean | null;
-  /**
-   * Belum diimplementasikan (butuh API resmi & kredensial). Tetap mati.
-   */
-  socialAutoImport?: boolean | null;
-  /**
-   * Hitungan halaman & klik tombol tanpa data pribadi.
-   */
-  visitorAnalytics?: boolean | null;
-  /**
-   * Belum dibangun. Lihat P2_ADMISSIONS_BACKLOG.md. Tetap mati.
-   */
-  fullAdmissions?: boolean | null;
-  updatedAt?: string | null;
-  createdAt?: string | null;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "payload-jobs-stats".
- */
-export interface PayloadJobsStat {
-  id: number;
-  stats?:
-    | {
-        [k: string]: unknown;
-      }
-    | unknown[]
-    | string
-    | number
-    | boolean
-    | null;
-  updatedAt?: string | null;
-  createdAt?: string | null;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -3658,10 +3769,10 @@ export interface HomepageSelect<T extends boolean = true> {
         limit?: T;
         id?: T;
       };
-  _status?: T;
+  tenant?: T;
   updatedAt?: T;
   createdAt?: T;
-  globalType?: T;
+  _status?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -3669,10 +3780,12 @@ export interface HomepageSelect<T extends boolean = true> {
  */
 export interface SiteSettingsSelect<T extends boolean = true> {
   schoolName?: T;
+  shortName?: T;
   city?: T;
   logo?: T;
   valuesLine?: T;
   shortProfile?: T;
+  ogImage?: T;
   address?: T;
   email?: T;
   phone?: T;
@@ -3681,6 +3794,8 @@ export interface SiteSettingsSelect<T extends boolean = true> {
   serviceHours?: T;
   mapUrl?: T;
   contactVerified?: T;
+  notifyContactEmail?: T;
+  notifyAdmissionsEmail?: T;
   portalUrl?: T;
   alumniUrl?: T;
   socials?:
@@ -3691,9 +3806,9 @@ export interface SiteSettingsSelect<T extends boolean = true> {
         url?: T;
         id?: T;
       };
+  tenant?: T;
   updatedAt?: T;
   createdAt?: T;
-  globalType?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -3722,9 +3837,9 @@ export interface NavigationSelect<T extends boolean = true> {
         href?: T;
         id?: T;
       };
+  tenant?: T;
   updatedAt?: T;
   createdAt?: T;
-  globalType?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -3739,9 +3854,171 @@ export interface FeatureFlagsSelect<T extends boolean = true> {
   socialAutoImport?: T;
   visitorAnalytics?: T;
   fullAdmissions?: T;
+  tenant?: T;
   updatedAt?: T;
   createdAt?: T;
-  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "audit-logs_select".
+ */
+export interface AuditLogsSelect<T extends boolean = true> {
+  action?: T;
+  collectionSlug?: T;
+  docId?: T;
+  docTitle?: T;
+  status?: T;
+  workflowStatus?: T;
+  changedFields?: T;
+  actor?: T;
+  actorEmail?: T;
+  tenant?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "tenants_select".
+ */
+export interface TenantsSelect<T extends boolean = true> {
+  name?: T;
+  slug?: T;
+  status?: T;
+  plan?: T;
+  timezone?: T;
+  domains?:
+    | T
+    | {
+        domain?: T;
+        primary?: T;
+        id?: T;
+      };
+  contactName?: T;
+  contactEmail?: T;
+  contactPhone?: T;
+  notes?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "users_select".
+ */
+export interface UsersSelect<T extends boolean = true> {
+  name?: T;
+  role?: T;
+  tenant?: T;
+  canPublishAdmissions?: T;
+  canAccessLeads?: T;
+  canExportLeads?: T;
+  active?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  email?: T;
+  resetPasswordToken?: T;
+  resetPasswordExpiration?: T;
+  salt?: T;
+  hash?: T;
+  resetPasswordRequestedAt?: T;
+  loginAttempts?: T;
+  lockUntil?: T;
+  sessions?:
+    | T
+    | {
+        id?: T;
+        createdAt?: T;
+        expiresAt?: T;
+      };
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "payload-kv_select".
+ */
+export interface PayloadKvSelect<T extends boolean = true> {
+  key?: T;
+  data?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "payload-jobs_select".
+ */
+export interface PayloadJobsSelect<T extends boolean = true> {
+  input?: T;
+  taskStatus?: T;
+  completedAt?: T;
+  totalTried?: T;
+  hasError?: T;
+  error?: T;
+  log?:
+    | T
+    | {
+        executedAt?: T;
+        completedAt?: T;
+        taskSlug?: T;
+        taskID?: T;
+        input?: T;
+        output?: T;
+        state?: T;
+        error?: T;
+        id?: T;
+      };
+  taskSlug?: T;
+  queue?: T;
+  waitUntil?: T;
+  processing?: T;
+  meta?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "payload-locked-documents_select".
+ */
+export interface PayloadLockedDocumentsSelect<T extends boolean = true> {
+  document?: T;
+  globalSlug?: T;
+  user?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "payload-preferences_select".
+ */
+export interface PayloadPreferencesSelect<T extends boolean = true> {
+  user?: T;
+  key?: T;
+  value?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "payload-migrations_select".
+ */
+export interface PayloadMigrationsSelect<T extends boolean = true> {
+  name?: T;
+  batch?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "payload-jobs-stats".
+ */
+export interface PayloadJobsStat {
+  id: number;
+  stats?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema

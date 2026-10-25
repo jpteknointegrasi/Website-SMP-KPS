@@ -1,5 +1,5 @@
 'use client'
-import { TZ } from '@/lib/format'
+import { tzAbbr } from '@/tenancy/config'
 import React, { useEffect, useRef, useState } from 'react'
 
 const reduced = () => typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
@@ -28,7 +28,7 @@ export const Reveal = ({ children, as: Tag = 'div', className = '', ...rest }: {
   )
 }
 
-const witaParts = () => {
+const clockParts = (TZ: string) => {
   const now = new Date()
   const time = new Intl.DateTimeFormat('id-ID', { timeZone: TZ, hour: '2-digit', minute: '2-digit', hour12: false }).format(now).replace(':', '.')
   const hour = Number(new Intl.DateTimeFormat('en-GB', { timeZone: TZ, hour: '2-digit', hour12: false }).format(now))
@@ -37,14 +37,15 @@ const witaParts = () => {
   return { time, greet, day }
 }
 
-/** Live WITA clock + time-of-day greeting (Balikpapan). Rendered client-side only to avoid hydration drift. */
-export const LiveClock = ({ city = 'Balikpapan' }: { city?: string }) => {
-  const [p, setP] = useState<ReturnType<typeof witaParts> | null>(null)
+/** Live clock + time-of-day greeting in the school's zone. Rendered client-side only to avoid hydration drift. */
+export const LiveClock = ({ city, tz }: { city?: string | null; tz: string }) => {
+  const [p, setP] = useState<ReturnType<typeof clockParts> | null>(null)
+  const z = tzAbbr(tz)
   useEffect(() => {
-    setP(witaParts())
-    const t = setInterval(() => setP(witaParts()), 15_000)
+    setP(clockParts(tz))
+    const t = setInterval(() => setP(clockParts(tz)), 15_000)
     return () => clearInterval(t)
-  }, [])
+  }, [tz])
   return (
     <p className="live-clock" aria-live="off">
       <span className="live-clock__dot" aria-hidden="true" />
@@ -53,11 +54,12 @@ export const LiveClock = ({ city = 'Balikpapan' }: { city?: string }) => {
           <span>{p.greet}</span>
           <span className="live-clock__sep" aria-hidden="true" />
           <span>
-            {p.day}, {city} <strong>{p.time}</strong> WITA
+            {p.day}
+            {city ? `, ${city}` : ''} <strong>{p.time}</strong> {z}
           </span>
         </>
       ) : (
-        <span>{city}, WITA</span>
+        <span>{city ? `${city}, ${z}` : z}</span>
       )}
     </p>
   )

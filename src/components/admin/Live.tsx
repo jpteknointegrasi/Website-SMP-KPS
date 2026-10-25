@@ -1,24 +1,23 @@
 'use client'
-import { TZ } from '@/lib/format'
 import React, { useEffect, useState } from 'react'
 
-const fmtNow = () =>
+const fmtNow = (TZ: string) =>
   new Intl.DateTimeFormat('id-ID', { timeZone: TZ, weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false })
     .format(new Date())
     .replace(/\./g, ':')
 
-/** Live WITA clock for the CMS dashboard (client-only to avoid hydration drift). */
-export const AdminClock = () => {
+/** Live clock in the school's time zone for the CMS dashboard (client-only to avoid hydration drift). */
+export const AdminClock = ({ tz, zone }: { tz: string; zone: string }) => {
   const [t, setT] = useState('')
   useEffect(() => {
-    setT(fmtNow())
-    const i = setInterval(() => setT(fmtNow()), 1000)
+    setT(fmtNow(tz))
+    const i = setInterval(() => setT(fmtNow(tz)), 1000)
     return () => clearInterval(i)
-  }, [])
+  }, [tz])
   return (
     <p className="kps-dash__clock" aria-live="off">
       <span className="kps-dash__pulse" aria-hidden="true" />
-      {t ? `${t} WITA` : 'Balikpapan, WITA'}
+      {t ? `${t} ${zone}` : zone}
     </p>
   )
 }

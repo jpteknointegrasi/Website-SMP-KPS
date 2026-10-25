@@ -1,9 +1,10 @@
+import { schoolMeta } from '@/lib/meta'
 import { listCollection, getGlobals } from '@/lib/queries'
 import { PageHeader, Container, EmptyState, SmartLink, DemoBadge } from '@/components/ui/bits'
 import { Icon } from '@/components/ui/Icon'
 import type { Service } from '@/payload-types'
 
-export const metadata = { title: 'Layanan Sekolah', description: 'Tautan layanan SMP Nasional KPS: portal, perpustakaan, rapor dan aplikasi sekolah.', alternates: { canonical: '/layanan' } }
+export const generateMetadata = schoolMeta(({ name }) => ({ title: 'Layanan Sekolah', description: `Tautan layanan ${name}: portal, perpustakaan, rapor dan aplikasi sekolah.`, alternates: { canonical: '/layanan' } }))
 
 export default async function Page() {
   const [res, { settings }] = await Promise.all([listCollection('services', { sort: 'order', limit: 48, depth: 0 }), getGlobals()])
