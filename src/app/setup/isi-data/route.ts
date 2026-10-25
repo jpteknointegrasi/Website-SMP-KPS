@@ -28,6 +28,14 @@ export async function GET(req: Request) {
     )
   }
 
+  // On Vercel the server disk is read-only/ephemeral: photos must go to Vercel Blob.
+  if (process.env.VERCEL && !process.env.BLOB_READ_WRITE_TOKEN) {
+    return page(
+      'Token Blob belum ada',
+      `<h1>Belum bisa mengisi foto</h1><div class="box warn"><p>Variabel <b>BLOB_READ_WRITE_TOKEN</b> belum terpasang di Vercel, jadi foto tidak bisa disimpan.</p><ol><li>Vercel → Storage → <b>kps-files</b> → <i>Show secret</i> → salin nilai <code>vercel_blob_rw_…</code></li><li>Settings → Environment Variables → <b>Add</b>: key <code>BLOB_READ_WRITE_TOKEN</code>, centang Production &amp; Preview → Save</li><li>Deployments → ⋯ → <b>Redeploy</b>, tunggu Ready, lalu buka halaman ini lagi.</li></ol></div>`,
+    )
+  }
+
   const started = Date.now()
   const lines: string[] = []
   const result = await runSeed(payload, (m) => lines.push(m), { deadline: started + 35_000 })
