@@ -1,0 +1,31 @@
+import type { MetadataRoute } from 'next'
+import { payloadClient } from '@/lib/payload'
+
+export const dynamic = 'force-dynamic'
+
+/** Only published, public URLs (read through public access rules: no drafts, demo or archived records). */
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  const SITE = (process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3000').replace(/\/$/, '')
+  const statics = ['', '/tentang', '/tentang/sejarah', '/tentang/visi-misi', '/tentang/pimpinan-guru', '/tentang/fasilitas', '/pembelajaran', '/kehidupan-siswa', '/prestasi', '/informasi', '/berita', '/pengumuman', '/agenda', '/galeri', '/unduhan', '/transparansi-bos', '/panduan', '/layanan', '/alumni', '/pendaftaran', '/kontak', '/kebijakan-privasi']
+  const out: MetadataRoute.Sitemap = statics.map((p) => ({ url: `${SITE}${p}`, changeFrequency: p === '' ? 'daily' : 'weekly' }))
+  const payload = await payloadClient()
+  const map: [string, string][] = [
+    ['posts', '/berita'],
+    ['announcements', '/pengumuman'],
+    ['events', '/agenda'],
+    ['albums', '/galeri'],
+    ['programs', '/pembelajaran'],
+    ['extracurriculars', '/ekstrakurikuler'],
+    ['facilities', '/tentang/fasilitas'],
+    ['achievements', '/prestasi'],
+    ['guides', '/panduan'],
+  ]
+  for (const [collection, base] of map) {
+    const res = await payload.find({ collection: collection as 'posts', limit: 500, depth: 0, overrideAccess: false, draft: false, select: { slug: true, updatedAt: true } as never })
+    res.docs.forEach((d) => {
+      const doc = d as unknown as { slug: string; updatedAt: string }
+      out.push({ url: `${SITE}${base}/${doc.slug}`, lastModified: doc.updatedAt })
+    })
+  }
+  return out
+}

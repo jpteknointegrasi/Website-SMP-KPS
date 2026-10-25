@@ -1,0 +1,61 @@
+import { TZ } from './format'
+
+type IcsEvent = {
+  id: number | string
+  slug: string
+  title: string
+  startAt: string
+  endAt?: string | null
+  allDay?: boolean | null
+  location?: string | null
+  excerpt?: string | null
+  eventStatus?: string | null
+  updatedAt?: string
+}
+
+const esc = (s: string) => s.replace(/\\/g, '\\\\').replace(/\n/g, '\\n').replace(/,/g, '\\,').replace(/;/g, '\\;')
+const utcStamp = (iso: string) => new Date(iso).toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '')
+
+/** Local (WITA) calendar date as YYYYMMDD — all-day events must not shift across the date line. */
+export const witaDate = (iso: string) => {
+  const p = new Intl.DateTimeFormat('en-CA', { timeZone: TZ, year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date(iso))
+  return p.replace(/-/g, '')
+}
+const nextDay = (yyyymmdd: string) => {
+  const d = new Date(Date.UTC(+yyyymmdd.slice(0, 4), +yyyymmdd.slice(4, 6) - 1, +yyyymmdd.slice(6, 8) + 1))
+  return d.toISOString().slice(0, 10).replace(/-/g, '')
+}
+/** Fold lines longer than 75 octets (RFC 5545 §3.1). */
+const fold = (line: string) => {
+  const out: string[] = []
+  let rest = line
+  while (Buffer.byteLength(rest) > 75) {
+    let cut = 74
+    while (Buffer.byteLength(rest.slice(0, cut)) > 74) cut--
+    out.push(rest.slice(0, cut))
+    rest = ' ' + rest.slice(cut)
+  }
+  out.push(rest)
+  return out.join('\r\n')
+}
+
+export function buildIcs(e: IcsEvent, siteUrl: string) {
+  const lines = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//SMP Nasional KPS//Agenda//ID', 'CALSCALE:GREGORIAN', 'METHOD:PUBLISH', 'BEGIN:VEVENT']
+  lines.push(`UID:event-${e.id}@smp.kps.sch.id`)
+  lines.push(`DTSTAMP:${utcStamp(e.updatedAt ?? new Date().toISOString())}`)
+  if (e.allDay) {
+    const s = witaDate(e.startAt)
+    const end = e.endAt ? witaDate(e.endAt) : s
+    lines.push(`DTSTART;VALUE=DATE:${s}`, `DTEND;VALUE=DATE:${nextDay(end)}`)
+  } else {
+    lines.push(`DTSTART:${utcStamp(e.startAt)}`)
+    lines.push(`DTEND:${utcStamp(e.endAt ?? new Date(new Date(e.startAt).getTime() + 3600_000).toISOString())}`)
+  }
+  lines.push(`SUMMARY:${esc(e.title)}`)
+  if (e.location) lines.push(`LOCATION:${esc(e.location)}`)
+  if (e.excerpt) lines.push(`DESCRIPTION:${esc(e.excerpt)}`)
+  if (siteUrl) lines.push(`URL:${siteUrl}/agenda/${e.slug}`)
+  lines.push(`STATUS:${e.eventStatus === 'cancelled' ? 'CANCELLED' : e.eventStatus === 'postponed' ? 'TENTATIVE' : 'CONFIRMED'}`)
+  lines.push('END:VEVENT', 'END:VCALENDAR')
+  return lines.map(fold).join('\r\n') + '\r\n'
+}

@@ -1,0 +1,20 @@
+CARA MENJALANKAN WEBSITE DI KOMPUTER INI (Windows)
+=================================================
+
+Syarat: Node.js versi 22.12 atau lebih baru (https://nodejs.org, pilih LTS).
+
+1. Klik dua kali  MULAI-WINDOWS.bat
+   - Pertama kali: memasang paket dan membuat database lokal (kps.db) beserta konten & foto resmi.
+     Butuh internet dan beberapa menit.
+   - Berikutnya: langsung menjalankan website.
+2. Browser terbuka ke http://localhost:3000
+   Pemuatan pertama tiap halaman agak lambat (sedang dikompilasi), berikutnya cepat.
+3. Buka http://localhost:3000/admin untuk membuat akun Admin pertama dan mengelola konten.
+4. Untuk berhenti: tekan Ctrl+C di jendela hitam.
+
+Catatan
+- Mode lokal ini memakai database SQLite (file kps.db) supaya tidak perlu memasang PostgreSQL.
+  Untuk server/produksi gunakan PostgreSQL (lihat DEPLOYMENT_RUNBOOK.md).
+- Data contoh berlabel "Contoh" sengaja ditampilkan (SHOW_DEMO_CONTENT=true di .env). Di produksi wajib false.
+- Mengulang dari awal: hentikan website, hapus file kps.db dan folder media, lalu jalankan MULAI-WINDOWS.bat lagi.
+- File .env berisi kunci rahasia: jangan dibagikan atau diunggah ke repository.
