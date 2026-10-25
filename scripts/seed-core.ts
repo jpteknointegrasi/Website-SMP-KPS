@@ -197,14 +197,18 @@ export async function runSeed(payload: Payload, log: (m: string) => void = (m) =
     ],
   })
 
-  // ---------- 5. leadership (names/positions from the official homepage; photos left for verification) ----------
+  // ---------- 5. leadership (names, positions and photos as published on the official homepage) ----------
   const leaders = [
-    ['M. Afcariono, S.Si., M.Pd.', 'Kepala Sekolah', 1],
-    ['Abundaris Khamil Iftara, S.Pd.', 'Wakil Bidang Kurikulum dan Sarpras', 2],
-    ['Hanim Farida, S.Pd., M.Pd.', 'Wakil Bidang Kesiswaan', 3],
+    ['M. Afcariono, S.Si., M.Pd.', 'Kepala Sekolah', 1, 'KPS-002'],
+    ['Abundaris Khamil Iftara, S.Pd.', 'Wakil Bidang Kurikulum dan Sarpras', 2, 'KPS-003'],
+    ['Hanim Farida, S.Pd., M.Pd.', 'Wakil Bidang Kesiswaan', 3, 'KPS-004'],
   ] as const
-  for (const [name, position, order] of leaders) {
-    await upsert(payload, 'staff', { name: { equals: name } }, { name, position, order, group: 'pimpinan', publicationConsent: false, isDemo: false })
+  for (const [name, position, order, photoId] of leaders) {
+    const photo = M(photoId)
+    await upsert(payload, 'staff', { name: { equals: name } }, {
+      name, position, order, group: 'pimpinan', isDemo: false,
+      ...(photo ? { photo, publicationConsent: true } : { publicationConsent: false }),
+    })
   }
 
   // ---------- 6. programs & student life ----------

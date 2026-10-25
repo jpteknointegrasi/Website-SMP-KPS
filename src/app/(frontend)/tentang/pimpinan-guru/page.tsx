@@ -7,6 +7,9 @@ export const metadata = { title: 'Pimpinan & Guru', alternates: { canonical: '/t
 
 const initials = (n: string) => n.replace(/[,.].*$/, '').split(' ').filter(Boolean).slice(0, 2).map((w) => w[0]).join('').toUpperCase()
 
+// PNG photos with a transparent background (e.g. the official hexagon portraits) are shown as-is, without our own crop.
+const cutout = (m: Staff['photo']) => Boolean(m && typeof m === 'object' && (m as Media).mimeType === 'image/png')
+
 export default async function Page() {
   const res = await listCollection('staff', { sort: 'order', limit: 48 })
   const staff = res.docs as unknown as Staff[]
@@ -26,8 +29,8 @@ export default async function Page() {
                 <ul className="people">
                   {list.map((s) => (
                     <li key={s.id} className="person">
-                      <div className="person__photo">
-                        {s.photo && typeof s.photo === 'object' ? <Img media={s.photo as Media} sizes="150px" alt={`Foto ${s.name}`} /> : <span className="person__initials" aria-hidden="true">{initials(s.name)}</span>}
+                      <div className={`person__photo${cutout(s.photo) ? ' is-cutout' : ''}`}>
+                        {s.photo && typeof s.photo === 'object' ? <Img media={s.photo as Media} sizes="180px" alt={`Foto ${s.name}`} /> : <span className="person__initials" aria-hidden="true">{initials(s.name)}</span>}
                       </div>
                       <h3>{s.name}</h3>
                       <p>{s.position}</p>
