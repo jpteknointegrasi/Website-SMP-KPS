@@ -34,7 +34,7 @@ if errorlevel 1 (
   exit /b 1
 )
 
-if not exist "node_modules\" (
+if not exist "node_modules\@payloadcms\storage-vercel-blob\" (
   echo Memasang paket - sekali saja, beberapa menit...
   call npm ci
   if errorlevel 1 (

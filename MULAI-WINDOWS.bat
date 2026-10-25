@@ -29,7 +29,7 @@ if not exist ".env" (
   exit /b 1
 )
 
-if not exist "node_modules\" (
+if not exist "node_modules\@payloadcms\storage-vercel-blob\" (
   echo [1/3] Memasang paket - sekali saja, beberapa menit...
   call npm ci
   if errorlevel 1 (
