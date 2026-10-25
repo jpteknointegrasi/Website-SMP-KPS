@@ -46,6 +46,12 @@ Uji: 71 tes lulus (`npm test`): 30 unit addendum, 17 integrasi addendum, 24 lama
 
 **Belum di produksi.** Menggabungkan ke `main` menjalankan migrasi di database produksi (Vercel `vercel-build`). Langkah: `DEPLOYMENT_RUNBOOK.md` §Addendum.
 
+## Persiapan peluncuran (26 Okt 2026)
+- Produksi: www.smpkps.sch.id (alamat Vercel dialihkan 308), addendum & data tambahan terpasang.
+- QA lanjutan: 85 tes lulus; Lighthouse HP & axe WCAG AA lulus; bug proteksi hapus media diperbaiki.
+- Tautan ke fitur tanpa isi disembunyikan otomatis; backup lokal `BACKUP-DATA-PRODUKSI.bat`.
+- Langkah tersisa untuk pemilik proyek & sekolah: `GO_LIVE_CHECKLIST.md` dan dokumen "Data yang Dibutuhkan untuk Website SMP Nasional KPS".
+
 ## Tersisa
 1. Data resmi dari sekolah — lihat `CONTENT_GAPS.md` (PPDB, kontak terverifikasi, URL portal, guru, prestasi, BOS).
 2. Tes tambahan: CMS-01/06/07, FORM-01 via browser, SEC-02/03/04 (lihat `QA_REPORT.md`).
