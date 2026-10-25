@@ -7,6 +7,10 @@ const __filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(__filename)
 
 const nextConfig: NextConfig = {
+  // the admin-only /setup/isi-data route reads the official photos & articles from content/
+  outputFileTracingIncludes: {
+    '/setup/isi-data': ['./content/**/*'],
+  },
   images: {
     localPatterns: [
       {

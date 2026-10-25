@@ -47,17 +47,14 @@ Proyek → **Settings → Environment Variables**. Tambahkan (Environment: *Prod
 ## Langkah 5 — Deploy
 Tab **Deployments** → titik tiga pada deployment terakhir → **Redeploy**. Proses build otomatis menjalankan migrasi database (`vercel-build`). Tunggu status **Ready** (±3–5 menit).
 
-## Langkah 6 — Isi konten & foto awal (dari komputer Anda)
-Database baru masih kosong. Isi sekali dari komputer Windows Anda:
-1. Di Vercel → **Storage → kps-db (Neon)** → tab **.env.local / Quickstart** → salin nilai `DATABASE_URL` (yang berakhiran `-pooler…`).
-2. **Storage → kps-files (Blob)** → salin `BLOB_READ_WRITE_TOKEN`.
-3. Buka file **`.env.vercel`** di folder proyek dengan Notepad, tempel kedua nilai itu di baris `DATABASE_URI=` dan `BLOB_READ_WRITE_TOKEN=`, simpan.
-4. Double-click **`ISI-DATA-PRODUKSI.bat`**. Foto diunggah ke Blob dan konten awal diisi (aman diulang, tidak menggandakan).
+## Langkah 6 — Buat akun admin
+Buka `https://<alamat-anda>/admin` → isi formulir akun pertama (otomatis **Admin Teknis**).
 
-> File `.env.vercel` berisi kunci produksi: jangan dibagikan atau diunggah. Sudah dikecualikan dari Git.
+## Langkah 7 — Isi konten & foto awal (tanpa perlu Node.js)
+Masih dalam keadaan login sebagai admin, buka **`https://<alamat-anda>/setup/isi-data`**.
+Halaman ini mengunggah 35 foto resmi ke Vercel Blob dan mengisi konten awal secara bertahap; ia memuat ulang sendiri sampai muncul **Selesai ✅** (±1–3 menit). Aman dibuka ulang kapan saja — data tidak digandakan.
 
-## Langkah 7 — Buat akun admin
-Buka `https://<alamat-anda>/admin` → isi formulir akun pertama (otomatis **Admin Teknis**). Buat akun staf lain dari menu *Pengguna*.
+> Alternatif bila Node.js terpasang di komputer: isi `DATABASE_URI` dan `BLOB_READ_WRITE_TOKEN` di `.env.vercel`, lalu jalankan `ISI-DATA-PRODUKSI.bat`.
 
 ## Langkah 8 (opsional) — Penerbitan terjadwal lebih cepat
 Daftar gratis di https://cron-job.org → *Create cronjob*:

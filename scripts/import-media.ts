@@ -68,9 +68,9 @@ const FOCAL: Record<string, { x: number; y: number }> = {
   'KPS-H04': { x: 55, y: 55 },
 }
 
-export async function importMedia(payload: Payload, log = console.log) {
+export async function importMedia(payload: Payload, log = console.log, opts: { deadline?: number } = {}) {
   const manifest = JSON.parse(fs.readFileSync(path.join(ROOT, 'assets-manifest.json'), 'utf8')) as { assets: Asset[] }
-  const result = { created: 0, skipped: 0, failed: 0, ids: {} as Record<string, number | string> }
+  const result = { created: 0, skipped: 0, failed: 0, remaining: 0, ids: {} as Record<string, number | string> }
   for (const a of manifest.assets) {
     const filePath = path.join(ROOT, a.file)
     try {
@@ -80,6 +80,11 @@ export async function importMedia(payload: Payload, log = console.log) {
       if (existing.docs[0]) {
         result.ids[a.id] = existing.docs[0].id
         result.skipped++
+        continue
+      }
+      // time budget (serverless): leave the rest for the next call
+      if (opts.deadline && Date.now() > opts.deadline) {
+        result.remaining++
         continue
       }
       const doc = await payload.create({
@@ -110,7 +115,7 @@ export async function importMedia(payload: Payload, log = console.log) {
       log(`x ${a.id}: ${(e as Error).message}`)
     }
   }
-  log(`Import media: ${result.created} baru, ${result.skipped} sudah ada (checksum), ${result.failed} gagal.`)
+  log(`Import media: ${result.created} baru, ${result.skipped} sudah ada (checksum), ${result.failed} gagal, ${result.remaining} menunggu.`)
   return result
 }
 
