@@ -52,3 +52,6 @@ node_modules/
 # database SQLite lokal
 /kps.db
 /kps.db-*
+
+# kredensial produksi untuk seed dari komputer lokal
+/.env.vercel

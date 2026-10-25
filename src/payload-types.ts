@@ -306,6 +306,8 @@ export interface Media {
   consent?: ('unknown' | 'approved' | 'not_required') | null;
   reviewStatus?: ('pending' | 'approved' | 'blocked') | null;
   editorialNote?: string | null;
+  prefix?: string | null;
+  _objectKey?: string | null;
   updatedAt: string;
   createdAt: string;
   url?: string | null;
@@ -558,6 +560,8 @@ export interface Document {
   archivedAt?: string | null;
   createdBy?: (number | null) | User;
   updatedBy?: (number | null) | User;
+  prefix?: string | null;
+  _objectKey?: string | null;
   updatedAt: string;
   createdAt: string;
   deletedAt?: string | null;
@@ -1093,6 +1097,8 @@ export interface PrivateFile {
   title: string;
   originalFilename?: string | null;
   note?: string | null;
+  prefix?: string | null;
+  _objectKey?: string | null;
   updatedAt: string;
   createdAt: string;
   url?: string | null;
@@ -1715,6 +1721,8 @@ export interface DocumentsSelect<T extends boolean = true> {
   archivedAt?: T;
   createdBy?: T;
   updatedBy?: T;
+  prefix?: T;
+  _objectKey?: T;
   updatedAt?: T;
   createdAt?: T;
   deletedAt?: T;
@@ -2055,6 +2063,8 @@ export interface MediaSelect<T extends boolean = true> {
   consent?: T;
   reviewStatus?: T;
   editorialNote?: T;
+  prefix?: T;
+  _objectKey?: T;
   updatedAt?: T;
   createdAt?: T;
   url?: T;
@@ -2119,6 +2129,8 @@ export interface PrivateFilesSelect<T extends boolean = true> {
   title?: T;
   originalFilename?: T;
   note?: T;
+  prefix?: T;
+  _objectKey?: T;
   updatedAt?: T;
   createdAt?: T;
   url?: T;

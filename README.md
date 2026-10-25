@@ -61,4 +61,6 @@ tests/                tes unit & integrasi
 - Waktu tampil memakai **WITA (Asia/Makassar)**; database menyimpan UTC.
 - Animasi menghormati `prefers-reduced-motion`; efek kursor hanya aktif di perangkat ber-mouse.
 
+**Go-live gratis di Vercel:** ikuti `PANDUAN_GO_LIVE_VERCEL.md` (Vercel + Neon + Vercel Blob).
+
 Dokumen lain: `PANDUAN_ADMIN.md`, `DEPLOYMENT_RUNBOOK.md`, `CONTENT_GAPS.md`, `MIGRATION_REPORT.md`, `REDIRECT_MAP.csv`, `QA_REPORT.md`.
