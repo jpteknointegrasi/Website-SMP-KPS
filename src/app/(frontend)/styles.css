@@ -196,7 +196,7 @@ main:focus { outline: none; }
 .rt-figure img { border-radius: var(--radius); }
 figcaption, .caption { font-size: 0.9rem; color: var(--text-2); margin-top: 8px; }
 .article-cover { margin: -24px 0 32px; }
-.article-cover img { width: 100%; border-radius: var(--radius-lg); aspect-ratio: 16 / 9; object-fit: cover; }
+.article-cover img { display: block; width: 100%; height: auto; max-height: 78vh; object-fit: contain; border-radius: var(--radius-lg); background: var(--ivory); }
 .article-meta { display: flex; flex-wrap: wrap; gap: 8px 16px; color: rgba(255, 255, 255, 0.8); font-size: 0.95rem; margin-top: 12px; }
 .source-note { margin-top: 32px; padding: 14px 18px; border-radius: 10px; background: var(--ivory); font-size: 0.92rem; color: var(--text-2); }
 .share { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-top: 28px; }
