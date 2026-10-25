@@ -2,6 +2,7 @@ import { getPayload, type Payload } from 'payload'
 import config from '@payload-config'
 import { del, list } from '@vercel/blob'
 import { runSeed } from '../../../../scripts/seed-core'
+import { runAddendumSetup } from '../../../../scripts/addendum-setup'
 import { isAdmin } from '@/access/roles'
 
 /**
@@ -20,7 +21,7 @@ const STEP_MS = 35_000
 
 const page = (title: string, body: string, opts: { refresh?: boolean; autoPost?: boolean } = {}) =>
   new Response(
-    `<!doctype html><html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex">${opts.refresh ? '<meta http-equiv="refresh" content="2">' : ''}<title>${title}</title>
+    `<!doctype html><html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex">${opts.refresh ? '<meta http-equiv="refresh" content="2;url=/setup/isi-data?jalankan=1">' : ''}<title>${title}</title>
 <style>body{font:16px/1.6 system-ui,sans-serif;max-width:640px;margin:48px auto;padding:0 20px;color:#172b3a}h1{color:#142a46;font-size:1.5rem}.box{padding:16px 20px;border-radius:12px;background:#eaf5f2;margin:16px 0}.warn{background:#fff7e0}a.btn,button{display:inline-block;padding:10px 18px;border-radius:10px;border:0;background:#167467;color:#fff;text-decoration:none;font:700 15px system-ui,sans-serif;cursor:pointer}button.danger{background:#b42318}progress{width:100%;height:14px}small{color:#526170}</style></head><body>${body}${
       opts.autoPost ? '<form method="post" id="next"><input type="hidden" name="aksi" value="ulang-foto"></form><script>setTimeout(function(){document.getElementById("next").submit()},1200)</script>' : ''
     }</body></html>`,
@@ -53,6 +54,23 @@ export async function GET(req: Request) {
   if (auth instanceof Response) return auth
   const { payload } = auth
 
+  // Menu first: the full seed resets initial texts (homepage, navigation). It runs only when chosen explicitly.
+  if (new URL(req.url).searchParams.get('jalankan') !== '1') {
+    const hasContent = (await payload.count({ collection: 'posts', overrideAccess: true })).totalDocs > 0
+    return page(
+      'Isi data',
+      `<h1>Data website</h1>
+<div class="box"><h2 style="font-size:1.1rem;margin-top:0">Data fitur tambahan</h2><p>Kategori agenda, FAQ penggunaan website, akun media sosial, tautan menu dan section KPS TV. <b>Hanya menambah yang belum ada</b> — aman untuk website yang sudah dipakai.</p>
+<form method="post"><input type="hidden" name="aksi" value="fitur-tambahan"><button type="submit">Pasang data fitur tambahan</button></form></div>
+<div class="box ${hasContent ? 'warn' : ''}"><h2 style="font-size:1.1rem;margin-top:0">Konten & foto awal</h2><p>${
+        hasContent
+          ? 'Website sudah berisi. Menjalankan ini <b>mengembalikan teks awal</b> (beranda, navigasi, berita impor) — perubahan staf pada bagian itu akan tertimpa.'
+          : 'Mengunggah 35 foto resmi dan konten awal. Memuat ulang sendiri sampai selesai.'
+      }</p><p><a class="btn" href="/setup/isi-data?jalankan=1"${hasContent ? ` onclick="return confirm('Teks awal akan menimpa perubahan staf. Lanjutkan?')"` : ''}>${hasContent ? 'Isi ulang konten awal' : 'Mulai isi data awal'}</a></p></div>
+<p><a href="/admin">Kembali ke panel admin</a></p>`,
+    )
+  }
+
   const started = Date.now()
   const lines: string[] = []
   const result = await runSeed(payload, (m) => lines.push(m), { deadline: started + STEP_MS })
@@ -81,6 +99,14 @@ export async function POST(req: Request) {
   if (auth instanceof Response) return auth
   const { payload } = auth
   const form = await req.formData().catch(() => null)
+  if (form?.get('aksi') === 'fitur-tambahan') {
+    const lines = await runAddendumSetup(payload)
+    const esc = (t: string) => t.replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' })[c]!)
+    return page(
+      'Fitur tambahan siap',
+      `<h1>Data fitur tambahan siap ✅</h1><div class="box"><ul>${lines.map((l) => `<li>${esc(l)}</li>`).join('')}</ul><p>Tidak ada konten lama yang ditimpa. Nyalakan fitur di <b>Pengaturan → Fitur Aktif</b> setelah datanya siap.</p></div><p><a class="btn" href="/admin/globals/feature-flags">Buka Fitur Aktif</a> &nbsp; <a href="/">Lihat website</a></p>`,
+    )
+  }
   if (form?.get('aksi') !== 'ulang-foto') return new Response('Permintaan tidak dikenal', { status: 400 })
 
   const deadline = Date.now() + STEP_MS
@@ -131,5 +157,5 @@ export async function POST(req: Request) {
   }
 
   // 3) back to the import flow, which uploads the photos again and relinks content
-  return new Response(null, { status: 303, headers: { location: '/setup/isi-data', 'cache-control': 'no-store' } })
+  return new Response(null, { status: 303, headers: { location: '/setup/isi-data?jalankan=1', 'cache-control': 'no-store' } })
 }

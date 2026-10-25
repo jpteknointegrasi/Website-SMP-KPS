@@ -18,6 +18,7 @@ import {
   Albums,
   Announcements,
   Categories,
+  EventCategories,
   Events,
   Extracurriculars,
   Facilities,
@@ -31,7 +32,14 @@ import {
 } from './collections/content'
 import { AdmissionsCycles, AuditLogs, ContactMessages, Redirects } from './collections/system'
 import { Homepage, Navigation, SiteSettings } from './globals'
+import { FeatureFlags } from './globals/flags'
+import { Faqs, StudentWorks } from './collections/extra'
+import { MediaItems, SocialAccounts } from './collections/media-hub'
+import { Leads, VisitBookings, VisitSessions } from './collections/admissions'
+import { AnalyticsDaily } from './collections/analytics'
 import { isStaff } from './access/roles'
+import { readFlags } from './lib/flags'
+import { releaseExpiredHolds } from './lib/capacity'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
@@ -74,6 +82,8 @@ export default buildConfig({
     Categories,
     Announcements,
     Events,
+    EventCategories,
+    Faqs,
     Albums,
     Documents,
     Guides,
@@ -84,15 +94,22 @@ export default buildConfig({
     Facilities,
     Staff,
     Achievements,
+    StudentWorks,
+    MediaItems,
+    SocialAccounts,
     AdmissionsCycles,
+    Leads,
+    VisitSessions,
+    VisitBookings,
     ContactMessages,
     Media,
     PrivateFiles,
     Redirects,
     Users,
     AuditLogs,
+    AnalyticsDaily,
   ],
-  globals: [Homepage, SiteSettings, Navigation],
+  globals: [Homepage, SiteSettings, Navigation, FeatureFlags],
   editor: lexicalEditor({
     // Structured rich text only: no raw HTML/script blocks; H1 is reserved for the page title.
     features: ({ defaultFeatures }) => [
@@ -130,6 +147,23 @@ export default buildConfig({
     // Runs scheduled publish/unpublish jobs every minute while the server is up.
     // Expiry of announcements does not depend on this: public queries filter by date.
     autoRun: [{ cron: '* * * * *', queue: 'default', limit: 20 }],
+    tasks: [
+      {
+        // Frees seats of visit bookings left "pending" past their confirmation deadline.
+        // Booking and availability requests also do this lazily, so a late scheduler never overbooks.
+        slug: 'releaseVisitHolds',
+        schedule: [{ cron: '0 * * * *', queue: 'default' }],
+        handler: async ({ req }) => {
+          if (!(await readFlags(req.payload)).schoolVisits) return { output: { skipped: 'flag off' } }
+          const released = await releaseExpiredHolds(req.payload)
+          return { output: { released } }
+        },
+        outputSchema: [
+          { name: 'released', type: 'number' },
+          { name: 'skipped', type: 'text' },
+        ],
+      },
+    ],
     // Serverless (Vercel) has no long-running process: jobs are triggered by cron → /api/payload-jobs/run
     shouldAutoRun: () => process.env.DISABLE_JOB_AUTORUN !== 'true' && !process.env.VERCEL,
   },

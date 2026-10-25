@@ -1,10 +1,12 @@
+import { TZ } from '@/lib/format'
 import type { Payload } from 'payload'
 import React from 'react'
 import { CountUp } from './CountUp'
 import { AdminClock, AdminCountdown } from './Live'
+import { DashboardOps } from './DashboardOps'
 import './dashboard.scss'
 
-type Props = { payload: Payload; user?: { name?: string; role?: string } | null }
+type Props = { payload: Payload; user?: { name?: string; role?: string; canAccessLeads?: boolean; canExportLeads?: boolean } | null }
 
 const ROLE_LABEL: Record<string, string> = {
   admin: 'Admin Teknis',
@@ -14,7 +16,7 @@ const ROLE_LABEL: Record<string, string> = {
 }
 
 const greeting = () => {
-  const h = Number(new Intl.DateTimeFormat('en-GB', { hour: '2-digit', hour12: false, timeZone: 'Asia/Makassar' }).format(new Date()))
+  const h = Number(new Intl.DateTimeFormat('en-GB', { hour: '2-digit', hour12: false, timeZone: TZ }).format(new Date()))
   if (h < 11) return 'Selamat pagi'
   if (h < 15) return 'Selamat siang'
   if (h < 18) return 'Selamat sore'
@@ -75,7 +77,7 @@ export async function Dashboard({ payload, user }: Props) {
       : Promise.resolve([]),
   ])
   const fmt = (iso: string, withTime = true) =>
-    new Intl.DateTimeFormat('id-ID', { timeZone: 'Asia/Makassar', day: 'numeric', month: 'short', ...(withTime ? { hour: '2-digit', minute: '2-digit' } : {}) }).format(new Date(iso))
+    new Intl.DateTimeFormat('id-ID', { timeZone: TZ, day: 'numeric', month: 'short', ...(withTime ? { hour: '2-digit', minute: '2-digit' } : {}) }).format(new Date(iso))
   const ACTION: Record<string, string> = { create: 'membuat', update: 'mengubah', publish: 'menerbitkan', delete: 'menghapus', unpublish: 'menarik', restore: 'memulihkan' }
 
   const stats = [
@@ -92,6 +94,8 @@ export async function Dashboard({ payload, user }: Props) {
     { label: 'Tambah agenda', href: '/admin/collections/events/create', icon: '📅' },
     { label: 'Ganti hero beranda', href: '/admin/globals/homepage', icon: '🖼' },
     { label: 'Info pendaftaran', href: '/admin/collections/admissions-cycles', icon: '🎓' },
+    { label: 'Tambah video/media', href: '/admin/collections/media-items/create', icon: '▶' },
+    { label: 'Tambah FAQ', href: '/admin/collections/faqs/create', icon: '?' },
     { label: 'Lihat website', href: '/', icon: '↗' },
   ]
 
@@ -180,6 +184,7 @@ export async function Dashboard({ payload, user }: Props) {
           </div>
         ) : null}
       </div>
+      <DashboardOps payload={payload} user={user} />
       <div className="kps-dash__actions">
         {actions.map((a) => (
           <a key={a.label} href={a.href} className="kps-dash__action">

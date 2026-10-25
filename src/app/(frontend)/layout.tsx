@@ -5,7 +5,8 @@ import '@fontsource-variable/inter'
 import './styles.css'
 import { Header } from '@/components/layout/Header'
 import { Footer } from '@/components/layout/Footer'
-import { getGlobals } from '@/lib/queries'
+import { getFlags, getGlobals, hrefAllowed, listSocialAccounts } from '@/lib/queries'
+import { Analytics } from '@/components/ui/Analytics'
 import type { Media } from '@/payload-types'
 
 export const dynamic = 'force-dynamic'
@@ -30,7 +31,13 @@ export const metadata: Metadata = {
 export const viewport: Viewport = { themeColor: '#142A46', width: 'device-width', initialScale: 1 }
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  const { settings, nav } = await getGlobals()
+  const [{ settings, nav }, flags] = await Promise.all([getGlobals(), getFlags()])
+  const accounts = await listSocialAccounts('showInFooter').catch(() => [])
+  // links to switched-off features are removed (the routes themselves also return 404)
+  const header = (nav.header ?? [])
+    .filter((h) => hrefAllowed(h.href, flags))
+    .map((h) => ({ label: h.label, href: h.href, children: (h.children ?? []).filter((c) => hrefAllowed(c.href, flags)) }))
+  const navFiltered = { ...nav, footer: (nav.footer ?? []).filter((f) => hrefAllowed(f.href, flags)) }
   const logo = settings.logo && typeof settings.logo === 'object' ? (settings.logo as Media) : null
   return (
     <html lang="id">
@@ -39,7 +46,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           Lewati ke konten utama
         </a>
         <Header
-          items={(nav.header ?? []).map((h) => ({ label: h.label, href: h.href, children: h.children ?? [] }))}
+          items={header}
           schoolName={settings.schoolName}
           logoUrl={logo?.url}
           portalUrl={settings.portalUrl || null}
@@ -47,7 +54,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <main id="main" tabIndex={-1}>
           {children}
         </main>
-        <Footer settings={settings} nav={nav} />
+        <Footer settings={settings} nav={navFiltered} accounts={accounts} />
+        {flags.visitorAnalytics ? <Analytics /> : null}
       </body>
     </html>
   )

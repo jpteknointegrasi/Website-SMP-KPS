@@ -31,12 +31,14 @@ export default async function Page() {
                     <div>
                       <h2>{s.title} <DemoBadge show={s.isDemo} /></h2>
                       {s.excerpt ? <p>{s.excerpt}</p> : null}
-                      {valid(s.url) ? (
-                        <SmartLink href={s.url!} className="arrow-link">
+                      {s.serviceStatus === 'maintenance' ? (
+                        <span className="badge badge--postponed">Sedang pemeliharaan</span>
+                      ) : (s.serviceStatus ?? 'active') === 'active' && valid(s.url) ? (
+                        <SmartLink href={s.url!} className="arrow-link" data-cta={`layanan-${s.slug}`}>
                           Buka layanan <Icon name={/^https/.test(s.url!) ? 'external' : 'arrow'} size={16} />
                         </SmartLink>
                       ) : (
-                        <span className="badge badge--ended">Tautan segera tersedia</span>
+                        <span className="badge badge--ended">Segera tersedia</span>
                       )}
                     </div>
                   </div>

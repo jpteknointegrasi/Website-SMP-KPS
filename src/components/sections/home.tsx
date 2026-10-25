@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import React from 'react'
-import type { Homepage, Media, Post, Announcement, Event, Program, Extracurricular, Achievement, Facility, Album, SiteSetting, AdmissionsCycle } from '@/payload-types'
+import { MediaCard, MediaEmbed } from '../media/MediaCard'
+import type { Homepage, Media, Post, Announcement, Event, Program, Extracurricular, Achievement, Facility, Album, SiteSetting, AdmissionsCycle, MediaItem, SocialAccount } from '@/payload-types'
 import { Img } from '../ui/Img'
 import { Icon } from '../ui/Icon'
 import { DemoBadge, SmartLink } from '../ui/bits'
@@ -390,6 +391,60 @@ export const LatestNews = ({ eyebrow, heading, posts }: { eyebrow?: string | nul
       </div>
     </section>
   ) : null
+
+/* ---------- 11b KPS TV & Cerita Digital (curated media; hidden when empty) ---------- */
+export const MediaHubSection = ({
+  eyebrow,
+  heading,
+  intro,
+  items,
+  channel,
+}: {
+  eyebrow?: string | null
+  heading?: string | null
+  intro?: string | null
+  items: MediaItem[]
+  channel?: SocialAccount | null
+}) => {
+  if (!items.length) return null
+  const [main, ...side] = items
+  return (
+    <section className="section section--ivory mhub">
+      <div className="container">
+        <Head
+          eyebrow={eyebrow ?? 'KPS TV'}
+          title={heading ?? 'KPS TV & Cerita Digital'}
+          aside={
+            <div className="mhub__links">
+              <MoreLink href="/media">Lihat Semua Media</MoreLink>
+              {channel ? (
+                <a className="arrow-link" href={channel.profileUrl} target="_blank" rel="noopener noreferrer" data-cta="kanal-youtube">
+                  Kunjungi Kanal YouTube <Icon name="external" size={15} />
+                  <span className="sr-only"> (membuka tab baru)</span>
+                </a>
+              ) : null}
+            </div>
+          }
+        />
+        {intro ? <p className="mhub__intro">{intro}</p> : null}
+        <div className={`mhub__grid${side.length ? '' : ' mhub__grid--single'}`}>
+          <div className="mhub__main">
+            <MediaEmbed m={main!} />
+          </div>
+          {side.length ? (
+            <ul className="mhub__side">
+              {side.slice(0, 2).map((m) => (
+                <li key={m.id}>
+                  <MediaCard m={m} />
+                </li>
+              ))}
+            </ul>
+          ) : null}
+        </div>
+      </div>
+    </section>
+  )
+}
 
 /* ---------- 12 facilities (optional) ---------- */
 export const FacilitiesSection = ({ items }: { items: Facility[] }) =>

@@ -1,4 +1,5 @@
 'use client'
+import { TZ } from '@/lib/format'
 import React, { useEffect, useRef, useState } from 'react'
 
 const reduced = () => typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
@@ -29,10 +30,10 @@ export const Reveal = ({ children, as: Tag = 'div', className = '', ...rest }: {
 
 const witaParts = () => {
   const now = new Date()
-  const time = new Intl.DateTimeFormat('id-ID', { timeZone: 'Asia/Makassar', hour: '2-digit', minute: '2-digit', hour12: false }).format(now).replace(':', '.')
-  const hour = Number(new Intl.DateTimeFormat('en-GB', { timeZone: 'Asia/Makassar', hour: '2-digit', hour12: false }).format(now))
+  const time = new Intl.DateTimeFormat('id-ID', { timeZone: TZ, hour: '2-digit', minute: '2-digit', hour12: false }).format(now).replace(':', '.')
+  const hour = Number(new Intl.DateTimeFormat('en-GB', { timeZone: TZ, hour: '2-digit', hour12: false }).format(now))
   const greet = hour < 11 ? 'Selamat pagi' : hour < 15 ? 'Selamat siang' : hour < 18 ? 'Selamat sore' : 'Selamat malam'
-  const day = new Intl.DateTimeFormat('id-ID', { timeZone: 'Asia/Makassar', weekday: 'long', day: 'numeric', month: 'long' }).format(now)
+  const day = new Intl.DateTimeFormat('id-ID', { timeZone: TZ, weekday: 'long', day: 'numeric', month: 'long' }).format(now)
   return { time, greet, day }
 }
 

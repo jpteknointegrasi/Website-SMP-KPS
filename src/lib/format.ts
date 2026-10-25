@@ -1,4 +1,5 @@
-export const TZ = 'Asia/Makassar'
+/** School time zone for display. Reusable for other schools via NEXT_PUBLIC_SCHOOL_TIMEZONE; default WITA (KPS). */
+export const TZ = process.env.NEXT_PUBLIC_SCHOOL_TIMEZONE || 'Asia/Makassar'
 
 const fmt = (opts: Intl.DateTimeFormatOptions) => new Intl.DateTimeFormat('id-ID', { timeZone: TZ, ...opts })
 
@@ -35,4 +36,19 @@ export const EVENT_STATUS: Record<string, string> = {
 
 export const isExternal = (href: string) => /^https?:\/\//i.test(href)
 
-export const AUDIENCE: Record<string, string> = { umum: 'Umum', orang_tua: 'Orang tua', siswa: 'Siswa', alumni: 'Alumni' }
+export const AUDIENCE: Record<string, string> = {
+  umum: 'Umum',
+  semua: 'Semua',
+  orang_tua: 'Orang tua',
+  siswa: 'Siswa',
+  kelas_7: 'Kelas 7',
+  kelas_8: 'Kelas 8',
+  kelas_9: 'Kelas 9',
+  calon_siswa: 'Calon siswa',
+  guru: 'Guru',
+  alumni: 'Alumni',
+}
+/** Audience filter values for the agenda (subset shown as chips). */
+export const EVENT_AUDIENCE = ['kelas_7', 'kelas_8', 'kelas_9', 'orang_tua', 'calon_siswa', 'guru'] as const
+
+export const WORK_CATS: Record<string, string> = { tulisan: 'Tulisan', seni: 'Seni', sains: 'Sains', teknologi: 'Teknologi', video: 'Video', proyek_sosial: 'Proyek sosial' }

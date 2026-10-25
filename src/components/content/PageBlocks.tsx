@@ -1,12 +1,31 @@
 import React from 'react'
-import type { Page, Media } from '@/payload-types'
+import Link from 'next/link'
+import type { Page, Media, Faq, Event, MediaItem, StudentWork, Guide } from '@/payload-types'
 import { RichText } from '../ui/RichText'
 import { Img } from '../ui/Img'
 import { SmartLink } from '../ui/bits'
+import { FaqList } from './FaqList'
+import { MediaEmbed } from '../media/MediaCard'
+import { getFlags, listFaqs, listUpcomingEvents } from '@/lib/queries'
+import { formatEventWhen, WORK_CATS } from '@/lib/format'
 
-export const PageBlocks = ({ blocks }: { blocks?: Page['layout'] }) => (
+// related documents that are unpublished come back as bare ids (access rules), so they are dropped here
+const objs = <T,>(v: unknown): T[] => (Array.isArray(v) ? v.filter((x): x is T => typeof x === 'object' && x !== null) : [])
+
+export async function PageBlocks({ blocks }: { blocks?: Page['layout'] }) {
+  const list = blocks ?? []
+  const flags = await getFlags()
+  // data for blocks that pull "latest" content
+  const extra = await Promise.all(
+    list.map(async (b) => {
+      if (b.blockType === 'faqBlock' && !objs(b.items).length && b.category) return listFaqs({ category: b.category, limit: 8 })
+      if (b.blockType === 'eventsBlock' && !objs(b.items).length) return (await listUpcomingEvents(3)).docs
+      return null
+    }),
+  )
+  return (
   <>
-    {(blocks ?? []).map((b, i) => {
+    {list.map((b, i) => {
       switch (b.blockType) {
         case 'richText':
           return (
@@ -52,9 +71,93 @@ export const PageBlocks = ({ blocks }: { blocks?: Page['layout'] }) => (
               ) : null}
             </div>
           )
+        case 'faqBlock': {
+          const items = objs<Faq>(b.items).length ? objs<Faq>(b.items) : ((extra[i] as Faq[] | null) ?? [])
+          return items.length ? (
+            <div className="block faq" key={i}>
+              {b.heading ? <h2>{b.heading}</h2> : null}
+              <FaqList items={items} />
+            </div>
+          ) : null
+        }
+        case 'eventsBlock': {
+          const items = objs<Event>(b.items).length ? objs<Event>(b.items) : ((extra[i] as Event[] | null) ?? [])
+          return items.length ? (
+            <div className="block" key={i}>
+              {b.heading ? <h2>{b.heading}</h2> : null}
+              <ul className="list-rows">
+                {items.map((e) => (
+                  <li key={e.id}>
+                    <Link className="row-link" href={`/agenda/${e.slug}`}>
+                      <strong>{e.title}</strong>
+                      <span>{formatEventWhen(e)}</span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : null
+        }
+        case 'mediaBlock': {
+          const items = flags.mediaHub ? objs<MediaItem>(b.items) : []
+          return items.length ? (
+            <div className="block" key={i}>
+              {b.heading ? <h2>{b.heading}</h2> : null}
+              {items.map((m) => <MediaEmbed key={m.id} m={m} />)}
+            </div>
+          ) : null
+        }
+        case 'worksBlock': {
+          const items = flags.studentWorks ? objs<StudentWork>(b.items) : []
+          return items.length ? (
+            <div className="block" key={i}>
+              {b.heading ? <h2>{b.heading}</h2> : null}
+              <ul className="list-rows">
+                {items.map((w) => (
+                  <li key={w.id}>
+                    <Link className="row-link" href={`/karya-siswa/${w.slug}`}>
+                      <strong>{w.title}</strong>
+                      <span>{WORK_CATS[w.category]}{w.year ? ` · ${w.year}` : ''}</span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : null
+        }
+        case 'guideBlock': {
+          const g = typeof b.guide === 'object' && b.guide ? (b.guide as Guide) : null
+          return g ? (
+            <div className="block" key={i}>
+              <h2>{g.title}</h2>
+              {g.steps?.length ? (
+                <ol className="steps">
+                  {g.steps.map((st) => (
+                    <li key={st.id ?? st.title}>
+                      <div>
+                        <h3>{st.title}</h3>
+                        {st.detail ? <p>{st.detail}</p> : null}
+                      </div>
+                    </li>
+                  ))}
+                </ol>
+              ) : null}
+              <p><Link href={`/panduan/${g.slug}`}>Panduan lengkap</Link></p>
+            </div>
+          ) : null
+        }
+        case 'admissionsCta':
+          return (
+            <div className="block cta-block" key={i}>
+              <h2>{b.heading ?? 'Mari Mengenal KPS Lebih Dekat'}</h2>
+              {b.text ? <p>{b.text}</p> : null}
+              <SmartLink href="/pendaftaran" className="btn btn--gold" data-cta="blok-pendaftaran">Informasi Pendaftaran</SmartLink>
+            </div>
+          )
         default:
           return null
       }
     })}
   </>
-)
+  )
+}

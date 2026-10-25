@@ -5,6 +5,7 @@ import { findBySlug, relatedPosts } from '@/lib/queries'
 import { PageHeader, Container } from '@/components/ui/bits'
 import { Img } from '@/components/ui/Img'
 import { RichText } from '@/components/ui/RichText'
+import { RelatedMedia } from '@/components/content/Detail'
 import { PostCard } from '@/components/sections/home'
 import { formatDate } from '@/lib/format'
 import type { Post, Media, Category } from '@/payload-types'
@@ -60,6 +61,7 @@ export default async function Page({ params }: P) {
           ) : null}
           {p.excerpt ? <p className="lead">{p.excerpt}</p> : null}
           <RichText data={p.content} />
+          <RelatedMedia items={p.relatedMedia} />
           {gallery.length ? (
             <ul className="gallery" style={{ marginTop: 32 }}>
               {gallery.map((g) => <li key={g.id}><figure><Img media={g} sizes="380px" />{g.caption ? <figcaption>{g.caption}</figcaption> : null}</figure></li>)}

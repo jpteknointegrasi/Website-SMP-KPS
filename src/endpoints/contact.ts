@@ -13,7 +13,7 @@ export const rateLimited = (key: string, now = Date.now()) => {
   return arr.length > MAX_PER_WINDOW
 }
 
-const CATEGORIES = ['umum', 'pendaftaran', 'akademik', 'saran', 'alumni'] as const
+const CATEGORIES = ['umum', 'pendaftaran', 'akademik', 'saran', 'alumni', 'kegiatan', 'kunjungan'] as const
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/
 const PHONE_RE = /^\+?[0-9\s\-()]{8,20}$/
 
@@ -26,6 +26,7 @@ export type ContactInput = {
   consent?: unknown
   website?: unknown // honeypot
   startedAt?: unknown
+  topic?: unknown
 }
 
 export const validateContact = (b: ContactInput) => {
@@ -42,7 +43,8 @@ export const validateContact = (b: ContactInput) => {
   if (!CATEGORIES.includes(category as (typeof CATEGORIES)[number])) errors.category = 'Pilih kategori.'
   if (message.length < 10 || message.length > 3000) errors.message = 'Pesan 10–3000 karakter.'
   if (b.consent !== true && b.consent !== 'true' && b.consent !== 'on') errors.consent = 'Persetujuan penggunaan data wajib dicentang.'
-  return { errors, value: { name, email, phone, message, category } }
+  const topic = typeof b.topic === 'string' ? b.topic.trim().toLowerCase().replace(/[^a-z0-9-]/g, '').slice(0, 80) : ''
+  return { errors, value: { name, email, phone, message, category, topic } }
 }
 
 const makeRef = () => {

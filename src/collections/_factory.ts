@@ -17,7 +17,13 @@ type Opts = {
   admissions?: boolean
   access?: CollectionConfig['access']
   defaultSort?: string
+  beforeChange?: NonNullable<NonNullable<CollectionConfig['hooks']>['beforeChange']>
+  beforeValidate?: NonNullable<NonNullable<CollectionConfig['hooks']>['beforeValidate']>
+  adminExtra?: Partial<NonNullable<CollectionConfig['admin']>>
+  listSearchableFields?: string[]
 }
+
+const PREVIEW = ['posts', 'announcements', 'events', 'media-items', 'student-works', 'faqs']
 
 /** Standard versioned, workflow-aware, audited content collection. */
 export const defineContent = (o: Opts): CollectionConfig => ({
@@ -30,7 +36,10 @@ export const defineContent = (o: Opts): CollectionConfig => ({
     useAsTitle: o.useAsTitle ?? 'title',
     defaultColumns: o.defaultColumns ?? [o.useAsTitle ?? 'title', 'workflowStatus', '_status', 'updatedAt'],
     description: o.description,
-    listSearchableFields: [o.useAsTitle ?? 'title', 'slug'],
+    listSearchableFields: o.listSearchableFields ?? [o.useAsTitle ?? 'title', 'slug'],
+    // "Pratinjau" button in the editor: draft rendered at desktop and phone width (staff session required)
+    ...(PREVIEW.includes(o.slug) ? { preview: (doc: Record<string, unknown>) => (doc?.id ? `/pratinjau-bingkai/${o.slug}/${doc.id}` : null) } : {}),
+    ...o.adminExtra,
   },
   access: {
     read: publishedOrStaff(o.publicWhere),
@@ -42,7 +51,8 @@ export const defineContent = (o: Opts): CollectionConfig => ({
   },
   versions: { drafts: { schedulePublish: true }, maxPerDoc: 50 },
   hooks: {
-    beforeChange: [enforceWorkflow({ admissions: o.admissions })],
+    ...(o.beforeValidate ? { beforeValidate: o.beforeValidate } : {}),
+    beforeChange: [enforceWorkflow({ admissions: o.admissions }), ...(o.beforeChange ?? [])],
     afterChange: [auditAfterChange],
     afterDelete: [auditAfterDelete],
   },

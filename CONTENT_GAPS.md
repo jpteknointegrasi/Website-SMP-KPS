@@ -10,7 +10,7 @@ Website tidak mengarang data. Bagian di bawah ini disembunyikan, diberi label "C
 | 4 | Nomor WhatsApp resmi | Tidak ada (telepon kantor bukan WA) | Tata usaha | Pengaturan Sekolah → WhatsApp |
 | 5 | Jam layanan, titik peta | "Sedang dikonfirmasi" | Tata usaha | Pengaturan Sekolah |
 | 6 | URL Portal Sekolah, Portal Alumni, Perpustakaan, Rapor, Link Tugas, E-Buletin | Tombol disembunyikan / "Tautan segera tersedia" | Admin TI | Pengaturan Sekolah & Layanan |
-| 7 | Nama & jabatan pimpinan (+ foto KPS-002–004) | Nama kepala sekolah dari situs lama; foto belum dipasang | Kepala sekolah / TU | Pimpinan & Guru |
+| 7 | Nama & jabatan pimpinan (+ foto KPS-002–004) | Nama dan foto dari situs resmi lama sudah dipasang | Kepala sekolah / TU | Konfirmasi ulang di Pimpinan & Guru |
 | 8 | Daftar guru & staf | Kosong (empty state) | TU | Pimpinan & Guru |
 | 9 | Program "Pembelajaran Aktif", "Sains & Teknologi" | Label desain, bertanda "Contoh" | Wakasek kurikulum | Program — ganti/terbitkan versi resmi |
 | 10 | Program/ekskul "Seni & Musik" | Bertanda "Contoh" | Pembina | Ekstrakurikuler |
@@ -24,5 +24,17 @@ Website tidak mengarang data. Bagian di bawah ini disembunyikan, diberi label "C
 | 18 | Kondisi terkini halaman sekolah pada foto hero KPS-030 (unggahan 2019) | Dipakai sebagai hero | Humas | Ganti dengan foto horizontal terbaru bila ada |
 | 19 | Warna identitas resmi | Palet usulan brief (navy/teal/emas) | Kepala sekolah | Konfirmasi pedoman logo |
 | 20 | Email notifikasi pesan & SMTP | Belum dipasang; pesan tetap tersimpan di admin | Admin TI | `DEPLOYMENT_RUNBOOK.md` §7 |
+| 21 | URL kanal **KPS TV SMP NASIONAL KPS BALIKPAPAN** | Belum dipasang (nama hanya dari tangkapan layar) | Humas | Video & Media Sosial → Akun → salin URL asli, centang *Sudah diverifikasi* |
+| 22 | Video profil/podcast yang boleh ditampilkan | Section KPS TV tersembunyi otomatis sampai ada konten terbit | Humas | Video & Media → tambah tautan, centang *Tampilkan di beranda* |
+| 23 | Instagram @smpnas.kps | Dipindahkan ke Akun Resmi dengan catatan "dari situs lama" | Humas | Konfirmasi ulang catatan verifikasi |
+| 24 | FAQ pendaftaran/pembelajaran/administrasi | Hanya 3 FAQ penggunaan website | Panitia PPDB, TU | FAQ → tulis jawaban resmi, isi *Terakhir ditinjau* |
+| 25 | Mode penerimaan, kapasitas gelombang, jenjang | Mode "Informasi saja"; kapasitas kosong | Panitia PPDB | Pendaftaran (PPDB/PMB) |
+| 26 | Kebijakan form minat (siapa menindaklanjuti, berapa lama) | Form minat **mati** | Kepala sekolah + PPDB | Tunjuk petugas → Fitur Aktif → Form minat |
+| 27 | Jadwal kunjungan/open house, kapasitas, pemandu | Kunjungan **mati** | Humas/PPDB | Sesi Kunjungan → Fitur Aktif → Kunjungan |
+| 28 | **Retensi data** minat, pemesanan kunjungan, statistik | Belum ditetapkan; data tidak dihapus otomatis | Kepala sekolah | Tetapkan periode (mis. 1 siklus + 6 bulan); admin menghapus berkala |
+| 29 | Teks Kebijakan Privasi untuk form minat & kunjungan | Versi persetujuan `privasi-2026-10` tercatat; teks halaman masih umum | Kepala sekolah | Perbarui halaman *kebijakan-privasi*; bila berubah material, naikkan `CONSENT_VERSION` |
+| 30 | Status & URL layanan (Perpustakaan, Rapor, Link Tugas, E-Buletin) | Status "Segera tersedia" | Admin TI | Layanan → URL + status Aktif + tanggal verifikasi |
+| 31 | Karya siswa berizin | Fitur **mati** | Guru/Humas | Karya Siswa (persetujuan wajib) → Fitur Aktif |
+| 32 | Daftar mapel guru & bio | Kosong | TU | Guru & Pimpinan → Mata pelajaran |
 
 Semua pengumuman & agenda berawalan "Contoh:" adalah data demo dan otomatis tersembunyi saat `SHOW_DEMO_CONTENT=false`.

@@ -19,6 +19,32 @@ Terakhir diperbarui: 25 Oktober 2026.
 - [x] Tes unit + integrasi (24 lulus)
 - [x] Dokumen serah terima (README, PANDUAN_ADMIN, DEPLOYMENT_RUNBOOK, CONTENT_GAPS, MIGRATION_REPORT, QA_REPORT)
 
+## Addendum P0/P1 (fitur tambahan, cabang `fitur-tambahan-p0p1`)
+Bukti fitur lama & keputusan reuse: `CURRENT_FEATURE_AUDIT.md`. Pengaturan fitur: `FEATURE_FLAGS.md`.
+
+| Kode | Fitur | Status | Catatan |
+|---|---|---|---|
+| F01 | Kalender akademik: tab Daftar/Kalender, grid bulan, kategori (CMS), sasaran, filter di URL, ICS + SEQUENCE, Google Calendar, lampiran | completed | Parameter lama `waktu`/`status` tetap jalan |
+| F02 | Pengumuman terarah: sasaran diperluas, agenda terkait, peringatan tanpa tanggal berakhir | completed | Expiry tetap difilter di kueri (tanpa menunggu scheduler) |
+| F03 | Penerimaan: mode, jenjang, status/kapasitas gelombang, dokumen info, video, FAQ, CTA minat & kunjungan | completed | `full_admissions` terkunci (P2) |
+| F04 | Form minat + pipeline: idempotensi, duplikat lunak, penugasan, status, riwayat, catatan privat, ekspor CSV aman + audit | completed | Notifikasi email opsional (`ADMISSIONS_NOTIFY_EMAIL` + SMTP) |
+| F05 | Kunjungan/open house: slot, kuota atomik, pending + batas konfirmasi, jadwal ulang, batal mandiri via token, hadir/tidak hadir | completed | Kuota diuji dengan 5 permintaan bersamaan |
+| F06 | FAQ (koleksi + `/faq` + blok kontekstual), kategori kontak baru, status layanan | completed | FAQ resmi sekolah belum ada (lihat CONTENT_GAPS) |
+| F07 | Karya siswa dengan persetujuan & moderasi | completed (flag off) | Nyalakan setelah ada karya berizin |
+| F08 | Aktivitas program/ekskul, media terkait, minat kegiatan via form kontak | completed | Tidak membuat daftar anggota |
+| F09 | Direktori guru: mapel, aktif/nonaktif, filter, foto hanya dengan persetujuan | completed | Data guru dari sekolah |
+| F10 | Unduhan: tanggal tinjau, relasi versi pengganti, tanpa `href="#"` | completed | |
+| F11 | Cerita alumni/orang tua: jenis hubungan; consent tetap wajib | completed | Submission publik tidak dibuka |
+| F12 | Dasbor: minat/kunjungan (sesuai izin), pengingat konten, statistik agregat tanpa PII | completed (statistik flag off) | |
+| F13 | Pratinjau draf desktop+HP, blok reusable (FAQ, agenda, media, karya, panduan, CTA), audit nama field berubah, feature flags | completed | Live preview real-time belum (tombol Pratinjau membuka draf tersimpan) |
+| F14 | Seleksi lengkap | backlog | `P2_ADMISSIONS_BACKLOG.md` |
+| F15 | KPS TV & media sosial: akun resmi terverifikasi, `/media`, `/media/[slug]`, section beranda, blok media, klik-untuk-memuat, CSP | completed | URL kanal KPS TV menunggu verifikasi; impor otomatis tidak dibuat (flag terkunci) |
+| §19 | Zona waktu dari `NEXT_PUBLIC_SCHOOL_TIMEZONE` | completed | Skema tanggal tetap WITA (mengubahnya butuh migrasi) |
+
+Uji: 71 tes lulus (`npm test`): 30 unit addendum, 17 integrasi addendum, 24 lama. Migrasi diuji: up → down → up pada salinan berisi data seperti produksi, dan pada database kosong.
+
+**Belum di produksi.** Menggabungkan ke `main` menjalankan migrasi di database produksi (Vercel `vercel-build`). Langkah: `DEPLOYMENT_RUNBOOK.md` §Addendum.
+
 ## Tersisa
 1. Data resmi dari sekolah — lihat `CONTENT_GAPS.md` (PPDB, kontak terverifikasi, URL portal, guru, prestasi, BOS).
 2. Tes tambahan: CMS-01/06/07, FORM-01 via browser, SEC-02/03/04 (lihat `QA_REPORT.md`).

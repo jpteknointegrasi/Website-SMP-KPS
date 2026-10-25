@@ -11,6 +11,7 @@ import path from 'path'
 import type { Payload } from 'payload'
 import { importMedia } from './import-media'
 import { lexical, type Block } from '../src/lib/lexical'
+import { runAddendumSetup } from './addendum-setup'
 
 const ctx = { skipAudit: true }
 type AnyData = Record<string, unknown>
@@ -268,7 +269,7 @@ export async function runSeed(payload: Payload, log: (m: string) => void = (m) =
     ['e-buletin', 'E-Buletin', 'Buletin digital sekolah.', 'file', 4],
   ] as const
   for (const [slug, title, excerpt, icon, order] of services) {
-    await upsert(payload, 'services', { slug: { equals: slug } }, { title, slug, excerpt, icon, order, url: null, external: true, isDemo: false })
+    await upsert(payload, 'services', { slug: { equals: slug } }, { title, slug, excerpt, icon, order, url: null, external: true, serviceStatus: 'coming_soon', isDemo: false })
   }
 
   // ---------- 9. admissions ----------
@@ -503,6 +504,7 @@ export async function runSeed(payload: Payload, log: (m: string) => void = (m) =
     } as never,
   })
 
+  await runAddendumSetup(payload, log)
   log('Seed selesai.')
   return { done: true, media: mediaSummary }
 }

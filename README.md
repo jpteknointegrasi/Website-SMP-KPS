@@ -64,3 +64,5 @@ tests/                tes unit & integrasi
 **Go-live gratis di Vercel:** ikuti `PANDUAN_GO_LIVE_VERCEL.md` (Vercel + Neon + Vercel Blob).
 
 Dokumen lain: `PANDUAN_ADMIN.md`, `DEPLOYMENT_RUNBOOK.md`, `CONTENT_GAPS.md`, `MIGRATION_REPORT.md`, `REDIRECT_MAP.csv`, `QA_REPORT.md`.
+
+Fitur tambahan (addendum P0/P1): `CURRENT_FEATURE_AUDIT.md`, `FEATURE_FLAGS.md`, `PANDUAN_PENERIMAAN_DAN_KUNJUNGAN.md`, `PANDUAN_EDITOR_TAMBAHAN.md`, `P2_ADMISSIONS_BACKLOG.md`.

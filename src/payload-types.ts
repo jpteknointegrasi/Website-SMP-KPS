@@ -72,6 +72,8 @@ export interface Config {
     categories: Category;
     announcements: Announcement;
     events: Event;
+    'event-categories': EventCategory;
+    faqs: Faq;
     albums: Album;
     documents: Document;
     guides: Guide;
@@ -82,13 +84,20 @@ export interface Config {
     facilities: Facility;
     staff: Staff;
     achievements: Achievement;
+    'student-works': StudentWork;
+    'media-items': MediaItem;
+    'social-accounts': SocialAccount;
     'admissions-cycles': AdmissionsCycle;
+    leads: Lead;
+    'visit-sessions': VisitSession;
+    'visit-bookings': VisitBooking;
     'contact-messages': ContactMessage;
     media: Media;
     'private-files': PrivateFile;
     redirects: Redirect;
     users: User;
     'audit-logs': AuditLog;
+    'analytics-daily': AnalyticsDaily;
     'payload-kv': PayloadKv;
     'payload-jobs': PayloadJob;
     'payload-locked-documents': PayloadLockedDocument;
@@ -102,6 +111,8 @@ export interface Config {
     categories: CategoriesSelect<false> | CategoriesSelect<true>;
     announcements: AnnouncementsSelect<false> | AnnouncementsSelect<true>;
     events: EventsSelect<false> | EventsSelect<true>;
+    'event-categories': EventCategoriesSelect<false> | EventCategoriesSelect<true>;
+    faqs: FaqsSelect<false> | FaqsSelect<true>;
     albums: AlbumsSelect<false> | AlbumsSelect<true>;
     documents: DocumentsSelect<false> | DocumentsSelect<true>;
     guides: GuidesSelect<false> | GuidesSelect<true>;
@@ -112,13 +123,20 @@ export interface Config {
     facilities: FacilitiesSelect<false> | FacilitiesSelect<true>;
     staff: StaffSelect<false> | StaffSelect<true>;
     achievements: AchievementsSelect<false> | AchievementsSelect<true>;
+    'student-works': StudentWorksSelect<false> | StudentWorksSelect<true>;
+    'media-items': MediaItemsSelect<false> | MediaItemsSelect<true>;
+    'social-accounts': SocialAccountsSelect<false> | SocialAccountsSelect<true>;
     'admissions-cycles': AdmissionsCyclesSelect<false> | AdmissionsCyclesSelect<true>;
+    leads: LeadsSelect<false> | LeadsSelect<true>;
+    'visit-sessions': VisitSessionsSelect<false> | VisitSessionsSelect<true>;
+    'visit-bookings': VisitBookingsSelect<false> | VisitBookingsSelect<true>;
     'contact-messages': ContactMessagesSelect<false> | ContactMessagesSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
     'private-files': PrivateFilesSelect<false> | PrivateFilesSelect<true>;
     redirects: RedirectsSelect<false> | RedirectsSelect<true>;
     users: UsersSelect<false> | UsersSelect<true>;
     'audit-logs': AuditLogsSelect<false> | AuditLogsSelect<true>;
+    'analytics-daily': AnalyticsDailySelect<false> | AnalyticsDailySelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-jobs': PayloadJobsSelect<false> | PayloadJobsSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
@@ -133,11 +151,15 @@ export interface Config {
     homepage: Homepage;
     'site-settings': SiteSetting;
     navigation: Navigation;
+    'feature-flags': FeatureFlag;
+    'payload-jobs-stats': PayloadJobsStat;
   };
   globalsSelect: {
     homepage: HomepageSelect<false> | HomepageSelect<true>;
     'site-settings': SiteSettingsSelect<false> | SiteSettingsSelect<true>;
     navigation: NavigationSelect<false> | NavigationSelect<true>;
+    'feature-flags': FeatureFlagsSelect<false> | FeatureFlagsSelect<true>;
+    'payload-jobs-stats': PayloadJobsStatsSelect<false> | PayloadJobsStatsSelect<true>;
   };
   locale: null;
   widgets: {
@@ -146,6 +168,7 @@ export interface Config {
   user: User;
   jobs: {
     tasks: {
+      releaseVisitHolds: TaskReleaseVisitHolds;
       schedulePublish: TaskSchedulePublish;
       inline: {
         input: unknown;
@@ -246,6 +269,48 @@ export interface Page {
             id?: string | null;
             blockName?: string | null;
             blockType: 'values';
+          }
+        | {
+            heading?: string | null;
+            category?: ('pendaftaran' | 'pembelajaran' | 'kegiatan' | 'administrasi' | 'website') | null;
+            items?: (number | Faq)[] | null;
+            id?: string | null;
+            blockName?: string | null;
+            blockType: 'faqBlock';
+          }
+        | {
+            heading?: string | null;
+            items?: (number | Event)[] | null;
+            id?: string | null;
+            blockName?: string | null;
+            blockType: 'eventsBlock';
+          }
+        | {
+            heading?: string | null;
+            items: (number | MediaItem)[];
+            id?: string | null;
+            blockName?: string | null;
+            blockType: 'mediaBlock';
+          }
+        | {
+            heading?: string | null;
+            items: (number | StudentWork)[];
+            id?: string | null;
+            blockName?: string | null;
+            blockType: 'worksBlock';
+          }
+        | {
+            guide: number | Guide;
+            id?: string | null;
+            blockName?: string | null;
+            blockType: 'guideBlock';
+          }
+        | {
+            heading?: string | null;
+            text?: string | null;
+            id?: string | null;
+            blockName?: string | null;
+            blockType: 'admissionsCta';
           }
         | {
             heading: string;
@@ -355,6 +420,59 @@ export interface Media {
   };
 }
 /**
+ * Hanya jawaban resmi. Bila belum ada jawaban, jangan diterbitkan — arahkan ke kontak.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "faqs".
+ */
+export interface Faq {
+  id: number;
+  title: string;
+  /**
+   * Huruf kecil, angka dan tanda hubung. Dibuat otomatis dari judul bila kosong.
+   */
+  slug: string;
+  answer: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  };
+  category: 'pendaftaran' | 'pembelajaran' | 'kegiatan' | 'administrasi' | 'website';
+  /**
+   * Contoh: /pendaftaran atau /kunjungan
+   */
+  relatedPage?: string | null;
+  featured?: boolean | null;
+  order?: number | null;
+  lastReviewedAt?: string | null;
+  /**
+   * Kontributor: pilih "Ajukan Review" lalu klik Simpan Draf. Editor menerbitkan setelah review.
+   */
+  workflowStatus: 'draft' | 'in_review' | 'published' | 'archived';
+  reviewNote?: string | null;
+  /**
+   * Data contoh hanya tampil bila SHOW_DEMO_CONTENT=true. Produksi wajib false.
+   */
+  isDemo?: boolean | null;
+  archivedAt?: string | null;
+  createdBy?: (number | null) | User;
+  updatedBy?: (number | null) | User;
+  updatedAt: string;
+  createdAt: string;
+  deletedAt?: string | null;
+  _status?: ('draft' | 'published') | null;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "users".
  */
@@ -366,6 +484,11 @@ export interface User {
    */
   role: 'admin' | 'editor' | 'contributor' | 'admissions';
   canPublishAdmissions?: boolean | null;
+  /**
+   * Petugas Pendaftaran otomatis boleh. Peran lain hanya bila dicentang Admin Teknis (tercatat di audit).
+   */
+  canAccessLeads?: boolean | null;
+  canExportLeads?: boolean | null;
   active?: boolean | null;
   updatedAt: string;
   createdAt: string;
@@ -386,6 +509,431 @@ export interface User {
     | null;
   password?: string | null;
   collection: 'users';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "events".
+ */
+export interface Event {
+  id: number;
+  title: string;
+  /**
+   * Huruf kecil, angka dan tanda hubung. Dibuat otomatis dari judul bila kosong.
+   */
+  slug: string;
+  startAt: string;
+  startAt_tz: 'Asia/Makassar';
+  endAt?: string | null;
+  endAt_tz?: 'Asia/Makassar' | null;
+  /**
+   * Tanggal dibaca dalam zona waktu sekolah; jam diabaikan. ICS memakai DTEND eksklusif (hari berikutnya).
+   */
+  allDay?: boolean | null;
+  category?: (number | null) | EventCategory;
+  audience?: ('semua' | 'kelas_7' | 'kelas_8' | 'kelas_9' | 'orang_tua' | 'calon_siswa' | 'guru')[] | null;
+  /**
+   * Hanya lokasi yang boleh diketahui umum.
+   */
+  location?: string | null;
+  organizer?: string | null;
+  eventStatus: 'scheduled' | 'postponed' | 'cancelled' | 'completed';
+  /**
+   * Maksimal 200 karakter. Tampil di kartu dan hasil pencarian.
+   */
+  excerpt?: string | null;
+  content?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  /**
+   * Gunakan https://… atau tautan internal yang diawali "/".
+   */
+  registrationUrl?: string | null;
+  attachments?: (number | Document)[] | null;
+  cover?: (number | null) | Media;
+  /**
+   * Naik otomatis saat jadwal/status berubah agar aplikasi kalender memperbarui acara.
+   */
+  sequence?: number | null;
+  seo?: {
+    title?: string | null;
+    description?: string | null;
+  };
+  /**
+   * Kontributor: pilih "Ajukan Review" lalu klik Simpan Draf. Editor menerbitkan setelah review.
+   */
+  workflowStatus: 'draft' | 'in_review' | 'published' | 'archived';
+  reviewNote?: string | null;
+  /**
+   * Data contoh hanya tampil bila SHOW_DEMO_CONTENT=true. Produksi wajib false.
+   */
+  isDemo?: boolean | null;
+  archivedAt?: string | null;
+  createdBy?: (number | null) | User;
+  updatedBy?: (number | null) | User;
+  updatedAt: string;
+  createdAt: string;
+  deletedAt?: string | null;
+  _status?: ('draft' | 'published') | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "event-categories".
+ */
+export interface EventCategory {
+  id: number;
+  title: string;
+  /**
+   * Huruf kecil, angka dan tanda hubung. Dibuat otomatis dari judul bila kosong.
+   */
+  slug: string;
+  color?: ('teal' | 'gold' | 'navy' | 'red' | 'green' | 'purple' | 'grey') | null;
+  order?: number | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "documents".
+ */
+export interface Document {
+  id: number;
+  title: string;
+  category: 'umum' | 'bos' | 'kalender' | 'panduan' | 'buletin';
+  /**
+   * Contoh: 2026 atau 2026/2027
+   */
+  period?: string | null;
+  version?: string | null;
+  description?: string | null;
+  approvedAt?: string | null;
+  /**
+   * Muncul sebagai pengingat di dasbor setelah lewat.
+   */
+  reviewDue?: string | null;
+  /**
+   * Pilih dokumen versi lama. Versi lama sebaiknya diarsipkan; tautannya tetap menyajikan berkas lama dengan label versinya.
+   */
+  supersedes?: (number | null) | Document;
+  originalFilename?: string | null;
+  publishedAt?: string | null;
+  /**
+   * Kontributor: pilih "Ajukan Review" lalu klik Simpan Draf. Editor menerbitkan setelah review.
+   */
+  workflowStatus: 'draft' | 'in_review' | 'published' | 'archived';
+  reviewNote?: string | null;
+  /**
+   * Data contoh hanya tampil bila SHOW_DEMO_CONTENT=true. Produksi wajib false.
+   */
+  isDemo?: boolean | null;
+  archivedAt?: string | null;
+  createdBy?: (number | null) | User;
+  updatedBy?: (number | null) | User;
+  prefix?: string | null;
+  _objectKey?: string | null;
+  updatedAt: string;
+  createdAt: string;
+  deletedAt?: string | null;
+  _status?: ('draft' | 'published') | null;
+  url?: string | null;
+  thumbnailURL?: string | null;
+  filename?: string | null;
+  mimeType?: string | null;
+  filesize?: number | null;
+  width?: number | null;
+  height?: number | null;
+  focalX?: number | null;
+  focalY?: number | null;
+}
+/**
+ * Tempel tautan video/postingan, isi judul & ringkasan sendiri, lalu terbitkan. Pemutar baru dimuat ketika pengunjung menekan Putar.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "media-items".
+ */
+export interface MediaItem {
+  id: number;
+  /**
+   * Boleh berbeda dari judul asli di platform.
+   */
+  title: string;
+  /**
+   * Huruf kecil, angka dan tanda hubung. Dibuat otomatis dari judul bila kosong.
+   */
+  slug: string;
+  /**
+   * Salin dari tombol Bagikan / alamat browser. Video, Shorts, playlist, kanal, Reel, TikTok, Facebook atau artikel. Bukan kode iframe.
+   */
+  originalUrl: string;
+  excerpt?: string | null;
+  /**
+   * Jangan klaim transkrip otomatis akurat tanpa ditinjau.
+   */
+  editorialBody?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  /**
+   * Terdeteksi otomatis. Video YouTube boleh diberi label Podcast.
+   */
+  contentType?: ('video' | 'short' | 'podcast' | 'playlist' | 'social_post' | 'channel' | 'external_article') | null;
+  /**
+   * Pemutar hanya untuk video/playlist YouTube. Lainnya otomatis kartu tautan.
+   */
+  displayMode?: ('click_to_load_embed' | 'link_card') | null;
+  aspectRatio?: ('16:9' | '9:16' | '1:1') | null;
+  /**
+   * Opsional untuk video YouTube (memakai gambar resmi YouTube). Disarankan untuk platform lain.
+   */
+  thumbnail?: (number | null) | Media;
+  thumbnailAlt?: string | null;
+  caption?: string | null;
+  sourcePublishedAt?: string | null;
+  durationSeconds?: number | null;
+  sourceAccount?: (number | null) | SocialAccount;
+  relatedEvents?: (number | Event)[] | null;
+  publishedAt?: string | null;
+  /**
+   * Maksimal 3 tampil; urutan kecil di depan.
+   */
+  homepageFeatured?: boolean | null;
+  homepageOrder?: number | null;
+  consentStatus: 'not_needed' | 'obtained' | 'pending';
+  contentPermissionNote?: string | null;
+  /**
+   * Tidak tersedia/dibatasi = tampil sebagai kartu tautan tanpa pemutar.
+   */
+  availability?: ('unchecked' | 'available' | 'unavailable' | 'restricted') | null;
+  lastVerifiedAt?: string | null;
+  platform?: string | null;
+  providerItemId?: string | null;
+  normalizedUrl?: string | null;
+  /**
+   * Kontributor: pilih "Ajukan Review" lalu klik Simpan Draf. Editor menerbitkan setelah review.
+   */
+  workflowStatus: 'draft' | 'in_review' | 'published' | 'archived';
+  reviewNote?: string | null;
+  /**
+   * Data contoh hanya tampil bila SHOW_DEMO_CONTENT=true. Produksi wajib false.
+   */
+  isDemo?: boolean | null;
+  archivedAt?: string | null;
+  createdBy?: (number | null) | User;
+  updatedBy?: (number | null) | User;
+  updatedAt: string;
+  createdAt: string;
+  deletedAt?: string | null;
+  _status?: ('draft' | 'published') | null;
+}
+/**
+ * Akun/kanal tempat mengikuti sekolah. Tampil publik hanya bila Aktif dan sudah diverifikasi sekolah.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "social-accounts".
+ */
+export interface SocialAccount {
+  id: number;
+  platform: 'youtube' | 'instagram' | 'tiktok' | 'facebook' | 'whatsapp' | 'web';
+  /**
+   * Contoh: KPS TV SMP Nasional KPS Balikpapan
+   */
+  displayName: string;
+  /**
+   * Contoh: @smpnas.kps
+   */
+  handle?: string | null;
+  /**
+   * Salin dari tautan asli (https://). Jangan menebak dari tangkapan layar.
+   */
+  profileUrl: string;
+  profileImage?: (number | null) | Media;
+  /**
+   * Akun yayasan tidak otomatis sama dengan akun sekolah.
+   */
+  owner?: ('sekolah' | 'lainnya') | null;
+  /**
+   * Siapa/kapan mengonfirmasi, atau sumber tautan.
+   */
+  verificationNote?: string | null;
+  verifiedBySchool?: boolean | null;
+  enabled?: boolean | null;
+  showInFooter?: boolean | null;
+  showOnContact?: boolean | null;
+  showOnMediaPage?: boolean | null;
+  verifiedAt?: string | null;
+  verifiedBy?: (number | null) | User;
+  order?: number | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Diunggah guru/kontributor, ditinjau Editor. Tampil publik hanya bila terbit DAN persetujuan publikasi sudah ada.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "student-works".
+ */
+export interface StudentWork {
+  id: number;
+  title: string;
+  /**
+   * Huruf kecil, angka dan tanda hubung. Dibuat otomatis dari judul bila kosong.
+   */
+  slug: string;
+  category: 'tulisan' | 'seni' | 'sains' | 'teknologi' | 'video' | 'proyek_sosial';
+  excerpt?: string | null;
+  content?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  /**
+   * Contoh: "Siswa kelas 8" bila nama tidak disetujui.
+   */
+  creatorsPublic?: string | null;
+  year?: number | null;
+  mentorPublic?: string | null;
+  cover?: (number | null) | Media;
+  gallery?: (number | Media)[] | null;
+  relatedMedia?: (number | MediaItem)[] | null;
+  consentStatus: 'pending' | 'obtained' | 'withdrawn';
+  /**
+   * Tidak pernah tampil publik.
+   */
+  consentRecord?: (number | null) | PrivateFile;
+  seo?: {
+    title?: string | null;
+    description?: string | null;
+  };
+  /**
+   * Kontributor: pilih "Ajukan Review" lalu klik Simpan Draf. Editor menerbitkan setelah review.
+   */
+  workflowStatus: 'draft' | 'in_review' | 'published' | 'archived';
+  reviewNote?: string | null;
+  /**
+   * Data contoh hanya tampil bila SHOW_DEMO_CONTENT=true. Produksi wajib false.
+   */
+  isDemo?: boolean | null;
+  archivedAt?: string | null;
+  createdBy?: (number | null) | User;
+  updatedBy?: (number | null) | User;
+  updatedAt: string;
+  createdAt: string;
+  deletedAt?: string | null;
+  _status?: ('draft' | 'published') | null;
+}
+/**
+ * Bukti internal. Tidak pernah tampil di website publik.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "private-files".
+ */
+export interface PrivateFile {
+  id: number;
+  title: string;
+  originalFilename?: string | null;
+  note?: string | null;
+  prefix?: string | null;
+  _objectKey?: string | null;
+  updatedAt: string;
+  createdAt: string;
+  url?: string | null;
+  thumbnailURL?: string | null;
+  filename?: string | null;
+  mimeType?: string | null;
+  filesize?: number | null;
+  width?: number | null;
+  height?: number | null;
+  focalX?: number | null;
+  focalY?: number | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "guides".
+ */
+export interface Guide {
+  id: number;
+  title: string;
+  /**
+   * Huruf kecil, angka dan tanda hubung. Dibuat otomatis dari judul bila kosong.
+   */
+  slug: string;
+  category?: string | null;
+  /**
+   * Maksimal 220 karakter. Tampil di kartu dan hasil pencarian.
+   */
+  excerpt?: string | null;
+  steps?:
+    | {
+        title: string;
+        detail?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  content?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  attachments?: (number | Document)[] | null;
+  lastReviewedAt?: string | null;
+  /**
+   * Kontributor: pilih "Ajukan Review" lalu klik Simpan Draf. Editor menerbitkan setelah review.
+   */
+  workflowStatus: 'draft' | 'in_review' | 'published' | 'archived';
+  reviewNote?: string | null;
+  /**
+   * Data contoh hanya tampil bila SHOW_DEMO_CONTENT=true. Produksi wajib false.
+   */
+  isDemo?: boolean | null;
+  archivedAt?: string | null;
+  createdBy?: (number | null) | User;
+  updatedBy?: (number | null) | User;
+  updatedAt: string;
+  createdAt: string;
+  deletedAt?: string | null;
+  _status?: ('draft' | 'published') | null;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -420,6 +968,10 @@ export interface Post {
     [k: string]: unknown;
   } | null;
   gallery?: (number | Media)[] | null;
+  /**
+   * Pilih dari Video & Media. Item yang sama bisa dipakai di beberapa halaman tanpa duplikasi.
+   */
+  relatedMedia?: (number | MediaItem)[] | null;
   categories?: (number | Category)[] | null;
   /**
    * Kosongkan bila belum disetujui.
@@ -495,7 +1047,11 @@ export interface Announcement {
     };
     [k: string]: unknown;
   } | null;
-  audience?: ('umum' | 'orang_tua' | 'siswa' | 'alumni')[] | null;
+  /**
+   * Label relevansi, BUKAN pembatas akses: pengumuman tetap bisa dibaca umum. Jangan memuat data pribadi.
+   */
+  audience?:
+    ('umum' | 'orang_tua' | 'siswa' | 'kelas_7' | 'kelas_8' | 'kelas_9' | 'calon_siswa' | 'guru' | 'alumni')[] | null;
   category?: ('umum' | 'akademik' | 'pendaftaran' | 'kegiatan') | null;
   /**
    * ≥ 50 dan aktif = tampil sebagai strip "Penting" di beranda.
@@ -507,118 +1063,10 @@ export interface Announcement {
    */
   displayEnd?: string | null;
   attachments?: (number | Document)[] | null;
+  relatedEvent?: (number | null) | Event;
   contact?: string | null;
   cover?: (number | null) | Media;
   publishedAt?: string | null;
-  seo?: {
-    title?: string | null;
-    description?: string | null;
-  };
-  /**
-   * Kontributor: pilih "Ajukan Review" lalu klik Simpan Draf. Editor menerbitkan setelah review.
-   */
-  workflowStatus: 'draft' | 'in_review' | 'published' | 'archived';
-  reviewNote?: string | null;
-  /**
-   * Data contoh hanya tampil bila SHOW_DEMO_CONTENT=true. Produksi wajib false.
-   */
-  isDemo?: boolean | null;
-  archivedAt?: string | null;
-  createdBy?: (number | null) | User;
-  updatedBy?: (number | null) | User;
-  updatedAt: string;
-  createdAt: string;
-  deletedAt?: string | null;
-  _status?: ('draft' | 'published') | null;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "documents".
- */
-export interface Document {
-  id: number;
-  title: string;
-  category: 'umum' | 'bos' | 'kalender' | 'panduan' | 'buletin';
-  /**
-   * Contoh: 2026 atau 2026/2027
-   */
-  period?: string | null;
-  version?: string | null;
-  description?: string | null;
-  approvedAt?: string | null;
-  originalFilename?: string | null;
-  publishedAt?: string | null;
-  /**
-   * Kontributor: pilih "Ajukan Review" lalu klik Simpan Draf. Editor menerbitkan setelah review.
-   */
-  workflowStatus: 'draft' | 'in_review' | 'published' | 'archived';
-  reviewNote?: string | null;
-  /**
-   * Data contoh hanya tampil bila SHOW_DEMO_CONTENT=true. Produksi wajib false.
-   */
-  isDemo?: boolean | null;
-  archivedAt?: string | null;
-  createdBy?: (number | null) | User;
-  updatedBy?: (number | null) | User;
-  prefix?: string | null;
-  _objectKey?: string | null;
-  updatedAt: string;
-  createdAt: string;
-  deletedAt?: string | null;
-  _status?: ('draft' | 'published') | null;
-  url?: string | null;
-  thumbnailURL?: string | null;
-  filename?: string | null;
-  mimeType?: string | null;
-  filesize?: number | null;
-  width?: number | null;
-  height?: number | null;
-  focalX?: number | null;
-  focalY?: number | null;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "events".
- */
-export interface Event {
-  id: number;
-  title: string;
-  /**
-   * Huruf kecil, angka dan tanda hubung. Dibuat otomatis dari judul bila kosong.
-   */
-  slug: string;
-  startAt: string;
-  startAt_tz: 'Asia/Makassar';
-  endAt?: string | null;
-  endAt_tz?: 'Asia/Makassar' | null;
-  allDay?: boolean | null;
-  location?: string | null;
-  organizer?: string | null;
-  eventStatus: 'scheduled' | 'postponed' | 'cancelled' | 'completed';
-  /**
-   * Maksimal 200 karakter. Tampil di kartu dan hasil pencarian.
-   */
-  excerpt?: string | null;
-  content?: {
-    root: {
-      type: string;
-      children: {
-        type: any;
-        version: number;
-        [k: string]: unknown;
-      }[];
-      direction: ('ltr' | 'rtl') | null;
-      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
-      indent: number;
-      version: number;
-    };
-    [k: string]: unknown;
-  } | null;
-  /**
-   * Gunakan https://… atau tautan internal yang diawali "/".
-   */
-  registrationUrl?: string | null;
-  cover?: (number | null) | Media;
   seo?: {
     title?: string | null;
     description?: string | null;
@@ -684,63 +1132,6 @@ export interface Album {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "guides".
- */
-export interface Guide {
-  id: number;
-  title: string;
-  /**
-   * Huruf kecil, angka dan tanda hubung. Dibuat otomatis dari judul bila kosong.
-   */
-  slug: string;
-  category?: string | null;
-  /**
-   * Maksimal 220 karakter. Tampil di kartu dan hasil pencarian.
-   */
-  excerpt?: string | null;
-  steps?:
-    | {
-        title: string;
-        detail?: string | null;
-        id?: string | null;
-      }[]
-    | null;
-  content?: {
-    root: {
-      type: string;
-      children: {
-        type: any;
-        version: number;
-        [k: string]: unknown;
-      }[];
-      direction: ('ltr' | 'rtl') | null;
-      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
-      indent: number;
-      version: number;
-    };
-    [k: string]: unknown;
-  } | null;
-  attachments?: (number | Document)[] | null;
-  lastReviewedAt?: string | null;
-  /**
-   * Kontributor: pilih "Ajukan Review" lalu klik Simpan Draf. Editor menerbitkan setelah review.
-   */
-  workflowStatus: 'draft' | 'in_review' | 'published' | 'archived';
-  reviewNote?: string | null;
-  /**
-   * Data contoh hanya tampil bila SHOW_DEMO_CONTENT=true. Produksi wajib false.
-   */
-  isDemo?: boolean | null;
-  archivedAt?: string | null;
-  createdBy?: (number | null) | User;
-  updatedBy?: (number | null) | User;
-  updatedAt: string;
-  createdAt: string;
-  deletedAt?: string | null;
-  _status?: ('draft' | 'published') | null;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "services".
  */
 export interface Service {
@@ -761,6 +1152,12 @@ export interface Service {
    */
   url?: string | null;
   external?: boolean | null;
+  /**
+   * Tombol hanya muncul bila Aktif DAN URL valid.
+   */
+  serviceStatus: 'active' | 'coming_soon' | 'maintenance';
+  serviceCategory?: ('umum' | 'akademik' | 'perpustakaan' | 'administrasi') | null;
+  verifiedAt?: string | null;
   order?: number | null;
   /**
    * Kontributor: pilih "Ajukan Review" lalu klik Simpan Draf. Editor menerbitkan setelah review.
@@ -790,6 +1187,10 @@ export interface Testimonial {
    * Huruf kecil, angka dan tanda hubung. Dibuat otomatis dari judul bila kosong.
    */
   slug: string;
+  /**
+   * Sesuai fakta. Foto kelompok guru bukan foto alumni.
+   */
+  relation?: ('alumni' | 'orang_tua' | 'siswa') | null;
   roleLine?: string | null;
   quote: string;
   photo?: (number | null) | Media;
@@ -848,7 +1249,17 @@ export interface Program {
         id?: string | null;
       }[]
     | null;
+  activities?:
+    | {
+        text: string;
+        id?: string | null;
+      }[]
+    | null;
   gallery?: (number | Media)[] | null;
+  /**
+   * Pilih dari Video & Media. Item yang sama bisa dipakai di beberapa halaman tanpa duplikasi.
+   */
+  relatedMedia?: (number | MediaItem)[] | null;
   featured?: boolean | null;
   order?: number | null;
   seo?: {
@@ -906,7 +1317,17 @@ export interface Extracurricular {
   kind?: ('ekskul' | 'organisasi' | 'kegiatan') | null;
   mentor?: string | null;
   schedule?: string | null;
+  activities?:
+    | {
+        text: string;
+        id?: string | null;
+      }[]
+    | null;
   gallery?: (number | Media)[] | null;
+  /**
+   * Pilih dari Video & Media. Item yang sama bisa dipakai di beberapa halaman tanpa duplikasi.
+   */
+  relatedMedia?: (number | MediaItem)[] | null;
   featured?: boolean | null;
   order?: number | null;
   seo?: {
@@ -963,7 +1384,17 @@ export interface Facility {
   } | null;
   category?: string | null;
   availability: 'available' | 'renovation' | 'planned';
+  activities?:
+    | {
+        text: string;
+        id?: string | null;
+      }[]
+    | null;
   gallery?: (number | Media)[] | null;
+  /**
+   * Pilih dari Video & Media. Item yang sama bisa dipakai di beberapa halaman tanpa duplikasi.
+   */
+  relatedMedia?: (number | MediaItem)[] | null;
   featured?: boolean | null;
   order?: number | null;
   seo?: {
@@ -1000,9 +1431,23 @@ export interface Staff {
   slug: string;
   position: string;
   group?: ('pimpinan' | 'guru' | 'staf') | null;
+  /**
+   * Pisahkan dengan koma. Contoh: Matematika, IPA. Hanya yang dikonfirmasi sekolah.
+   */
+  subjects?: string | null;
   photo?: (number | null) | Media;
+  /**
+   * Jangan memuat NIK, alamat rumah, nomor pribadi atau data kepegawaian.
+   */
   bio?: string | null;
+  /**
+   * Foto hanya tampil publik bila dicentang.
+   */
   publicationConsent?: boolean | null;
+  /**
+   * Nonaktif = turun dari halaman publik; riwayat & audit tetap ada.
+   */
+  active?: boolean | null;
   order?: number | null;
   /**
    * Kontributor: pilih "Ajukan Review" lalu klik Simpan Draf. Editor menerbitkan setelah review.
@@ -1059,6 +1504,10 @@ export interface Achievement {
   } | null;
   cover?: (number | null) | Media;
   gallery?: (number | Media)[] | null;
+  /**
+   * Pilih dari Video & Media. Item yang sama bisa dipakai di beberapa halaman tanpa duplikasi.
+   */
+  relatedMedia?: (number | MediaItem)[] | null;
   verified?: boolean | null;
   /**
    * Tidak pernah ditampilkan publik.
@@ -1087,31 +1536,6 @@ export interface Achievement {
   _status?: ('draft' | 'published') | null;
 }
 /**
- * Bukti internal. Tidak pernah tampil di website publik.
- *
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "private-files".
- */
-export interface PrivateFile {
-  id: number;
-  title: string;
-  originalFilename?: string | null;
-  note?: string | null;
-  prefix?: string | null;
-  _objectKey?: string | null;
-  updatedAt: string;
-  createdAt: string;
-  url?: string | null;
-  thumbnailURL?: string | null;
-  filename?: string | null;
-  mimeType?: string | null;
-  filesize?: number | null;
-  width?: number | null;
-  height?: number | null;
-  focalX?: number | null;
-  focalY?: number | null;
-}
-/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "admissions-cycles".
  */
@@ -1122,17 +1546,32 @@ export interface AdmissionsCycle {
    * Tombol "Daftar" hanya muncul jika status Dibuka DAN URL pendaftaran valid.
    */
   admissionStatus: 'unconfirmed' | 'not_open' | 'open' | 'closed';
+  /**
+   * Hanya satu proses resmi: bila memakai sistem eksternal, website menjadi pusat informasi dan tombol ke sistem itu.
+   */
+  mode: 'information_only' | 'external_system' | 'interest_form' | 'full_admissions';
+  /**
+   * Contoh: Kelas 7. Kosongkan bila belum dikonfirmasi.
+   */
+  levels?: string | null;
   intro?: string | null;
   /**
    * Harus https://. Uji tautan sebelum mengaktifkan status Dibuka.
    */
   registrationUrl?: string | null;
+  /**
+   * Butuh fitur "Form minat" aktif di Pengaturan → Fitur Aktif. Bisa dipakai saat status belum dibuka/ditutup (minat siklus berikutnya).
+   */
+  interestFormEnabled?: boolean | null;
+  closedOffer?: ('contact' | 'interest_next') | null;
   waves?:
     | {
         name: string;
         start?: string | null;
         end?: string | null;
         note?: string | null;
+        capacity?: number | null;
+        waveStatus?: ('unconfirmed' | 'not_open' | 'open' | 'closed') | null;
         id?: string | null;
       }[]
     | null;
@@ -1173,6 +1612,11 @@ export interface AdmissionsCycle {
       }[]
     | null;
   contactNote?: string | null;
+  infoDocuments?: (number | Document)[] | null;
+  /**
+   * Hanya video yang relevan dan masih berlaku untuk siklus ini.
+   */
+  videos?: (number | MediaItem)[] | null;
   /**
    * Kontributor: pilih "Ajukan Review" lalu klik Simpan Draf. Editor menerbitkan setelah review.
    */
@@ -1191,6 +1635,145 @@ export interface AdmissionsCycle {
   _status?: ('draft' | 'published') | null;
 }
 /**
+ * PRIVAT. Hanya Petugas Pendaftaran dan akun yang diberi izin. Tindak lanjut adalah tugas internal — sistem tidak mengirim pesan otomatis.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "leads".
+ */
+export interface Lead {
+  id: number;
+  reference?: string | null;
+  parentName: string;
+  email?: string | null;
+  /**
+   * Belum tentu nomor WhatsApp aktif.
+   */
+  phone?: string | null;
+  phoneNormalized?: string | null;
+  cycle?: (number | null) | AdmissionsCycle;
+  /**
+   * Mis. "Belum ditentukan".
+   */
+  targetYearLabel?: string | null;
+  interests?: ('info' | 'kunjungan' | 'biaya_program' | 'lainnya')[] | null;
+  studentName?: string | null;
+  originSchool?: string | null;
+  message?: string | null;
+  status: 'new' | 'assigned' | 'contacted' | 'follow_up' | 'interested' | 'converted' | 'closed';
+  assignee?: (number | null) | User;
+  nextFollowUpAt?: string | null;
+  closeReason?: ('not_interested' | 'other_school' | 'unreachable' | 'duplicate' | 'test_spam' | 'other') | null;
+  /**
+   * "Masuk proses resmi" ≠ diterima sekolah.
+   */
+  convertedNote?: string | null;
+  notes?:
+    | {
+        text: string;
+        at?: string | null;
+        by?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  source?: ('website' | 'pendaftaran' | 'kunjungan' | 'beranda' | 'brosur' | 'media_sosial') | null;
+  /**
+   * Kontak sama pada siklus sama. Bisa jadi saudara kandung — tinjau, jangan langsung tutup.
+   */
+  possibleDuplicateOf?: (number | null) | Lead;
+  duplicateReviewed?: boolean | null;
+  isTest?: boolean | null;
+  marketingOptIn?: boolean | null;
+  consentVersion?: string | null;
+  consentAt?: string | null;
+  idempotencyKey?: string | null;
+  history?:
+    | {
+        at?: string | null;
+        actor?: string | null;
+        event?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Slot kunjungan/open house. Publik hanya melihat sisa kuota — tidak pernah daftar pengunjung.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "visit-sessions".
+ */
+export interface VisitSession {
+  id: number;
+  /**
+   * Contoh: Open House Sabtu Pagi
+   */
+  title: string;
+  kind: 'open_house' | 'individual';
+  sessionStatus: 'draft' | 'open' | 'closed' | 'cancelled';
+  startAt: string;
+  startAt_tz: 'Asia/Makassar';
+  endAt?: string | null;
+  endAt_tz?: 'Asia/Makassar' | null;
+  location?: string | null;
+  capacity: number;
+  capacityUnit: 'families' | 'people';
+  bookedCount?: number | null;
+  bookingDeadline?: string | null;
+  requiresConfirmation?: boolean | null;
+  /**
+   * Pemesanan Menunggu yang tidak dikonfirmasi dalam waktu ini dilepas otomatis.
+   */
+  holdHours?: number | null;
+  instructions?: string | null;
+  guide?: (number | null) | User;
+  cycle?: (number | null) | AdmissionsCycle;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * PRIVAT. Konfirmasi, jadwalkan ulang (ganti sesi), batalkan, lalu tandai hadir/tidak hadir. Kuota dihitung otomatis.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "visit-bookings".
+ */
+export interface VisitBooking {
+  id: number;
+  reference?: string | null;
+  session: number | VisitSession;
+  status: 'pending' | 'confirmed' | 'cancelled' | 'expired' | 'attended' | 'no_show';
+  participants: number;
+  statusReason?: string | null;
+  parentName: string;
+  email?: string | null;
+  phone?: string | null;
+  phoneNormalized?: string | null;
+  targetYearLabel?: string | null;
+  note?: string | null;
+  internalNote?: string | null;
+  /**
+   * Dihubungkan otomatis bila kontak sama pada siklus yang sama; tidak membuat data minat baru.
+   */
+  lead?: (number | null) | Lead;
+  holdExpiresAt?: string | null;
+  isTest?: boolean | null;
+  consentVersion?: string | null;
+  consentAt?: string | null;
+  cancelTokenHash?: string | null;
+  cancelTokenExpiresAt?: string | null;
+  idempotencyKey?: string | null;
+  history?:
+    | {
+        at?: string | null;
+        actor?: string | null;
+        event?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * Privat. Hanya peran berwenang yang dapat membaca.
  *
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1202,12 +1785,17 @@ export interface ContactMessage {
   name: string;
   email?: string | null;
   phone?: string | null;
-  category: 'umum' | 'pendaftaran' | 'akademik' | 'saran' | 'alumni';
+  category: 'umum' | 'pendaftaran' | 'akademik' | 'saran' | 'alumni' | 'kegiatan' | 'kunjungan';
+  topic?: string | null;
   message: string;
   consent?: boolean | null;
   status?: ('new' | 'in_progress' | 'done' | 'spam') | null;
   assignedTo?: (number | null) | User;
   internalNote?: string | null;
+  /**
+   * Opsional dan manual. Hanya pesan pendaftaran yang relevan.
+   */
+  linkedLead?: (number | null) | Lead;
   emailNotified?: boolean | null;
   updatedAt: string;
   createdAt: string;
@@ -1237,8 +1825,24 @@ export interface AuditLog {
   docTitle?: string | null;
   status?: string | null;
   workflowStatus?: string | null;
+  changedFields?: string | null;
   actor?: (number | null) | User;
   actorEmail?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Agregat harian tanpa data pribadi (tanpa IP, cookie, isi form). Aktif bila fitur Statistik pengunjung dinyalakan.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "analytics-daily".
+ */
+export interface AnalyticsDaily {
+  id: number;
+  day: string;
+  kind: 'pageview' | 'cta_click' | 'form_success';
+  key: string;
+  count: number;
   updatedAt: string;
   createdAt: string;
 }
@@ -1311,7 +1915,7 @@ export interface PayloadJob {
     | {
         executedAt: string;
         completedAt: string;
-        taskSlug: 'inline' | 'schedulePublish';
+        taskSlug: 'inline' | 'releaseVisitHolds' | 'schedulePublish';
         taskID: string;
         input?:
           | {
@@ -1344,10 +1948,19 @@ export interface PayloadJob {
         id?: string | null;
       }[]
     | null;
-  taskSlug?: ('inline' | 'schedulePublish') | null;
+  taskSlug?: ('inline' | 'releaseVisitHolds' | 'schedulePublish') | null;
   queue?: string | null;
   waitUntil?: string | null;
   processing?: boolean | null;
+  meta?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -1377,6 +1990,14 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'events';
         value: number | Event;
+      } | null)
+    | ({
+        relationTo: 'event-categories';
+        value: number | EventCategory;
+      } | null)
+    | ({
+        relationTo: 'faqs';
+        value: number | Faq;
       } | null)
     | ({
         relationTo: 'albums';
@@ -1419,8 +2040,32 @@ export interface PayloadLockedDocument {
         value: number | Achievement;
       } | null)
     | ({
+        relationTo: 'student-works';
+        value: number | StudentWork;
+      } | null)
+    | ({
+        relationTo: 'media-items';
+        value: number | MediaItem;
+      } | null)
+    | ({
+        relationTo: 'social-accounts';
+        value: number | SocialAccount;
+      } | null)
+    | ({
         relationTo: 'admissions-cycles';
         value: number | AdmissionsCycle;
+      } | null)
+    | ({
+        relationTo: 'leads';
+        value: number | Lead;
+      } | null)
+    | ({
+        relationTo: 'visit-sessions';
+        value: number | VisitSession;
+      } | null)
+    | ({
+        relationTo: 'visit-bookings';
+        value: number | VisitBooking;
       } | null)
     | ({
         relationTo: 'contact-messages';
@@ -1445,6 +2090,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'audit-logs';
         value: number | AuditLog;
+      } | null)
+    | ({
+        relationTo: 'analytics-daily';
+        value: number | AnalyticsDaily;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -1531,6 +2180,54 @@ export interface PagesSelect<T extends boolean = true> {
               id?: T;
               blockName?: T;
             };
+        faqBlock?:
+          | T
+          | {
+              heading?: T;
+              category?: T;
+              items?: T;
+              id?: T;
+              blockName?: T;
+            };
+        eventsBlock?:
+          | T
+          | {
+              heading?: T;
+              items?: T;
+              id?: T;
+              blockName?: T;
+            };
+        mediaBlock?:
+          | T
+          | {
+              heading?: T;
+              items?: T;
+              id?: T;
+              blockName?: T;
+            };
+        worksBlock?:
+          | T
+          | {
+              heading?: T;
+              items?: T;
+              id?: T;
+              blockName?: T;
+            };
+        guideBlock?:
+          | T
+          | {
+              guide?: T;
+              id?: T;
+              blockName?: T;
+            };
+        admissionsCta?:
+          | T
+          | {
+              heading?: T;
+              text?: T;
+              id?: T;
+              blockName?: T;
+            };
         cta?:
           | T
           | {
@@ -1571,6 +2268,7 @@ export interface PostsSelect<T extends boolean = true> {
   coverCaption?: T;
   content?: T;
   gallery?: T;
+  relatedMedia?: T;
   categories?: T;
   authorName?: T;
   publishedAt?: T;
@@ -1617,6 +2315,7 @@ export interface AnnouncementsSelect<T extends boolean = true> {
   displayStart?: T;
   displayEnd?: T;
   attachments?: T;
+  relatedEvent?: T;
   contact?: T;
   cover?: T;
   publishedAt?: T;
@@ -1649,19 +2348,59 @@ export interface EventsSelect<T extends boolean = true> {
   endAt?: T;
   endAt_tz?: T;
   allDay?: T;
+  category?: T;
+  audience?: T;
   location?: T;
   organizer?: T;
   eventStatus?: T;
   excerpt?: T;
   content?: T;
   registrationUrl?: T;
+  attachments?: T;
   cover?: T;
+  sequence?: T;
   seo?:
     | T
     | {
         title?: T;
         description?: T;
       };
+  workflowStatus?: T;
+  reviewNote?: T;
+  isDemo?: T;
+  archivedAt?: T;
+  createdBy?: T;
+  updatedBy?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  deletedAt?: T;
+  _status?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "event-categories_select".
+ */
+export interface EventCategoriesSelect<T extends boolean = true> {
+  title?: T;
+  slug?: T;
+  color?: T;
+  order?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "faqs_select".
+ */
+export interface FaqsSelect<T extends boolean = true> {
+  title?: T;
+  slug?: T;
+  answer?: T;
+  category?: T;
+  relatedPage?: T;
+  featured?: T;
+  order?: T;
+  lastReviewedAt?: T;
   workflowStatus?: T;
   reviewNote?: T;
   isDemo?: T;
@@ -1713,6 +2452,8 @@ export interface DocumentsSelect<T extends boolean = true> {
   version?: T;
   description?: T;
   approvedAt?: T;
+  reviewDue?: T;
+  supersedes?: T;
   originalFilename?: T;
   publishedAt?: T;
   workflowStatus?: T;
@@ -1778,6 +2519,9 @@ export interface ServicesSelect<T extends boolean = true> {
   icon?: T;
   url?: T;
   external?: T;
+  serviceStatus?: T;
+  serviceCategory?: T;
+  verifiedAt?: T;
   order?: T;
   workflowStatus?: T;
   reviewNote?: T;
@@ -1797,6 +2541,7 @@ export interface ServicesSelect<T extends boolean = true> {
 export interface TestimonialsSelect<T extends boolean = true> {
   publicName?: T;
   slug?: T;
+  relation?: T;
   roleLine?: T;
   quote?: T;
   photo?: T;
@@ -1828,7 +2573,14 @@ export interface ProgramsSelect<T extends boolean = true> {
         text?: T;
         id?: T;
       };
+  activities?:
+    | T
+    | {
+        text?: T;
+        id?: T;
+      };
   gallery?: T;
+  relatedMedia?: T;
   featured?: T;
   order?: T;
   seo?:
@@ -1861,7 +2613,14 @@ export interface ExtracurricularsSelect<T extends boolean = true> {
   kind?: T;
   mentor?: T;
   schedule?: T;
+  activities?:
+    | T
+    | {
+        text?: T;
+        id?: T;
+      };
   gallery?: T;
+  relatedMedia?: T;
   featured?: T;
   order?: T;
   seo?:
@@ -1893,7 +2652,14 @@ export interface FacilitiesSelect<T extends boolean = true> {
   content?: T;
   category?: T;
   availability?: T;
+  activities?:
+    | T
+    | {
+        text?: T;
+        id?: T;
+      };
   gallery?: T;
+  relatedMedia?: T;
   featured?: T;
   order?: T;
   seo?:
@@ -1922,9 +2688,11 @@ export interface StaffSelect<T extends boolean = true> {
   slug?: T;
   position?: T;
   group?: T;
+  subjects?: T;
   photo?: T;
   bio?: T;
   publicationConsent?: T;
+  active?: T;
   order?: T;
   workflowStatus?: T;
   reviewNote?: T;
@@ -1954,6 +2722,7 @@ export interface AchievementsSelect<T extends boolean = true> {
   content?: T;
   cover?: T;
   gallery?: T;
+  relatedMedia?: T;
   verified?: T;
   proof?: T;
   featured?: T;
@@ -1976,13 +2745,116 @@ export interface AchievementsSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "student-works_select".
+ */
+export interface StudentWorksSelect<T extends boolean = true> {
+  title?: T;
+  slug?: T;
+  category?: T;
+  excerpt?: T;
+  content?: T;
+  creatorsPublic?: T;
+  year?: T;
+  mentorPublic?: T;
+  cover?: T;
+  gallery?: T;
+  relatedMedia?: T;
+  consentStatus?: T;
+  consentRecord?: T;
+  seo?:
+    | T
+    | {
+        title?: T;
+        description?: T;
+      };
+  workflowStatus?: T;
+  reviewNote?: T;
+  isDemo?: T;
+  archivedAt?: T;
+  createdBy?: T;
+  updatedBy?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  deletedAt?: T;
+  _status?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "media-items_select".
+ */
+export interface MediaItemsSelect<T extends boolean = true> {
+  title?: T;
+  slug?: T;
+  originalUrl?: T;
+  excerpt?: T;
+  editorialBody?: T;
+  contentType?: T;
+  displayMode?: T;
+  aspectRatio?: T;
+  thumbnail?: T;
+  thumbnailAlt?: T;
+  caption?: T;
+  sourcePublishedAt?: T;
+  durationSeconds?: T;
+  sourceAccount?: T;
+  relatedEvents?: T;
+  publishedAt?: T;
+  homepageFeatured?: T;
+  homepageOrder?: T;
+  consentStatus?: T;
+  contentPermissionNote?: T;
+  availability?: T;
+  lastVerifiedAt?: T;
+  platform?: T;
+  providerItemId?: T;
+  normalizedUrl?: T;
+  workflowStatus?: T;
+  reviewNote?: T;
+  isDemo?: T;
+  archivedAt?: T;
+  createdBy?: T;
+  updatedBy?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  deletedAt?: T;
+  _status?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "social-accounts_select".
+ */
+export interface SocialAccountsSelect<T extends boolean = true> {
+  platform?: T;
+  displayName?: T;
+  handle?: T;
+  profileUrl?: T;
+  profileImage?: T;
+  owner?: T;
+  verificationNote?: T;
+  verifiedBySchool?: T;
+  enabled?: T;
+  showInFooter?: T;
+  showOnContact?: T;
+  showOnMediaPage?: T;
+  verifiedAt?: T;
+  verifiedBy?: T;
+  order?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "admissions-cycles_select".
  */
 export interface AdmissionsCyclesSelect<T extends boolean = true> {
   academicYear?: T;
   admissionStatus?: T;
+  mode?: T;
+  levels?: T;
   intro?: T;
   registrationUrl?: T;
+  interestFormEnabled?: T;
+  closedOffer?: T;
   waves?:
     | T
     | {
@@ -1990,6 +2862,8 @@ export interface AdmissionsCyclesSelect<T extends boolean = true> {
         start?: T;
         end?: T;
         note?: T;
+        capacity?: T;
+        waveStatus?: T;
         id?: T;
       };
   steps?:
@@ -2015,6 +2889,8 @@ export interface AdmissionsCyclesSelect<T extends boolean = true> {
         id?: T;
       };
   contactNote?: T;
+  infoDocuments?: T;
+  videos?: T;
   workflowStatus?: T;
   reviewNote?: T;
   isDemo?: T;
@@ -2028,6 +2904,115 @@ export interface AdmissionsCyclesSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "leads_select".
+ */
+export interface LeadsSelect<T extends boolean = true> {
+  reference?: T;
+  parentName?: T;
+  email?: T;
+  phone?: T;
+  phoneNormalized?: T;
+  cycle?: T;
+  targetYearLabel?: T;
+  interests?: T;
+  studentName?: T;
+  originSchool?: T;
+  message?: T;
+  status?: T;
+  assignee?: T;
+  nextFollowUpAt?: T;
+  closeReason?: T;
+  convertedNote?: T;
+  notes?:
+    | T
+    | {
+        text?: T;
+        at?: T;
+        by?: T;
+        id?: T;
+      };
+  source?: T;
+  possibleDuplicateOf?: T;
+  duplicateReviewed?: T;
+  isTest?: T;
+  marketingOptIn?: T;
+  consentVersion?: T;
+  consentAt?: T;
+  idempotencyKey?: T;
+  history?:
+    | T
+    | {
+        at?: T;
+        actor?: T;
+        event?: T;
+        id?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "visit-sessions_select".
+ */
+export interface VisitSessionsSelect<T extends boolean = true> {
+  title?: T;
+  kind?: T;
+  sessionStatus?: T;
+  startAt?: T;
+  startAt_tz?: T;
+  endAt?: T;
+  endAt_tz?: T;
+  location?: T;
+  capacity?: T;
+  capacityUnit?: T;
+  bookedCount?: T;
+  bookingDeadline?: T;
+  requiresConfirmation?: T;
+  holdHours?: T;
+  instructions?: T;
+  guide?: T;
+  cycle?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "visit-bookings_select".
+ */
+export interface VisitBookingsSelect<T extends boolean = true> {
+  reference?: T;
+  session?: T;
+  status?: T;
+  participants?: T;
+  statusReason?: T;
+  parentName?: T;
+  email?: T;
+  phone?: T;
+  phoneNormalized?: T;
+  targetYearLabel?: T;
+  note?: T;
+  internalNote?: T;
+  lead?: T;
+  holdExpiresAt?: T;
+  isTest?: T;
+  consentVersion?: T;
+  consentAt?: T;
+  cancelTokenHash?: T;
+  cancelTokenExpiresAt?: T;
+  idempotencyKey?: T;
+  history?:
+    | T
+    | {
+        at?: T;
+        actor?: T;
+        event?: T;
+        id?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "contact-messages_select".
  */
 export interface ContactMessagesSelect<T extends boolean = true> {
@@ -2036,11 +3021,13 @@ export interface ContactMessagesSelect<T extends boolean = true> {
   email?: T;
   phone?: T;
   category?: T;
+  topic?: T;
   message?: T;
   consent?: T;
   status?: T;
   assignedTo?: T;
   internalNote?: T;
+  linkedLead?: T;
   emailNotified?: T;
   updatedAt?: T;
   createdAt?: T;
@@ -2163,6 +3150,8 @@ export interface UsersSelect<T extends boolean = true> {
   name?: T;
   role?: T;
   canPublishAdmissions?: T;
+  canAccessLeads?: T;
+  canExportLeads?: T;
   active?: T;
   updatedAt?: T;
   createdAt?: T;
@@ -2193,8 +3182,21 @@ export interface AuditLogsSelect<T extends boolean = true> {
   docTitle?: T;
   status?: T;
   workflowStatus?: T;
+  changedFields?: T;
   actor?: T;
   actorEmail?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "analytics-daily_select".
+ */
+export interface AnalyticsDailySelect<T extends boolean = true> {
+  day?: T;
+  kind?: T;
+  key?: T;
+  count?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -2234,6 +3236,7 @@ export interface PayloadJobsSelect<T extends boolean = true> {
   queue?: T;
   waitUntil?: T;
   processing?: T;
+  meta?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -2354,6 +3357,9 @@ export interface Homepage {
      * Opsional. Tampil sebagai tumpukan foto di blok prestasi.
      */
     achievementsAlbum?: (number | null) | Album;
+    mediaEyebrow?: string | null;
+    mediaHeading?: string | null;
+    mediaIntro?: string | null;
     ctaHeading?: string | null;
     ctaText?: string | null;
   };
@@ -2372,6 +3378,7 @@ export interface Homepage {
           | 'achievements'
           | 'announcementsAgenda'
           | 'latestNews'
+          | 'mediaHub'
           | 'facilities'
           | 'communityAlumni'
           | 'admissionsCta';
@@ -2420,6 +3427,9 @@ export interface SiteSetting {
    * Kosong = tombol portal alumni disembunyikan.
    */
   alumniUrl?: string | null;
+  /**
+   * Digantikan oleh Video & Media Sosial → Akun Media Sosial Resmi. Dipakai hanya bila koleksi itu kosong.
+   */
   socials?:
     | {
         platform: 'instagram' | 'youtube' | 'facebook' | 'tiktok';
@@ -2470,6 +3480,67 @@ export interface Navigation {
         href: string;
         id?: string | null;
       }[]
+    | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * Hanya Admin Teknis. Mematikan fitur menutup halaman, API dan job terkait — bukan hanya menyembunyikan tombol.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "feature-flags".
+ */
+export interface FeatureFlag {
+  id: number;
+  /**
+   * Tab "Kalender" (grid bulan). Mati = hanya daftar.
+   */
+  calendarMonthView?: boolean | null;
+  /**
+   * Aktifkan setelah petugas penerimaan siap menindaklanjuti. Mati = /pendaftaran/minat dan API ditutup.
+   */
+  interestForm?: boolean | null;
+  /**
+   * Aktifkan setelah slot kunjungan disetujui. Mati = /kunjungan, API pemesanan dan job pelepasan kuota ditutup.
+   */
+  schoolVisits?: boolean | null;
+  /**
+   * Aktifkan setelah ada karya dengan persetujuan publikasi.
+   */
+  studentWorks?: boolean | null;
+  /**
+   * Halaman /media, section beranda dan blok media. Section otomatis tersembunyi bila belum ada konten terbit.
+   */
+  mediaHub?: boolean | null;
+  /**
+   * Belum diimplementasikan (butuh API resmi & kredensial). Tetap mati.
+   */
+  socialAutoImport?: boolean | null;
+  /**
+   * Hitungan halaman & klik tombol tanpa data pribadi.
+   */
+  visitorAnalytics?: boolean | null;
+  /**
+   * Belum dibangun. Lihat P2_ADMISSIONS_BACKLOG.md. Tetap mati.
+   */
+  fullAdmissions?: boolean | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "payload-jobs-stats".
+ */
+export interface PayloadJobsStat {
+  id: number;
+  stats?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
     | null;
   updatedAt?: string | null;
   createdAt?: string | null;
@@ -2542,6 +3613,9 @@ export interface HomepageSelect<T extends boolean = true> {
         communityText?: T;
         communityImage?: T;
         achievementsAlbum?: T;
+        mediaEyebrow?: T;
+        mediaHeading?: T;
+        mediaIntro?: T;
         ctaHeading?: T;
         ctaText?: T;
       };
@@ -2623,6 +3697,33 @@ export interface NavigationSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "feature-flags_select".
+ */
+export interface FeatureFlagsSelect<T extends boolean = true> {
+  calendarMonthView?: T;
+  interestForm?: T;
+  schoolVisits?: T;
+  studentWorks?: T;
+  mediaHub?: T;
+  socialAutoImport?: T;
+  visitorAnalytics?: T;
+  fullAdmissions?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "payload-jobs-stats_select".
+ */
+export interface PayloadJobsStatsSelect<T extends boolean = true> {
+  stats?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "collections_widget".
  */
 export interface CollectionsWidget {
@@ -2630,6 +3731,17 @@ export interface CollectionsWidget {
     [k: string]: unknown;
   };
   width: 'full';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "TaskReleaseVisitHolds".
+ */
+export interface TaskReleaseVisitHolds {
+  input?: unknown;
+  output: {
+    released?: number | null;
+    skipped?: string | null;
+  };
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -2655,6 +3767,10 @@ export interface TaskSchedulePublish {
       | ({
           relationTo: 'events';
           value: number | Event;
+        } | null)
+      | ({
+          relationTo: 'faqs';
+          value: number | Faq;
         } | null)
       | ({
           relationTo: 'albums';
@@ -2691,6 +3807,14 @@ export interface TaskSchedulePublish {
       | ({
           relationTo: 'achievements';
           value: number | Achievement;
+        } | null)
+      | ({
+          relationTo: 'student-works';
+          value: number | StudentWork;
+        } | null)
+      | ({
+          relationTo: 'media-items';
+          value: number | MediaItem;
         } | null)
       | ({
           relationTo: 'admissions-cycles';

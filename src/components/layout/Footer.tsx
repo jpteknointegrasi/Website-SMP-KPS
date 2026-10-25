@@ -1,9 +1,15 @@
 import Link from 'next/link'
 import React from 'react'
-import type { Navigation, SiteSetting, Media } from '@/payload-types'
+import type { Navigation, SiteSetting, Media, SocialAccount } from '@/payload-types'
 import { Icon } from '../ui/Icon'
 
-export const Footer = ({ settings, nav }: { settings: SiteSetting; nav: Navigation }) => {
+export const PLATFORM_ICON: Record<string, string> = { instagram: 'instagram', youtube: 'youtube', tiktok: 'tiktok', facebook: 'facebook', whatsapp: 'whatsapp', web: 'globe' }
+
+export const Footer = ({ settings, nav, accounts = [] }: { settings: SiteSetting; nav: Navigation; accounts?: SocialAccount[] }) => {
+  // verified official accounts; the old settings list is only a fallback while the collection is empty
+  const socials = accounts.length
+    ? accounts.map((a) => ({ url: a.profileUrl, platform: a.platform, label: a.handle || a.displayName }))
+    : (settings.socials ?? []).map((s) => ({ url: s.url, platform: s.platform, label: s.handle || s.platform }))
   const logo = settings.logo && typeof settings.logo === 'object' ? (settings.logo as Media) : null
   const tel = settings.phone ? settings.phone.replace(/[^0-9+]/g, '') : ''
   return (
@@ -18,13 +24,14 @@ export const Footer = ({ settings, nav }: { settings: SiteSetting; nav: Navigati
             <strong>{settings.schoolName}</strong>
           )}
           {settings.valuesLine ? <p className="site-footer__values">{settings.valuesLine}</p> : null}
-          {settings.socials?.length ? (
-            <ul className="site-footer__social" aria-label="Media sosial">
-              {settings.socials.map((s) => (
+          {socials.length ? (
+            <ul className="site-footer__social" aria-label="Akun resmi sekolah">
+              {socials.map((s) => (
                 <li key={s.url}>
-                  <a href={s.url} target="_blank" rel="noopener noreferrer" aria-label={`${s.platform} ${s.handle ?? ''}`}>
-                    <Icon name={s.platform === 'instagram' ? 'instagram' : 'external'} size={18} />
-                    <span>{s.handle || s.platform}</span>
+                  <a href={s.url} target="_blank" rel="noopener noreferrer">
+                    <Icon name={PLATFORM_ICON[s.platform] ?? 'external'} size={18} />
+                    <span>{s.label}</span>
+                    <span className="sr-only"> ({s.platform}, membuka tab baru)</span>
                   </a>
                 </li>
               ))}

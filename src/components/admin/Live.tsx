@@ -1,8 +1,9 @@
 'use client'
+import { TZ } from '@/lib/format'
 import React, { useEffect, useState } from 'react'
 
 const fmtNow = () =>
-  new Intl.DateTimeFormat('id-ID', { timeZone: 'Asia/Makassar', weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false })
+  new Intl.DateTimeFormat('id-ID', { timeZone: TZ, weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false })
     .format(new Date())
     .replace(/\./g, ':')
 

@@ -51,7 +51,8 @@ export const SiteSettings: GlobalConfig = {
             {
               name: 'socials',
               type: 'array',
-              label: 'Media sosial',
+              label: 'Media sosial (lama)',
+              admin: { description: 'Digantikan oleh Video & Media Sosial → Akun Media Sosial Resmi. Dipakai hanya bila koleksi itu kosong.' },
               fields: [
                 { name: 'platform', type: 'select', required: true, options: ['instagram', 'youtube', 'facebook', 'tiktok'].map((v) => ({ label: v, value: v })) },
                 { name: 'handle', type: 'text', label: 'Nama akun' },
@@ -75,6 +76,7 @@ const sectionTypes = [
   { label: 'Prestasi', value: 'achievements' },
   { label: 'Pengumuman & agenda', value: 'announcementsAgenda' },
   { label: 'Berita terbaru', value: 'latestNews' },
+  { label: 'KPS TV & Cerita Digital (video & media)', value: 'mediaHub' },
   { label: 'Fasilitas', value: 'facilities' },
   { label: 'Komunitas & alumni', value: 'communityAlumni' },
   { label: 'Ajakan pendaftaran', value: 'admissionsCta' },
@@ -195,6 +197,9 @@ export const Homepage: GlobalConfig = {
         { name: 'communityText', type: 'textarea' },
         { name: 'communityImage', type: 'upload', relationTo: 'media', label: 'Foto blok komunitas/alumni' },
         { name: 'achievementsAlbum', type: 'relationship', relationTo: 'albums', label: 'Album arsip di blok prestasi', admin: { description: 'Opsional. Tampil sebagai tumpukan foto di blok prestasi.' } },
+        { name: 'mediaEyebrow', type: 'text', label: 'Label kecil KPS TV', defaultValue: 'KPS TV' },
+        { name: 'mediaHeading', type: 'text', label: 'Judul KPS TV', defaultValue: 'KPS TV & Cerita Digital' },
+        { name: 'mediaIntro', type: 'textarea', label: 'Teks KPS TV', maxLength: 200, defaultValue: 'Kenali kehidupan sekolah melalui video, podcast, dan cerita dari komunitas KPS.' },
         { name: 'ctaHeading', type: 'text', defaultValue: 'Mari Mengenal KPS Lebih Dekat' },
         { name: 'ctaText', type: 'textarea' },
       ],

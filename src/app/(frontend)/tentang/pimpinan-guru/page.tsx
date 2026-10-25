@@ -10,15 +10,41 @@ const initials = (n: string) => n.replace(/[,.].*$/, '').split(' ').filter(Boole
 // PNG photos with a transparent background (e.g. the official hexagon portraits) are shown as-is, without our own crop.
 const cutout = (m: Staff['photo']) => Boolean(m && typeof m === 'object' && (m as Media).mimeType === 'image/png')
 
-export default async function Page() {
+type SP = { searchParams: Promise<{ kelompok?: string; mapel?: string }> }
+
+export default async function Page({ searchParams }: SP) {
+  const sp = await searchParams
   const res = await listCollection('staff', { sort: 'order', limit: 48 })
-  const staff = res.docs as unknown as Staff[]
+  const all = res.docs as unknown as Staff[]
+  const subjectsOf = (s: Staff) => (s.subjects ?? '').split(',').map((x) => x.trim()).filter(Boolean)
+  const subjects = [...new Set(all.flatMap(subjectsOf))].sort((a, b) => a.localeCompare(b, 'id'))
+  const group = ['pimpinan', 'guru', 'staf'].includes(sp.kelompok ?? '') ? sp.kelompok : undefined
+  const subject = subjects.find((x) => x === sp.mapel)
+  const staff = all.filter((s) => (!group || (s.group ?? 'pimpinan') === group) && (!subject || subjectsOf(s).includes(subject)))
   const groups: [string, string][] = [['pimpinan', 'Pimpinan'], ['guru', 'Guru'], ['staf', 'Tenaga kependidikan']]
+  const q = (o: Record<string, string | undefined>) => {
+    const p = new URLSearchParams(Object.entries({ kelompok: group, mapel: subject, ...o }).filter(([, v]) => v) as [string, string][]).toString()
+    return p ? `/tentang/pimpinan-guru?${p}` : '/tentang/pimpinan-guru'
+  }
   return (
     <>
       <PageHeader title="Pimpinan & Guru" lead="Pendidik yang mendampingi siswa SMP Nasional KPS." crumbs={[{ label: 'Tentang KPS', href: '/tentang' }, { label: 'Pimpinan & Guru' }]} />
       <section className="section">
         <Container>
+          {all.length > 3 ? (
+            <>
+              <nav className="filters" aria-label="Kelompok">
+                <a className="chip" href={q({ kelompok: undefined })} aria-current={!group ? 'true' : undefined}>Semua</a>
+                {groups.map(([k, l]) => <a key={k} className="chip" href={q({ kelompok: k })} aria-current={group === k ? 'true' : undefined}>{l}</a>)}
+              </nav>
+              {subjects.length ? (
+                <nav className="filters" aria-label="Mata pelajaran">
+                  <a className="chip" href={q({ mapel: undefined })} aria-current={!subject ? 'true' : undefined}>Semua mapel</a>
+                  {subjects.map((m) => <a key={m} className="chip" href={q({ mapel: m })} aria-current={subject === m ? 'true' : undefined}>{m}</a>)}
+                </nav>
+              ) : null}
+            </>
+          ) : null}
           {staff.length === 0 ? <EmptyState title="Data belum tersedia" text="Daftar pimpinan dan guru akan dimuat setelah dikonfirmasi sekolah." /> : null}
           {groups.map(([key, label]) => {
             const list = staff.filter((s) => (s.group ?? 'pimpinan') === key)
@@ -29,11 +55,14 @@ export default async function Page() {
                 <ul className="people">
                   {list.map((s) => (
                     <li key={s.id} className="person">
-                      <div className={`person__photo${cutout(s.photo) ? ' is-cutout' : ''}`}>
-                        {s.photo && typeof s.photo === 'object' ? <Img media={s.photo as Media} sizes="180px" alt={`Foto ${s.name}`} /> : <span className="person__initials" aria-hidden="true">{initials(s.name)}</span>}
+                      <div className={`person__photo${s.publicationConsent && cutout(s.photo) ? ' is-cutout' : ''}`}>
+                        {/* photo only with publication consent */}
+                        {s.publicationConsent && s.photo && typeof s.photo === 'object' ? <Img media={s.photo as Media} sizes="180px" alt={`Foto ${s.name}`} /> : <span className="person__initials" aria-hidden="true">{initials(s.name)}</span>}
                       </div>
                       <h3>{s.name}</h3>
                       <p>{s.position}</p>
+                      {s.subjects ? <p className="muted">{s.subjects}</p> : null}
+                      {s.bio ? <p className="person__bio">{s.bio}</p> : null}
                     </li>
                   ))}
                 </ul>

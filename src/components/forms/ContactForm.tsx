@@ -4,7 +4,7 @@ import React, { useRef, useState } from 'react'
 
 type Errors = Partial<Record<'name' | 'email' | 'phone' | 'category' | 'message' | 'consent' | 'form', string>>
 
-export const ContactForm = ({ defaultCategory = 'umum' }: { defaultCategory?: string }) => {
+export const ContactForm = ({ defaultCategory = 'umum', topic }: { defaultCategory?: string; topic?: string }) => {
   const [errors, setErrors] = useState<Errors>({})
   const [state, setState] = useState<'idle' | 'sending' | 'ok'>('idle')
   const [ref, setRef] = useState('')
@@ -17,6 +17,7 @@ export const ContactForm = ({ defaultCategory = 'umum' }: { defaultCategory?: st
     const body = Object.fromEntries(fd.entries()) as Record<string, unknown>
     body.consent = fd.get('consent') === 'on'
     body.startedAt = started.current
+    if (topic) body.topic = topic
     setState('sending')
     setErrors({})
     try {
@@ -87,6 +88,8 @@ export const ContactForm = ({ defaultCategory = 'umum' }: { defaultCategory?: st
           <option value="akademik">Akademik</option>
           <option value="saran">Kritik &amp; saran</option>
           <option value="alumni">Alumni</option>
+          <option value="kegiatan">Kegiatan &amp; ekstrakurikuler</option>
+          <option value="kunjungan">Kunjungan sekolah</option>
         </select>
         {err('category')}
       </div>

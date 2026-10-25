@@ -42,3 +42,42 @@ Status: **PASS** = diuji & lulus · **PASS (manual)** = diperiksa manual/visual 
 | OPS-01 | Restore DB + media ke staging | BLOCKED | butuh lingkungan staging |
 | OPS-02 | Build produksi + smoke | PASS (lokal) | `npm run build` sukses; `next start`: /, /berita, /agenda, /pendaftaran, /kontak, /sitemap.xml, /admin = 200 (30–430 ms), URL asing = 404. Deploy staging belum |
 | — | Lighthouse mobile (Performance ≥ 85, A11y ≥ 95) | TODO | jalankan di staging dengan build produksi |
+
+## Addendum P0/P1 — 25 Oktober 2026
+Lingkungan: lokal (PostgreSQL 16), cabang `fitur-tambahan-p0p1`. Data uji sintetis, dihapus otomatis setelah tes. Bukti: `tests/unit/addendum.spec.ts` (30), `tests/int/addendum.int.spec.ts` (17). Total `npm test`: **71 lulus**. Tes integrasi juga dijalankan pada salinan database yang dimigrasi dengan berkas migrasi (bukan dev push): 28/28 lulus.
+
+| ID | Pengujian | Status | Bukti / catatan |
+|---|---|---|---|
+| REG-01 | Rute & konten lama setelah migrasi | PASS | Migrasi pada salinan berdata produksi: 6 berita, 35 media, 3 pimpinan, 4 layanan utuh; 22 rute 200 tanpa overflow di 390 px; parameter `waktu`/`status` agenda tetap |
+| CAL-01 | Grid bulan, lintas tahun, filter, mobile | PASS | unit: Jan 2027 mulai Senin 28 Des; Playwright 390/1440 tanpa overflow; filter di URL |
+| CAL-02 | WITA, sepanjang hari, ICS, perubahan status | PASS | unit: 00.30 WITA tidak bergeser, DTEND eksklusif, folding ≤75 oktet; int: SEQUENCE naik saat status berubah, tidak naik untuk field non-kalender |
+| ANN-01 | Expiry saat cron tertunda | PASS | tes lama (kueri memfilter tanggal) |
+| ADM-01 | Status/mode penerimaan | PASS (manual) | Tombol sistem resmi hanya bila Dibuka + URL https; mode P2 ditolak CMS |
+| LEAD-01 | Valid, invalid, double submit | PASS | 3 permintaan bersamaan berkunci sama → 1 record, referensi sama (bug race ditemukan & diperbaiki saat uji) |
+| LEAD-02 | Kontak sama dua anak | PASS | keduanya tersimpan; kedua ditandai *Mungkin sama dengan* |
+| LEAD-03 | Penugasan, status, overdue | PASS | riwayat otomatis; tutup tanpa alasan ditolak |
+| VIS-01 | Rebutan sisa kuota 1 | PASS | 5 permintaan bersamaan → 1 diterima, 4 ditolak 409, counter = 1 |
+| VIS-02 | Batal/jadwal ulang/pending kedaluwarsa | PASS | token sekali pakai; token salah & kedaluwarsa = pesan sama; pindah ke sesi penuh ditolak tanpa efek; hold kedaluwarsa melepas kuota |
+| PRIV-01 | Publik/guru/editor/admin coba list/ekspor lead | PASS | REST 403 (Playwright + int); ekspor 403 tanpa izin; CSV menetralkan formula; audit memakai nomor referensi |
+| PRIV-02 | Dokumen privat | PASS (desain) | bukti persetujuan karya di `private-files`; token pembatalan hanya disimpan sebagai hash |
+| CMS-01 | Draf, review, publish | PASS (tes lama) + pratinjau draf hanya staf (anonim 404) | Live preview real-time belum |
+| MEDIA-01 | Foto besar, focal point | PASS (fitur lama) | |
+| FORM-01 | Email tidak tersedia | PASS (desain) | notifikasi opsional; kegagalan tidak menghapus data |
+| FLAG-01 | Modul dimatikan | PASS | API 404 saat mati; halaman 404; menu & sitemap disaring |
+| WORK-01 | Karya tanpa izin | PASS | terbit tapi persetujuan *Menunggu* → tidak publik (int + halaman 404) |
+| STAT-01 | Klik CTA vs form tersimpan | PASS | `form_success` hanya dari server setelah simpan; kunci dibersihkan dari query/token |
+| MED-01 | Video/Shorts/playlist/kanal | PASS | unit |
+| MED-02 | youtu.be/watch/embed/tracking | PASS | unit: satu URL baku; duplikat ditolak (int) |
+| MED-03 | Host mirip, javascript:, iframe | PASS | unit 12 kasus + int |
+| MED-04 | Beranda sebelum klik putar | PASS | hanya poster; iframe dibuat setelah klik; CSP `frame-src` hanya youtube-nocookie |
+| MED-05 | Video dihapus/privat | PASS (desain) | *Ketersediaan* → kartu tautan + tombol sumber |
+| MED-06 | Instagram/TikTok tanpa embed | PASS | kartu tautan |
+| MED-07 | Draf/izin/flag | PASS | int |
+| MED-08 | Mobile, vertikal | PASS | 390 px tanpa overflow; rasio 9:16 |
+| MED-09 | API impor gagal | N/A | impor otomatis tidak dibangun (flag terkunci) |
+| MED-10 | Featured diganti lewat CMS | PASS (manual) | beranda dinamis tiap permintaan |
+| OPS-01 | Backup/restore & rollback migrasi | PASS (lokal) | pg_dump → restore utuh; migrate up → down → up; perbaikan skrip *down* (IF EXISTS) |
+| UX-01 | 360/390/768/1440 & keyboard | PARTIAL | 390 & 1440 diuji; FAQ memakai `<details>` native; uji pembaca layar manual belum |
+| P2-01..03 | Seleksi lengkap | belum scope / flag off | `P2_ADMISSIONS_BACKLOG.md` |
+
+Keterbatasan: belum diuji di staging Vercel/Neon; thumbnail YouTube tidak bisa dimuat di lingkungan uji (jaringan dibatasi); Lighthouse belum dijalankan.

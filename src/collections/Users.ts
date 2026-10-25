@@ -59,6 +59,27 @@ export const Users: CollectionConfig = {
       admin: { condition: (d) => d?.role === 'admissions' },
     },
     {
+      name: 'canAccessLeads',
+      type: 'checkbox',
+      label: 'Boleh melihat data calon orang tua (minat & kunjungan)',
+      defaultValue: false,
+      access: { create: fieldAdminOnly, update: fieldAdminOnly },
+      saveToJWT: true,
+      admin: {
+        condition: (d) => d?.role !== 'admissions' && d?.role !== 'contributor',
+        description: 'Petugas Pendaftaran otomatis boleh. Peran lain hanya bila dicentang Admin Teknis (tercatat di audit).',
+      },
+    },
+    {
+      name: 'canExportLeads',
+      type: 'checkbox',
+      label: 'Boleh mengekspor kontak calon orang tua (CSV)',
+      defaultValue: false,
+      access: { create: fieldAdminOnly, update: fieldAdminOnly },
+      saveToJWT: true,
+      admin: { condition: (d) => Boolean(d?.canAccessLeads) && d?.role !== 'admissions' },
+    },
+    {
       name: 'active',
       type: 'checkbox',
       label: 'Akun aktif',
