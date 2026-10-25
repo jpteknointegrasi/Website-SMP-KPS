@@ -52,8 +52,10 @@ export const PriorityStrip = ({ a }: { a: Announcement | null }) =>
   ) : null
 
 /* ---------- 03 hero ---------- */
-export const Hero = ({ hero, settings }: { hero: Homepage['hero']; settings: SiteSetting }) => {
-  const words = (hero.title ?? '').split(' ')
+export const Hero = ({ hero: heroIn, settings }: { hero?: Homepage['hero'] | null; settings: SiteSetting }) => {
+  // Empty database (fresh install): fall back to safe defaults instead of crashing.
+  const hero = (heroIn ?? {}) as Homepage['hero']
+  const words = (hero.title || settings.schoolName || 'SMP Nasional KPS').split(' ')
   const img = m(hero.image)
   const mobile = m(hero.imageMobile)
   const slides = ((hero.slides ?? []).map(m).filter((s) => s?.url) as Media[])
