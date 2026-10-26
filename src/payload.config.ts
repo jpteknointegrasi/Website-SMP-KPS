@@ -40,6 +40,7 @@ import { AnalyticsDaily } from './collections/analytics'
 import { isStaff } from './access/roles'
 import { readFlags } from './lib/flags'
 import { releaseExpiredHolds } from './lib/capacity'
+import { arrangeCollections, arrangeGlobals } from './admin/nav'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
@@ -76,7 +77,8 @@ export default buildConfig({
     supportedLanguages: { id, en },
     fallbackLanguage: 'id',
   },
-  collections: [
+  // sidebar groups, order and labels: src/admin/nav.ts
+  collections: arrangeCollections([
     Pages,
     Posts,
     Categories,
@@ -108,8 +110,8 @@ export default buildConfig({
     Users,
     AuditLogs,
     AnalyticsDaily,
-  ],
-  globals: [Homepage, SiteSettings, Navigation, FeatureFlags],
+  ]),
+  globals: arrangeGlobals([Homepage, SiteSettings, Navigation, FeatureFlags]),
   editor: lexicalEditor({
     // Structured rich text only: no raw HTML/script blocks; H1 is reserved for the page title.
     features: ({ defaultFeatures }) => [

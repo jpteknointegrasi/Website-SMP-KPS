@@ -1,6 +1,20 @@
 # Panduan Admin — CMS SMP Nasional KPS
 
-Masuk ke **/admin** dengan akun pribadi Anda. Jangan berbagi akun. Setiap perubahan tercatat di menu **Audit**.
+Masuk ke **/admin** dengan akun pribadi Anda. Jangan berbagi akun. Setiap perubahan tercatat di **Log Audit** (Pengaturan & Akses, khusus Admin Teknis).
+
+## Peta menu admin
+
+| Grup | Isi |
+|---|---|
+| **Beranda & Halaman** | Halaman, Beranda (tab: Hero · Akses cepat · Mengenal sekolah · Teks blok · Urutan blok), Menu & Footer |
+| **Berita & Informasi** | Berita, Kategori Berita, Pengumuman, Agenda & Kalender, Kategori Agenda, FAQ, Layanan & Tautan, Panduan |
+| **Profil & Kesiswaan** | Guru, Staf & Pimpinan, Program Pembelajaran, Ekstrakurikuler & Kegiatan, Fasilitas, Prestasi, Karya Siswa, Cerita Alumni |
+| **Galeri, Video & Dokumen** | Foto & Gambar, Album Galeri, Video & KPS TV, Akun Media Sosial, Dokumen & Unduhan |
+| **Penerimaan Siswa** | Siklus Penerimaan (PPDB), Jadwal Kunjungan, serta Minat Calon Orang Tua dan Pemesanan Kunjungan (hanya untuk petugas pendaftaran / akun yang diberi izin) |
+| **Kotak Masuk** | Pesan dari Formulir Kontak |
+| **Pengaturan & Akses** | Pengguna, Identitas & Kontak Sekolah, Berkas Privat, Statistik Pengunjung. Khusus Admin Teknis: Fitur Aktif, Pengalihan URL, Log Audit |
+
+Menu yang tidak sesuai peran pengguna disembunyikan otomatis.
 
 ## Peran
 
@@ -20,7 +34,7 @@ Masuk ke **/admin** dengan akun pribadi Anda. Jangan berbagi akun. Setiap peruba
 4. Riwayat versi ada di tab **Versi**; memulihkan versi lama membuat versi baru (riwayat tidak hilang).
 
 ## Mengganti hero beranda
-Pengaturan → **Beranda** → grup *Hero*: ubah eyebrow, judul (maks. 80 karakter), deskripsi, foto, dan tombol.
+Beranda & Halaman → **Beranda** → tab *Hero*: ubah eyebrow, judul (maks. 80 karakter), deskripsi, foto, dan tombol.
 - Foto: gunakan foto **horizontal** resmi. Di menu Media, klik foto lalu atur **titik fokus** agar wajah tidak terpotong di HP. Isi teks *alt* yang menggambarkan isi foto.
 - **Foto hero bergantian** (maks. 6): bila diisi, foto-foto ini tampil bergantian dengan efek memudar dan zoom pelan. Atur *Jeda antar foto* (4–15 detik). Pengunjung dapat menjeda lewat tombol ⏸ di pojok foto; pergantian otomatis berhenti saat kursor di atas foto dan bagi pengguna yang mematikan animasi. Kosongkan untuk memakai satu foto utama saja.
 - Foto hero paling cocok berukuran lebar (rasio sekitar 3:1, minimal 2000 px). Atur titik fokus agar subjek utama tetap terlihat di HP.
@@ -30,16 +44,16 @@ Pengaturan → **Beranda** → grup *Hero*: ubah eyebrow, judul (maks. 80 karakt
 Di halaman yang sama Anda bisa mengubah: 6 **Akses cepat**, teks & kolase **Mengenal sekolah**, label kecil dan judul setiap blok, serta **urutan & status blok** (seret untuk mengubah urutan; matikan blok yang belum punya konten layak). Blok *Sekilas KPS* (angka otomatis dari konten terbit) tersedia tetapi nonaktif secara bawaan.
 
 ## Menulis berita
-Konten → **Berita** → *Buat baru*. Isi judul, ringkasan (tampil di kartu), foto sampul, isi, kategori.
+Berita & Informasi → **Berita** → *Buat baru*. Isi judul, ringkasan (tampil di kartu), foto sampul, isi, kategori.
 - **Tanggal publikasi**: untuk materi lama isi tanggal aslinya. Tanggal di masa depan = terjadwal.
 - Tombol **Duplikat** membuat salinan draf; ubah slug sebelum menerbitkan.
 
 ## Pengumuman
-Konten → **Pengumuman**. Atur *Mulai tampil* dan *Selesai tampil* (WITA). Setelah lewat, pengumuman otomatis hilang dari beranda dan pindah ke Arsip dengan label "Sudah berakhir" — tanpa perlu dihapus.
+Berita & Informasi → **Pengumuman**. Atur *Mulai tampil* dan *Selesai tampil* (WITA). Setelah lewat, pengumuman otomatis hilang dari beranda dan pindah ke Arsip dengan label "Sudah berakhir" — tanpa perlu dihapus.
 - **Prioritas ≥ 50** = muncul di strip kuning paling atas beranda (hanya satu, prioritas tertinggi).
 
 ## Agenda
-Konten → **Agenda**. Isi mulai/selesai (WITA) atau centang *Sepanjang hari*. Ubah *Status* bila ditunda/dibatalkan — website menampilkan label yang jelas. Pengunjung dapat mengunduh file kalender (.ics).
+Berita & Informasi → **Agenda & Kalender**. Isi mulai/selesai (WITA) atau centang *Sepanjang hari*. Ubah *Status* bila ditunda/dibatalkan — website menampilkan label yang jelas. Pengunjung dapat mengunduh file kalender (.ics).
 
 ## Dokumen, BOS, galeri
 - **Dokumen**: unggah PDF/Office, pilih kategori (BOS, kalender, panduan, buletin), periode dan versi. Kategori *Dana BOS* tampil di halaman Transparansi BOS.
@@ -50,11 +64,11 @@ Akademik → **Siklus Pendaftaran**. Atur tahun ajaran, **status** (belum dikonf
 Tombol "Daftar sekarang" hanya muncul bila status **dibuka** dan URL diawali `https://`. Biaya hanya tampil bila *Biaya disetujui* dicentang.
 
 ## Menu & pengaturan sekolah
-- Pengaturan → **Navigasi**: menu atas (dengan submenu) dan tautan footer.
-- Pengaturan → **Pengaturan Sekolah**: nama, logo, nilai, alamat, email, telepon, jam layanan, URL portal sekolah, URL portal alumni, media sosial. Tombol *Portal Sekolah*/*Portal Alumni* otomatis muncul setelah URL diisi.
+- Beranda & Halaman → **Menu & Footer**: menu atas (dengan submenu) dan tautan footer.
+- Pengaturan & Akses → **Identitas & Kontak Sekolah**: nama, logo, nilai, alamat, email, telepon, jam layanan, URL portal sekolah, URL portal alumni, media sosial. Tombol *Portal Sekolah*/*Portal Alumni* otomatis muncul setelah URL diisi.
 
 ## Pesan masuk
-Menu **Pesan Masuk** berisi pesan dari formulir Kontak (nomor referensi `KPS-…`). Ubah status (baru → diproses → selesai) dan isi catatan privat. Pesan tidak pernah tampil di website.
+Menu **Kotak Masuk → Pesan dari Formulir Kontak** berisi pesan dari formulir Kontak (nomor referensi `KPS-…`). Ubah status (baru → diproses → selesai) dan isi catatan privat. Pesan tidak pernah tampil di website.
 
 ## Media
 - Format diterima: JPG, PNG, WebP, AVIF, PDF; SVG dan berkas berbahaya ditolak.

@@ -74,30 +74,30 @@ export interface Config {
     events: Event;
     'event-categories': EventCategory;
     faqs: Faq;
-    albums: Album;
-    documents: Document;
-    guides: Guide;
     services: Service;
-    testimonials: Testimonial;
+    guides: Guide;
+    staff: Staff;
     programs: Program;
     extracurriculars: Extracurricular;
     facilities: Facility;
-    staff: Staff;
     achievements: Achievement;
     'student-works': StudentWork;
+    testimonials: Testimonial;
+    media: Media;
+    albums: Album;
     'media-items': MediaItem;
     'social-accounts': SocialAccount;
+    documents: Document;
     'admissions-cycles': AdmissionsCycle;
     leads: Lead;
     'visit-sessions': VisitSession;
     'visit-bookings': VisitBooking;
     'contact-messages': ContactMessage;
-    media: Media;
-    'private-files': PrivateFile;
-    redirects: Redirect;
     users: User;
-    'audit-logs': AuditLog;
+    'private-files': PrivateFile;
     'analytics-daily': AnalyticsDaily;
+    redirects: Redirect;
+    'audit-logs': AuditLog;
     'payload-kv': PayloadKv;
     'payload-jobs': PayloadJob;
     'payload-locked-documents': PayloadLockedDocument;
@@ -113,30 +113,30 @@ export interface Config {
     events: EventsSelect<false> | EventsSelect<true>;
     'event-categories': EventCategoriesSelect<false> | EventCategoriesSelect<true>;
     faqs: FaqsSelect<false> | FaqsSelect<true>;
-    albums: AlbumsSelect<false> | AlbumsSelect<true>;
-    documents: DocumentsSelect<false> | DocumentsSelect<true>;
-    guides: GuidesSelect<false> | GuidesSelect<true>;
     services: ServicesSelect<false> | ServicesSelect<true>;
-    testimonials: TestimonialsSelect<false> | TestimonialsSelect<true>;
+    guides: GuidesSelect<false> | GuidesSelect<true>;
+    staff: StaffSelect<false> | StaffSelect<true>;
     programs: ProgramsSelect<false> | ProgramsSelect<true>;
     extracurriculars: ExtracurricularsSelect<false> | ExtracurricularsSelect<true>;
     facilities: FacilitiesSelect<false> | FacilitiesSelect<true>;
-    staff: StaffSelect<false> | StaffSelect<true>;
     achievements: AchievementsSelect<false> | AchievementsSelect<true>;
     'student-works': StudentWorksSelect<false> | StudentWorksSelect<true>;
+    testimonials: TestimonialsSelect<false> | TestimonialsSelect<true>;
+    media: MediaSelect<false> | MediaSelect<true>;
+    albums: AlbumsSelect<false> | AlbumsSelect<true>;
     'media-items': MediaItemsSelect<false> | MediaItemsSelect<true>;
     'social-accounts': SocialAccountsSelect<false> | SocialAccountsSelect<true>;
+    documents: DocumentsSelect<false> | DocumentsSelect<true>;
     'admissions-cycles': AdmissionsCyclesSelect<false> | AdmissionsCyclesSelect<true>;
     leads: LeadsSelect<false> | LeadsSelect<true>;
     'visit-sessions': VisitSessionsSelect<false> | VisitSessionsSelect<true>;
     'visit-bookings': VisitBookingsSelect<false> | VisitBookingsSelect<true>;
     'contact-messages': ContactMessagesSelect<false> | ContactMessagesSelect<true>;
-    media: MediaSelect<false> | MediaSelect<true>;
-    'private-files': PrivateFilesSelect<false> | PrivateFilesSelect<true>;
-    redirects: RedirectsSelect<false> | RedirectsSelect<true>;
     users: UsersSelect<false> | UsersSelect<true>;
-    'audit-logs': AuditLogsSelect<false> | AuditLogsSelect<true>;
+    'private-files': PrivateFilesSelect<false> | PrivateFilesSelect<true>;
     'analytics-daily': AnalyticsDailySelect<false> | AnalyticsDailySelect<true>;
+    redirects: RedirectsSelect<false> | RedirectsSelect<true>;
+    'audit-logs': AuditLogsSelect<false> | AuditLogsSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-jobs': PayloadJobsSelect<false> | PayloadJobsSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
@@ -149,15 +149,15 @@ export interface Config {
   fallbackLocale: null;
   globals: {
     homepage: Homepage;
-    'site-settings': SiteSetting;
     navigation: Navigation;
+    'site-settings': SiteSetting;
     'feature-flags': FeatureFlag;
     'payload-jobs-stats': PayloadJobsStat;
   };
   globalsSelect: {
     homepage: HomepageSelect<false> | HomepageSelect<true>;
-    'site-settings': SiteSettingsSelect<false> | SiteSettingsSelect<true>;
     navigation: NavigationSelect<false> | NavigationSelect<true>;
+    'site-settings': SiteSettingsSelect<false> | SiteSettingsSelect<true>;
     'feature-flags': FeatureFlagsSelect<false> | FeatureFlagsSelect<true>;
     'payload-jobs-stats': PayloadJobsStatsSelect<false> | PayloadJobsStatsSelect<true>;
   };
@@ -1108,48 +1108,6 @@ export interface Announcement {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "albums".
- */
-export interface Album {
-  id: number;
-  title: string;
-  /**
-   * Huruf kecil, angka dan tanda hubung. Dibuat otomatis dari judul bila kosong.
-   */
-  slug: string;
-  eventDate?: string | null;
-  /**
-   * Maksimal 220 karakter. Tampil di kartu dan hasil pencarian.
-   */
-  excerpt?: string | null;
-  cover: number | Media;
-  items?:
-    | {
-        media: number | Media;
-        caption?: string | null;
-        id?: string | null;
-      }[]
-    | null;
-  publicationConsent?: boolean | null;
-  /**
-   * Kontributor: pilih "Ajukan Review" lalu klik Simpan Draf. Editor menerbitkan setelah review.
-   */
-  workflowStatus: 'draft' | 'in_review' | 'published' | 'archived';
-  reviewNote?: string | null;
-  /**
-   * Data contoh hanya tampil bila SHOW_DEMO_CONTENT=true. Produksi wajib false.
-   */
-  isDemo?: boolean | null;
-  archivedAt?: string | null;
-  createdBy?: (number | null) | User;
-  updatedBy?: (number | null) | User;
-  updatedAt: string;
-  createdAt: string;
-  deletedAt?: string | null;
-  _status?: ('draft' | 'published') | null;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "services".
  */
 export interface Service {
@@ -1196,23 +1154,35 @@ export interface Service {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "testimonials".
+ * via the `definition` "staff".
  */
-export interface Testimonial {
+export interface Staff {
   id: number;
-  publicName: string;
+  name: string;
   /**
    * Huruf kecil, angka dan tanda hubung. Dibuat otomatis dari judul bila kosong.
    */
   slug: string;
+  position: string;
+  group?: ('yayasan' | 'pimpinan' | 'guru' | 'staf') | null;
   /**
-   * Sesuai fakta. Foto kelompok guru bukan foto alumni.
+   * Pisahkan dengan koma. Contoh: Matematika, IPA. Hanya yang dikonfirmasi sekolah.
    */
-  relation?: ('alumni' | 'orang_tua' | 'siswa') | null;
-  roleLine?: string | null;
-  quote: string;
+  subjects?: string | null;
   photo?: (number | null) | Media;
-  consent: boolean;
+  /**
+   * Jangan memuat NIK, alamat rumah, nomor pribadi atau data kepegawaian.
+   */
+  bio?: string | null;
+  /**
+   * Foto hanya tampil publik bila dicentang.
+   */
+  publicationConsent?: boolean | null;
+  /**
+   * Nonaktif = turun dari halaman publik; riwayat & audit tetap ada.
+   */
+  active?: boolean | null;
+  order?: number | null;
   /**
    * Kontributor: pilih "Ajukan Review" lalu klik Simpan Draf. Editor menerbitkan setelah review.
    */
@@ -1438,54 +1408,6 @@ export interface Facility {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "staff".
- */
-export interface Staff {
-  id: number;
-  name: string;
-  /**
-   * Huruf kecil, angka dan tanda hubung. Dibuat otomatis dari judul bila kosong.
-   */
-  slug: string;
-  position: string;
-  group?: ('yayasan' | 'pimpinan' | 'guru' | 'staf') | null;
-  /**
-   * Pisahkan dengan koma. Contoh: Matematika, IPA. Hanya yang dikonfirmasi sekolah.
-   */
-  subjects?: string | null;
-  photo?: (number | null) | Media;
-  /**
-   * Jangan memuat NIK, alamat rumah, nomor pribadi atau data kepegawaian.
-   */
-  bio?: string | null;
-  /**
-   * Foto hanya tampil publik bila dicentang.
-   */
-  publicationConsent?: boolean | null;
-  /**
-   * Nonaktif = turun dari halaman publik; riwayat & audit tetap ada.
-   */
-  active?: boolean | null;
-  order?: number | null;
-  /**
-   * Kontributor: pilih "Ajukan Review" lalu klik Simpan Draf. Editor menerbitkan setelah review.
-   */
-  workflowStatus: 'draft' | 'in_review' | 'published' | 'archived';
-  reviewNote?: string | null;
-  /**
-   * Data contoh hanya tampil bila SHOW_DEMO_CONTENT=true. Produksi wajib false.
-   */
-  isDemo?: boolean | null;
-  archivedAt?: string | null;
-  createdBy?: (number | null) | User;
-  updatedBy?: (number | null) | User;
-  updatedAt: string;
-  createdAt: string;
-  deletedAt?: string | null;
-  _status?: ('draft' | 'published') | null;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "achievements".
  */
 export interface Achievement {
@@ -1536,6 +1458,84 @@ export interface Achievement {
     title?: string | null;
     description?: string | null;
   };
+  /**
+   * Kontributor: pilih "Ajukan Review" lalu klik Simpan Draf. Editor menerbitkan setelah review.
+   */
+  workflowStatus: 'draft' | 'in_review' | 'published' | 'archived';
+  reviewNote?: string | null;
+  /**
+   * Data contoh hanya tampil bila SHOW_DEMO_CONTENT=true. Produksi wajib false.
+   */
+  isDemo?: boolean | null;
+  archivedAt?: string | null;
+  createdBy?: (number | null) | User;
+  updatedBy?: (number | null) | User;
+  updatedAt: string;
+  createdAt: string;
+  deletedAt?: string | null;
+  _status?: ('draft' | 'published') | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "testimonials".
+ */
+export interface Testimonial {
+  id: number;
+  publicName: string;
+  /**
+   * Huruf kecil, angka dan tanda hubung. Dibuat otomatis dari judul bila kosong.
+   */
+  slug: string;
+  /**
+   * Sesuai fakta. Foto kelompok guru bukan foto alumni.
+   */
+  relation?: ('alumni' | 'orang_tua' | 'siswa') | null;
+  roleLine?: string | null;
+  quote: string;
+  photo?: (number | null) | Media;
+  consent: boolean;
+  /**
+   * Kontributor: pilih "Ajukan Review" lalu klik Simpan Draf. Editor menerbitkan setelah review.
+   */
+  workflowStatus: 'draft' | 'in_review' | 'published' | 'archived';
+  reviewNote?: string | null;
+  /**
+   * Data contoh hanya tampil bila SHOW_DEMO_CONTENT=true. Produksi wajib false.
+   */
+  isDemo?: boolean | null;
+  archivedAt?: string | null;
+  createdBy?: (number | null) | User;
+  updatedBy?: (number | null) | User;
+  updatedAt: string;
+  createdAt: string;
+  deletedAt?: string | null;
+  _status?: ('draft' | 'published') | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "albums".
+ */
+export interface Album {
+  id: number;
+  title: string;
+  /**
+   * Huruf kecil, angka dan tanda hubung. Dibuat otomatis dari judul bila kosong.
+   */
+  slug: string;
+  eventDate?: string | null;
+  /**
+   * Maksimal 220 karakter. Tampil di kartu dan hasil pencarian.
+   */
+  excerpt?: string | null;
+  cover: number | Media;
+  items?:
+    | {
+        media: number | Media;
+        caption?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  publicationConsent?: boolean | null;
   /**
    * Kontributor: pilih "Ajukan Review" lalu klik Simpan Draf. Editor menerbitkan setelah review.
    */
@@ -1819,6 +1819,21 @@ export interface ContactMessage {
   createdAt: string;
 }
 /**
+ * Agregat harian tanpa data pribadi (tanpa IP, cookie, isi form). Aktif bila fitur Statistik pengunjung dinyalakan.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "analytics-daily".
+ */
+export interface AnalyticsDaily {
+  id: number;
+  day: string;
+  kind: 'pageview' | 'cta_click' | 'form_success';
+  key: string;
+  count: number;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "redirects".
  */
@@ -1846,21 +1861,6 @@ export interface AuditLog {
   changedFields?: string | null;
   actor?: (number | null) | User;
   actorEmail?: string | null;
-  updatedAt: string;
-  createdAt: string;
-}
-/**
- * Agregat harian tanpa data pribadi (tanpa IP, cookie, isi form). Aktif bila fitur Statistik pengunjung dinyalakan.
- *
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "analytics-daily".
- */
-export interface AnalyticsDaily {
-  id: number;
-  day: string;
-  kind: 'pageview' | 'cta_click' | 'form_success';
-  key: string;
-  count: number;
   updatedAt: string;
   createdAt: string;
 }
@@ -2018,24 +2018,16 @@ export interface PayloadLockedDocument {
         value: number | Faq;
       } | null)
     | ({
-        relationTo: 'albums';
-        value: number | Album;
-      } | null)
-    | ({
-        relationTo: 'documents';
-        value: number | Document;
+        relationTo: 'services';
+        value: number | Service;
       } | null)
     | ({
         relationTo: 'guides';
         value: number | Guide;
       } | null)
     | ({
-        relationTo: 'services';
-        value: number | Service;
-      } | null)
-    | ({
-        relationTo: 'testimonials';
-        value: number | Testimonial;
+        relationTo: 'staff';
+        value: number | Staff;
       } | null)
     | ({
         relationTo: 'programs';
@@ -2050,10 +2042,6 @@ export interface PayloadLockedDocument {
         value: number | Facility;
       } | null)
     | ({
-        relationTo: 'staff';
-        value: number | Staff;
-      } | null)
-    | ({
         relationTo: 'achievements';
         value: number | Achievement;
       } | null)
@@ -2062,12 +2050,28 @@ export interface PayloadLockedDocument {
         value: number | StudentWork;
       } | null)
     | ({
+        relationTo: 'testimonials';
+        value: number | Testimonial;
+      } | null)
+    | ({
+        relationTo: 'media';
+        value: number | Media;
+      } | null)
+    | ({
+        relationTo: 'albums';
+        value: number | Album;
+      } | null)
+    | ({
         relationTo: 'media-items';
         value: number | MediaItem;
       } | null)
     | ({
         relationTo: 'social-accounts';
         value: number | SocialAccount;
+      } | null)
+    | ({
+        relationTo: 'documents';
+        value: number | Document;
       } | null)
     | ({
         relationTo: 'admissions-cycles';
@@ -2090,28 +2094,24 @@ export interface PayloadLockedDocument {
         value: number | ContactMessage;
       } | null)
     | ({
-        relationTo: 'media';
-        value: number | Media;
+        relationTo: 'users';
+        value: number | User;
       } | null)
     | ({
         relationTo: 'private-files';
         value: number | PrivateFile;
       } | null)
     | ({
+        relationTo: 'analytics-daily';
+        value: number | AnalyticsDaily;
+      } | null)
+    | ({
         relationTo: 'redirects';
         value: number | Redirect;
       } | null)
     | ({
-        relationTo: 'users';
-        value: number | User;
-      } | null)
-    | ({
         relationTo: 'audit-logs';
         value: number | AuditLog;
-      } | null)
-    | ({
-        relationTo: 'analytics-daily';
-        value: number | AnalyticsDaily;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -2445,69 +2445,29 @@ export interface FaqsSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "albums_select".
+ * via the `definition` "services_select".
  */
-export interface AlbumsSelect<T extends boolean = true> {
+export interface ServicesSelect<T extends boolean = true> {
   title?: T;
   slug?: T;
-  eventDate?: T;
   excerpt?: T;
-  cover?: T;
-  items?:
-    | T
-    | {
-        media?: T;
-        caption?: T;
-        id?: T;
-      };
-  publicationConsent?: T;
-  workflowStatus?: T;
-  reviewNote?: T;
-  isDemo?: T;
-  archivedAt?: T;
-  createdBy?: T;
-  updatedBy?: T;
-  updatedAt?: T;
-  createdAt?: T;
-  deletedAt?: T;
-  _status?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "documents_select".
- */
-export interface DocumentsSelect<T extends boolean = true> {
-  title?: T;
-  category?: T;
-  period?: T;
-  version?: T;
-  description?: T;
-  approvedAt?: T;
-  reviewDue?: T;
-  supersedes?: T;
-  originalFilename?: T;
-  publishedAt?: T;
-  workflowStatus?: T;
-  reviewNote?: T;
-  isDemo?: T;
-  archivedAt?: T;
-  createdBy?: T;
-  updatedBy?: T;
-  prefix?: T;
-  _objectKey?: T;
-  updatedAt?: T;
-  createdAt?: T;
-  deletedAt?: T;
-  _status?: T;
+  icon?: T;
   url?: T;
-  thumbnailURL?: T;
-  filename?: T;
-  mimeType?: T;
-  filesize?: T;
-  width?: T;
-  height?: T;
-  focalX?: T;
-  focalY?: T;
+  external?: T;
+  serviceStatus?: T;
+  serviceCategory?: T;
+  verifiedAt?: T;
+  order?: T;
+  workflowStatus?: T;
+  reviewNote?: T;
+  isDemo?: T;
+  archivedAt?: T;
+  createdBy?: T;
+  updatedBy?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  deletedAt?: T;
+  _status?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -2541,42 +2501,19 @@ export interface GuidesSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "services_select".
+ * via the `definition` "staff_select".
  */
-export interface ServicesSelect<T extends boolean = true> {
-  title?: T;
+export interface StaffSelect<T extends boolean = true> {
+  name?: T;
   slug?: T;
-  excerpt?: T;
-  icon?: T;
-  url?: T;
-  external?: T;
-  serviceStatus?: T;
-  serviceCategory?: T;
-  verifiedAt?: T;
-  order?: T;
-  workflowStatus?: T;
-  reviewNote?: T;
-  isDemo?: T;
-  archivedAt?: T;
-  createdBy?: T;
-  updatedBy?: T;
-  updatedAt?: T;
-  createdAt?: T;
-  deletedAt?: T;
-  _status?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "testimonials_select".
- */
-export interface TestimonialsSelect<T extends boolean = true> {
-  publicName?: T;
-  slug?: T;
-  relation?: T;
-  roleLine?: T;
-  quote?: T;
+  position?: T;
+  group?: T;
+  subjects?: T;
   photo?: T;
-  consent?: T;
+  bio?: T;
+  publicationConsent?: T;
+  active?: T;
+  order?: T;
   workflowStatus?: T;
   reviewNote?: T;
   isDemo?: T;
@@ -2712,32 +2649,6 @@ export interface FacilitiesSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "staff_select".
- */
-export interface StaffSelect<T extends boolean = true> {
-  name?: T;
-  slug?: T;
-  position?: T;
-  group?: T;
-  subjects?: T;
-  photo?: T;
-  bio?: T;
-  publicationConsent?: T;
-  active?: T;
-  order?: T;
-  workflowStatus?: T;
-  reviewNote?: T;
-  isDemo?: T;
-  archivedAt?: T;
-  createdBy?: T;
-  updatedBy?: T;
-  updatedAt?: T;
-  createdAt?: T;
-  deletedAt?: T;
-  _status?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "achievements_select".
  */
 export interface AchievementsSelect<T extends boolean = true> {
@@ -2798,6 +2709,134 @@ export interface StudentWorksSelect<T extends boolean = true> {
         title?: T;
         description?: T;
       };
+  workflowStatus?: T;
+  reviewNote?: T;
+  isDemo?: T;
+  archivedAt?: T;
+  createdBy?: T;
+  updatedBy?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  deletedAt?: T;
+  _status?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "testimonials_select".
+ */
+export interface TestimonialsSelect<T extends boolean = true> {
+  publicName?: T;
+  slug?: T;
+  relation?: T;
+  roleLine?: T;
+  quote?: T;
+  photo?: T;
+  consent?: T;
+  workflowStatus?: T;
+  reviewNote?: T;
+  isDemo?: T;
+  archivedAt?: T;
+  createdBy?: T;
+  updatedBy?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  deletedAt?: T;
+  _status?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "media_select".
+ */
+export interface MediaSelect<T extends boolean = true> {
+  alt?: T;
+  decorative?: T;
+  caption?: T;
+  sourceId?: T;
+  sourceUrl?: T;
+  sourcePage?: T;
+  originalFilename?: T;
+  downloadedAt?: T;
+  sha256?: T;
+  license?: T;
+  consent?: T;
+  reviewStatus?: T;
+  editorialNote?: T;
+  prefix?: T;
+  _objectKey?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  url?: T;
+  thumbnailURL?: T;
+  filename?: T;
+  mimeType?: T;
+  filesize?: T;
+  width?: T;
+  height?: T;
+  focalX?: T;
+  focalY?: T;
+  sizes?:
+    | T
+    | {
+        thumb?:
+          | T
+          | {
+              url?: T;
+              width?: T;
+              height?: T;
+              mimeType?: T;
+              filesize?: T;
+              filename?: T;
+            };
+        card?:
+          | T
+          | {
+              url?: T;
+              width?: T;
+              height?: T;
+              mimeType?: T;
+              filesize?: T;
+              filename?: T;
+            };
+        large?:
+          | T
+          | {
+              url?: T;
+              width?: T;
+              height?: T;
+              mimeType?: T;
+              filesize?: T;
+              filename?: T;
+            };
+        hero?:
+          | T
+          | {
+              url?: T;
+              width?: T;
+              height?: T;
+              mimeType?: T;
+              filesize?: T;
+              filename?: T;
+            };
+      };
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "albums_select".
+ */
+export interface AlbumsSelect<T extends boolean = true> {
+  title?: T;
+  slug?: T;
+  eventDate?: T;
+  excerpt?: T;
+  cover?: T;
+  items?:
+    | T
+    | {
+        media?: T;
+        caption?: T;
+        id?: T;
+      };
+  publicationConsent?: T;
   workflowStatus?: T;
   reviewNote?: T;
   isDemo?: T;
@@ -2872,6 +2911,43 @@ export interface SocialAccountsSelect<T extends boolean = true> {
   order?: T;
   updatedAt?: T;
   createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "documents_select".
+ */
+export interface DocumentsSelect<T extends boolean = true> {
+  title?: T;
+  category?: T;
+  period?: T;
+  version?: T;
+  description?: T;
+  approvedAt?: T;
+  reviewDue?: T;
+  supersedes?: T;
+  originalFilename?: T;
+  publishedAt?: T;
+  workflowStatus?: T;
+  reviewNote?: T;
+  isDemo?: T;
+  archivedAt?: T;
+  createdBy?: T;
+  updatedBy?: T;
+  prefix?: T;
+  _objectKey?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  deletedAt?: T;
+  _status?: T;
+  url?: T;
+  thumbnailURL?: T;
+  filename?: T;
+  mimeType?: T;
+  filesize?: T;
+  width?: T;
+  height?: T;
+  focalX?: T;
+  focalY?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -3065,116 +3141,6 @@ export interface ContactMessagesSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "media_select".
- */
-export interface MediaSelect<T extends boolean = true> {
-  alt?: T;
-  decorative?: T;
-  caption?: T;
-  sourceId?: T;
-  sourceUrl?: T;
-  sourcePage?: T;
-  originalFilename?: T;
-  downloadedAt?: T;
-  sha256?: T;
-  license?: T;
-  consent?: T;
-  reviewStatus?: T;
-  editorialNote?: T;
-  prefix?: T;
-  _objectKey?: T;
-  updatedAt?: T;
-  createdAt?: T;
-  url?: T;
-  thumbnailURL?: T;
-  filename?: T;
-  mimeType?: T;
-  filesize?: T;
-  width?: T;
-  height?: T;
-  focalX?: T;
-  focalY?: T;
-  sizes?:
-    | T
-    | {
-        thumb?:
-          | T
-          | {
-              url?: T;
-              width?: T;
-              height?: T;
-              mimeType?: T;
-              filesize?: T;
-              filename?: T;
-            };
-        card?:
-          | T
-          | {
-              url?: T;
-              width?: T;
-              height?: T;
-              mimeType?: T;
-              filesize?: T;
-              filename?: T;
-            };
-        large?:
-          | T
-          | {
-              url?: T;
-              width?: T;
-              height?: T;
-              mimeType?: T;
-              filesize?: T;
-              filename?: T;
-            };
-        hero?:
-          | T
-          | {
-              url?: T;
-              width?: T;
-              height?: T;
-              mimeType?: T;
-              filesize?: T;
-              filename?: T;
-            };
-      };
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "private-files_select".
- */
-export interface PrivateFilesSelect<T extends boolean = true> {
-  title?: T;
-  originalFilename?: T;
-  note?: T;
-  prefix?: T;
-  _objectKey?: T;
-  updatedAt?: T;
-  createdAt?: T;
-  url?: T;
-  thumbnailURL?: T;
-  filename?: T;
-  mimeType?: T;
-  filesize?: T;
-  width?: T;
-  height?: T;
-  focalX?: T;
-  focalY?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "redirects_select".
- */
-export interface RedirectsSelect<T extends boolean = true> {
-  oldPath?: T;
-  newPath?: T;
-  active?: T;
-  note?: T;
-  updatedAt?: T;
-  createdAt?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "users_select".
  */
 export interface UsersSelect<T extends boolean = true> {
@@ -3204,6 +3170,52 @@ export interface UsersSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "private-files_select".
+ */
+export interface PrivateFilesSelect<T extends boolean = true> {
+  title?: T;
+  originalFilename?: T;
+  note?: T;
+  prefix?: T;
+  _objectKey?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  url?: T;
+  thumbnailURL?: T;
+  filename?: T;
+  mimeType?: T;
+  filesize?: T;
+  width?: T;
+  height?: T;
+  focalX?: T;
+  focalY?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "analytics-daily_select".
+ */
+export interface AnalyticsDailySelect<T extends boolean = true> {
+  day?: T;
+  kind?: T;
+  key?: T;
+  count?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "redirects_select".
+ */
+export interface RedirectsSelect<T extends boolean = true> {
+  oldPath?: T;
+  newPath?: T;
+  active?: T;
+  note?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "audit-logs_select".
  */
 export interface AuditLogsSelect<T extends boolean = true> {
@@ -3216,18 +3228,6 @@ export interface AuditLogsSelect<T extends boolean = true> {
   changedFields?: T;
   actor?: T;
   actorEmail?: T;
-  updatedAt?: T;
-  createdAt?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "analytics-daily_select".
- */
-export interface AnalyticsDailySelect<T extends boolean = true> {
-  day?: T;
-  kind?: T;
-  key?: T;
-  count?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -3365,32 +3365,35 @@ export interface Homepage {
         }[]
       | null;
   };
+  /**
+   * Buka bagian blok yang ingin diubah. Kosongkan untuk memakai teks bawaan.
+   */
   texts?: {
     programsEyebrow?: string | null;
     programsHeading?: string | null;
     programsIntro?: string | null;
     studentLifeEyebrow?: string | null;
-    achievementsEyebrow?: string | null;
-    achievementsText?: string | null;
-    infoEyebrow?: string | null;
-    newsEyebrow?: string | null;
-    communityEyebrow?: string | null;
-    alumniTitle?: string | null;
-    alumniText?: string | null;
-    ctaEyebrow?: string | null;
     studentLifeHeading?: string | null;
+    achievementsEyebrow?: string | null;
     achievementsHeading?: string | null;
-    newsHeading?: string | null;
-    communityHeading?: string | null;
-    communityText?: string | null;
-    communityImage?: (number | null) | Media;
+    achievementsText?: string | null;
     /**
      * Opsional. Tampil sebagai tumpukan foto di blok prestasi.
      */
     achievementsAlbum?: (number | null) | Album;
+    infoEyebrow?: string | null;
+    newsEyebrow?: string | null;
+    newsHeading?: string | null;
     mediaEyebrow?: string | null;
     mediaHeading?: string | null;
     mediaIntro?: string | null;
+    communityEyebrow?: string | null;
+    communityHeading?: string | null;
+    communityText?: string | null;
+    communityImage?: (number | null) | Media;
+    alumniTitle?: string | null;
+    alumniText?: string | null;
+    ctaEyebrow?: string | null;
     ctaHeading?: string | null;
     ctaText?: string | null;
   };
@@ -3419,6 +3422,46 @@ export interface Homepage {
       }[]
     | null;
   _status?: ('draft' | 'published') | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "navigation".
+ */
+export interface Navigation {
+  id: number;
+  header?:
+    | {
+        label: string;
+        /**
+         * Gunakan https://… atau tautan internal yang diawali "/".
+         */
+        href: string;
+        children?:
+          | {
+              label: string;
+              /**
+               * Gunakan https://… atau tautan internal yang diawali "/".
+               */
+              href: string;
+              description?: string | null;
+              id?: string | null;
+            }[]
+          | null;
+        id?: string | null;
+      }[]
+    | null;
+  footer?:
+    | {
+        label: string;
+        /**
+         * Gunakan https://… atau tautan internal yang diawali "/".
+         */
+        href: string;
+        id?: string | null;
+      }[]
+    | null;
   updatedAt?: string | null;
   createdAt?: string | null;
 }
@@ -3469,46 +3512,6 @@ export interface SiteSetting {
          * Gunakan https://… atau tautan internal yang diawali "/".
          */
         url: string;
-        id?: string | null;
-      }[]
-    | null;
-  updatedAt?: string | null;
-  createdAt?: string | null;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "navigation".
- */
-export interface Navigation {
-  id: number;
-  header?:
-    | {
-        label: string;
-        /**
-         * Gunakan https://… atau tautan internal yang diawali "/".
-         */
-        href: string;
-        children?:
-          | {
-              label: string;
-              /**
-               * Gunakan https://… atau tautan internal yang diawali "/".
-               */
-              href: string;
-              description?: string | null;
-              id?: string | null;
-            }[]
-          | null;
-        id?: string | null;
-      }[]
-    | null;
-  footer?:
-    | {
-        label: string;
-        /**
-         * Gunakan https://… atau tautan internal yang diawali "/".
-         */
-        href: string;
         id?: string | null;
       }[]
     | null;
@@ -3629,24 +3632,24 @@ export interface HomepageSelect<T extends boolean = true> {
         programsHeading?: T;
         programsIntro?: T;
         studentLifeEyebrow?: T;
+        studentLifeHeading?: T;
         achievementsEyebrow?: T;
+        achievementsHeading?: T;
         achievementsText?: T;
+        achievementsAlbum?: T;
         infoEyebrow?: T;
         newsEyebrow?: T;
-        communityEyebrow?: T;
-        alumniTitle?: T;
-        alumniText?: T;
-        ctaEyebrow?: T;
-        studentLifeHeading?: T;
-        achievementsHeading?: T;
         newsHeading?: T;
-        communityHeading?: T;
-        communityText?: T;
-        communityImage?: T;
-        achievementsAlbum?: T;
         mediaEyebrow?: T;
         mediaHeading?: T;
         mediaIntro?: T;
+        communityEyebrow?: T;
+        communityHeading?: T;
+        communityText?: T;
+        communityImage?: T;
+        alumniTitle?: T;
+        alumniText?: T;
+        ctaEyebrow?: T;
         ctaHeading?: T;
         ctaText?: T;
       };
@@ -3659,6 +3662,37 @@ export interface HomepageSelect<T extends boolean = true> {
         id?: T;
       };
   _status?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "navigation_select".
+ */
+export interface NavigationSelect<T extends boolean = true> {
+  header?:
+    | T
+    | {
+        label?: T;
+        href?: T;
+        children?:
+          | T
+          | {
+              label?: T;
+              href?: T;
+              description?: T;
+              id?: T;
+            };
+        id?: T;
+      };
+  footer?:
+    | T
+    | {
+        label?: T;
+        href?: T;
+        id?: T;
+      };
   updatedAt?: T;
   createdAt?: T;
   globalType?: T;
@@ -3689,37 +3723,6 @@ export interface SiteSettingsSelect<T extends boolean = true> {
         platform?: T;
         handle?: T;
         url?: T;
-        id?: T;
-      };
-  updatedAt?: T;
-  createdAt?: T;
-  globalType?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "navigation_select".
- */
-export interface NavigationSelect<T extends boolean = true> {
-  header?:
-    | T
-    | {
-        label?: T;
-        href?: T;
-        children?:
-          | T
-          | {
-              label?: T;
-              href?: T;
-              description?: T;
-              id?: T;
-            };
-        id?: T;
-      };
-  footer?:
-    | T
-    | {
-        label?: T;
-        href?: T;
         id?: T;
       };
   updatedAt?: T;
@@ -3804,20 +3807,16 @@ export interface TaskSchedulePublish {
           value: number | Faq;
         } | null)
       | ({
-          relationTo: 'albums';
-          value: number | Album;
+          relationTo: 'services';
+          value: number | Service;
         } | null)
       | ({
           relationTo: 'guides';
           value: number | Guide;
         } | null)
       | ({
-          relationTo: 'services';
-          value: number | Service;
-        } | null)
-      | ({
-          relationTo: 'testimonials';
-          value: number | Testimonial;
+          relationTo: 'staff';
+          value: number | Staff;
         } | null)
       | ({
           relationTo: 'programs';
@@ -3832,16 +3831,20 @@ export interface TaskSchedulePublish {
           value: number | Facility;
         } | null)
       | ({
-          relationTo: 'staff';
-          value: number | Staff;
-        } | null)
-      | ({
           relationTo: 'achievements';
           value: number | Achievement;
         } | null)
       | ({
           relationTo: 'student-works';
           value: number | StudentWork;
+        } | null)
+      | ({
+          relationTo: 'testimonials';
+          value: number | Testimonial;
+        } | null)
+      | ({
+          relationTo: 'albums';
+          value: number | Album;
         } | null)
       | ({
           relationTo: 'media-items';
