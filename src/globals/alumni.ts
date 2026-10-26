@@ -183,6 +183,7 @@ export const AlumniPage: GlobalConfig = {
                 { name: 'caption', type: 'text', label: 'Keterangan' },
               ],
             },
+            { name: 'photoCredit', type: 'text', label: 'Kredit foto', admin: { description: 'Tampil di bawah galeri, mis. "Foto kegiatan: Instagram @ika_kps". Kosong = tidak tampil.' } },
             {
               type: 'row',
               fields: [

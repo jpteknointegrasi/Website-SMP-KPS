@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { findBySlug, getAlumniPage, getGlobals, getHomepage, listAlumniEvents, listCollection } from '@/lib/queries'
 import { EventFacts, eventInvitation } from '@/components/sections/EventBanner'
 import { Countdown } from '@/components/ui/motion'
+import { SectionNav } from '@/components/layout/SectionNav'
 import { Container } from '@/components/ui/bits'
 import { PageBlocks } from '@/components/content/PageBlocks'
 import { Img } from '@/components/ui/Img'
@@ -97,19 +98,20 @@ export default async function Page() {
 
   return (
     <>
+      <SectionNav
+        label="Bagian halaman alumni"
+        items={[
+          ...(featured ? [{ id: 'acara', label: 'Acara' }] : []),
+          { id: 'tentang', label: 'Tentang' },
+          { id: 'portal', label: 'Portal Alumni' },
+          { id: 'pengurus', label: 'Pengurus' },
+          { id: 'kegiatan', label: 'Kegiatan' },
+          { id: 'galeri', label: 'Galeri' },
+          { id: 'bergabung', label: 'Bergabung' },
+        ]}
+      />
       <section className="ika-hero" aria-labelledby="ika-title">
         <Container>
-          <nav className="ika-nav" aria-label="Bagian halaman alumni">
-            <ul>
-              {featured ? <li><a href="#acara">Acara</a></li> : null}
-              <li><a href="#tentang">Tentang</a></li>
-              <li><a href="#portal">Portal Alumni</a></li>
-              <li><a href="#pengurus">Pengurus</a></li>
-              <li><a href="#kegiatan">Kegiatan</a></li>
-              <li><a href="#galeri">Galeri</a></li>
-              <li><a href="#bergabung">Bergabung</a></li>
-            </ul>
-          </nav>
           <div className="ika-hero__grid">
             <div className="ika-hero__copy">
               <nav className="crumbs" aria-label="Breadcrumb">
@@ -339,7 +341,7 @@ export default async function Page() {
               </ul>
             </div>
           ) : null}
-          {usingDefaultGallery || activities === D.activities ? <p className="ika-credit">Foto kegiatan dan poster: Instagram @ika_kps.</p> : null}
+          {cms.photoCredit || usingDefaultGallery ? <p className="ika-credit">{cms.photoCredit || D.photoCredit}</p> : null}
         </Container>
       </section>
 

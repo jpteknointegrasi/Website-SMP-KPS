@@ -3562,6 +3562,10 @@ export interface AlumniPage {
         id?: string | null;
       }[]
     | null;
+  /**
+   * Tampil di bawah galeri, mis. "Foto kegiatan: Instagram @ika_kps". Kosong = tidak tampil.
+   */
+  photoCredit?: string | null;
   ctaHeading?: string | null;
   ctaText?: string | null;
   updatedAt?: string | null;
@@ -3872,6 +3876,7 @@ export interface AlumniPageSelect<T extends boolean = true> {
         caption?: T;
         id?: T;
       };
+  photoCredit?: T;
   ctaHeading?: T;
   ctaText?: T;
   updatedAt?: T;

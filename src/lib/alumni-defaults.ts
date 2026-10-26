@@ -17,7 +17,7 @@ export const ALUMNI_DEFAULTS = {
   headingAccent: 'Sejuta Cerita.',
   tagline: 'Connect • Collaborate • Contribute',
   intro: 'Ruang silaturahmi, kolaborasi, dan kontribusi keluarga besar alumni KPS.',
-  heroImage: pic('silaturahmi-dinner', 632, 842, 'Para alumni berfoto bersama pada Dinner IKA KPS di Kampung Pasir, Balikpapan'),
+  heroImage: pic('silaturahmi-dinner', 1086, 1448, 'Para alumni berfoto bersama pada Dinner IKA KPS di Kampung Pasir, Balikpapan'),
   heroCaption: 'Silaturahmi keluarga besar IKA KPS',
   aboutHeading: 'Tentang IKA KPS',
   aboutText:
@@ -52,7 +52,7 @@ export const ALUMNI_DEFAULTS = {
       title: 'Silaturahmi Alumni',
       category: 'Kebersamaan',
       summary: 'Pertemuan alumni dalam suasana hangat untuk berbagi cerita, menjaga persaudaraan, dan mempererat hubungan lintas angkatan.',
-      image: pic('silaturahmi-dinner', 632, 842, 'Para alumni berfoto bersama pada Dinner IKA KPS'),
+      image: pic('silaturahmi-dinner', 1086, 1448, 'Para alumni berfoto bersama pada Dinner IKA KPS'),
       url: 'https://www.instagram.com/ika_kps/p/DdArQmBj-xZ/',
     },
   ],
@@ -82,6 +82,7 @@ export const ALUMNI_DEFAULTS = {
     pic('arsip-8-hari', 283, 378, 'Poster arsip: 8 hari menuju pelantikan IKA KPS'),
     pic('arsip-7-hari', 283, 378, 'Poster arsip: 7 hari menuju pelantikan IKA KPS'),
   ],
+  photoCredit: 'Foto kegiatan dan poster: Instagram @ika_kps.',
   ctaHeading: 'Sudah terhubung dengan keluarga KPS?',
   ctaText: 'Mari kembali terhubung, berbagi kabar, dan bergerak bersama keluarga besar IKA KPS.',
 }
