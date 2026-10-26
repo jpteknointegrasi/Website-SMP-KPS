@@ -54,7 +54,7 @@ await saveBranding(
   { shortName: cur.shortName || 'SMP Nasional KPS', city: cur.city || 'Balikpapan', address: cur.address || '[Alamat sekolah]', phone: cur.phone || '[Kontak sekolah]' },
   { logo: logo ? { name: logo, buffer: readFileSync(logo) } : null, hero: foto ? { name: foto, buffer: readFileSync(foto) } : null },
 )
-await putSetting(db, 'modules', { ...DEFAULT_MODULES, buku_induk: 'active', kartu: 'active', penerimaan: 'pilot', akademik: 'pilot', nilai_rapor: 'pilot', pengumuman: 'pilot', layanan: 'pilot', keuangan: 'configuring', bk: 'configuring', ekskul: 'pilot', kesiswaan: 'configuring', perpustakaan: 'configuring', uks: 'configuring', organisasi: 'configuring', alumni: 'configuring' }, sysId)
+await putSetting(db, 'modules', { ...DEFAULT_MODULES, buku_induk: 'active', kartu: 'active', penerimaan: 'pilot', akademik: 'pilot', nilai_rapor: 'pilot', pengumuman: 'pilot', layanan: 'pilot', keuangan: 'configuring', bk: 'pilot', ekskul: 'pilot', kesiswaan: 'pilot', perpustakaan: 'configuring', uks: 'configuring', organisasi: 'configuring', alumni: 'configuring' }, sysId)
 
 // admin staff (CMS e-mail) with broad roles
 const admin = arg('--admin')
@@ -226,12 +226,11 @@ if (!(await db.select().from(admissionCycles).where(eq(admissionCycles.code, 'PP
       // learning: material + tasks in MTK VII A
       const mtk = asg.find((a) => a.homeroom === 'VII A' && a.subjectCode === 'MTK')!
       await learn.saveMaterial(ctx, { assignmentId: mtk.a.id, title: 'Bilangan bulat dan operasinya', unit: 'Bab 1', body: 'Ringkasan materi: penjumlahan, pengurangan, perkalian dan pembagian bilangan bulat beserta contoh soal.', links: [], publish: true }, [])
-      const t1 = await learn.saveTask(ctx, { assignmentId: mtk.a.id, title: 'Latihan bilangan bulat', kind: 'tugas', instructions: 'Kerjakan soal nomor 1–10 di buku paket halaman 12. Unggah foto jawaban atau ketik jawabanmu.', dueAt: new Date(Date.now() + 3 * 86400_000), maxScore: 100, allowLate: true, submissionType: 'file_or_text', publish: true }, [])
+      await learn.saveTask(ctx, { assignmentId: mtk.a.id, title: 'Latihan bilangan bulat', kind: 'tugas', instructions: 'Kerjakan soal nomor 1–10 di buku paket halaman 12. Unggah foto jawaban atau ketik jawabanmu.', dueAt: new Date(Date.now() + 3 * 86400_000), maxScore: 100, allowLate: true, submissionType: 'file_or_text', publish: true }, [])
       const t2 = await learn.saveTask(ctx, { assignmentId: mtk.a.id, title: 'Kuis pecahan', kind: 'kuis', instructions: 'Kuis singkat 10 soal.', dueAt: new Date(Date.now() + 86400_000), maxScore: 100, allowLate: false, submissionType: 'file_or_text', publish: true }, [])
       await learn.submitTask(sctx, t2, 'Jawaban kuis: 1) 3/4 2) 1/2 … (contoh)', [])
       await db.update(tasksT).set({ dueAt: new Date(Date.now() - 2 * 86400_000) }).where(eq(tasksT.id, t2))
       await learn.reviewSubmission(ctx, t2, alya.id, { score: 85, feedback: 'Bagus! Perhatikan penyederhanaan pecahan di soal 7.', needsRevision: false })
-      void t1
 
       // announcements & a service request
       await comms.saveAnnouncement(ctx, { title: 'Asesmen Tengah Semester Ganjil', body: 'Asesmen Tengah Semester dilaksanakan dua pekan lagi. Jadwal per mata pelajaran akan dibagikan wali kelas. Mohon orang tua mendampingi anak belajar di rumah.', audience: { type: 'families' }, publishAt: null, requiresAck: true, pinned: true, publish: true }, [])
@@ -256,6 +255,53 @@ if (!(await db.select().from(admissionCycles).where(eq(admissionCycles.code, 'PP
       if (wd(day) === 0 || wd(day) === 6) continue
       n++
       await att.saveDaily(ctx, room['VII A']!, day, pupils.map((p, i) => ({ studentId: p.studentId, status: (i + k) % 9 === 0 ? 'S' : (i + k) % 13 === 0 ? 'I' : 'H', note: null })))
+    }
+  }
+}
+// ---------- P3: grades & report cards, extracurricular, achievements, BK (synthetic) ----------
+{
+  const { gradeItems, accounts: accT2, students: stT } = await import('../src/db/schema')
+  if (!(await db.select({ id: gradeItems.id }).from(gradeItems).limit(1)).length) {
+    const G = await import('../src/modules/grades/service')
+    const X = await import('../src/modules/activities/service')
+    const K = await import('../src/modules/affairs/service')
+    const BK = await import('../src/modules/counseling/service')
+    const { homeroomStudents } = await import('../src/modules/scope')
+    const { today: todayOf } = await import('../src/server/time')
+    const d0 = todayOf(ctx.tz)
+    const ovG = await A.academicOverview(ctx)
+    const term1 = ovG.terms.find((t) => t.yearId === yearId && t.ordinal === 1)!
+    const asgG = (await A.assignmentsOfTerm(ctx, term1.id)).filter((a) => a.homeroom === 'VII A')
+    const pupils = await homeroomStudents(db, room['VII A']!, d0)
+    const DESC = ['Menunjukkan penguasaan yang sangat baik dan mampu menerapkan konsep pada soal kontekstual.', 'Menunjukkan penguasaan yang baik; perlu penguatan pada penerapan konsep.', 'Cukup menguasai materi; perlu bimbingan pada beberapa kompetensi.']
+    for (const [ai, a] of asgG.entries()) {
+      const it1 = await G.saveItem(ctx, { assignmentId: a.a.id, kind: 'sumatif', title: 'Sumatif Bab 1', date: '2026-08-28', maxScore: 100, weight: 1 })
+      const it2 = await G.saveItem(ctx, { assignmentId: a.a.id, kind: 'sts', title: 'STS Ganjil', date: '2026-10-05', maxScore: 100, weight: 1 })
+      await G.saveScores(ctx, it1, pupils.map((p, i) => ({ studentId: p.studentId, score: 72 + ((i * 7 + ai * 3) % 25) })))
+      await G.saveScores(ctx, it2, pupils.map((p, i) => ({ studentId: p.studentId, score: 70 + ((i * 5 + ai * 11) % 28) })))
+      if (a.subjectCode !== 'INF') {
+        const book = await G.gradebook(ctx, a.a.id)
+        await G.saveResults(ctx, a.a.id, book.rows.map((r) => ({ studentId: r.studentId, finalScore: null, adjustReason: null, description: DESC[r.computed! >= 88 ? 0 : r.computed! >= 78 ? 1 : 2]! })))
+        await G.submitResults(ctx, a.a.id)
+      }
+    }
+    // extracurricular
+    const coach = (await db.select().from(staffMembers).where(eq(staffMembers.email, `guru1@${slug}.contoh.invalid`)))[0]
+    const pramuka = await X.saveActivity(ctx, { name: 'Pramuka', category: 'wajib', description: 'Kepramukaan untuk seluruh siswa kelas VII.', coachId: coach?.id ?? null, schedule: 'Jumat 14.00–16.00', location: 'Lapangan', capacity: null, requiresConsent: false, status: 'open' })
+    await X.saveActivity(ctx, { name: 'Futsal', category: 'minat', description: 'Latihan teknik dan pertandingan persahabatan.', coachId: coach?.id ?? null, schedule: 'Selasa 15.00–17.00', location: 'Lapangan futsal', capacity: 20, requiresConsent: true, status: 'open' })
+    await X.saveActivity(ctx, { name: 'Paduan Suara', category: 'minat', description: 'Vokal grup untuk upacara dan lomba.', coachId: null, schedule: 'Rabu 14.00–15.30', location: 'Ruang musik', capacity: 30, requiresConsent: true, status: 'open' })
+    const alyaG = (await db.select().from(stT).where(eq(stT.nis, '26001')))[0]
+    const wali = (await db.select().from(accT2).where(eq(accT2.login, 'wali.alya@contoh.invalid')))[0]
+    if (alyaG && wali) {
+      const wctx = makeCtx({ school, db, account: { kind: 'account', id: wali.id, personId: wali.personId, login: wali.login, name: 'Ibu Alya (contoh)', email: wali.email, emailVerified: true, mustChangePassword: false, sessionId: 'demo' } })
+      const m = await X.apply(wctx, pramuka, alyaG.id, null)
+      await X.decide(ctx, m, true, null)
+      await X.recordSession(ctx, pramuka, '2026-10-23', 'Baris-berbaris', { [alyaG.id]: 'H' })
+      await X.evaluate(ctx, pramuka, term1.id, [{ studentId: alyaG.id, predicate: 'Baik', description: 'Aktif dan disiplin.' }])
+      const ach = await K.submitAchievement(wctx, { studentId: alyaG.id, title: 'Juara 2 Lomba Cerdas Cermat (contoh)', field: 'akademik', level: 'kota', rank: 'Juara 2', organizer: 'Panitia contoh', date: '2026-09-19', publicConsent: true, file: null })
+      await K.reviewAchievement(ctx, ach, true, null)
+      await BK.requestCase(wctx, { studentId: alyaG.id, category: 'belajar', urgency: 'normal', request: 'Mohon bantuan mengatur waktu belajar di rumah (contoh).', preferredTime: 'Setelah pulang sekolah' })
+      await K.submitReport(wctx, { category: 'sarana', description: 'Kran air di toilet lantai 2 bocor sejak minggu lalu (contoh).', occurredOn: null, location: 'Toilet lantai 2', hideIdentity: false, file: null })
     }
   }
 }

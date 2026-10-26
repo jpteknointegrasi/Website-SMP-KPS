@@ -50,8 +50,8 @@ export const STAFF_NAV: Group[] = [
   {
     label: 'Kesiswaan',
     items: [
-      { label: 'Bimbingan & Konseling', href: '/staf/bk', icon: 'heart', perms: ['counseling', 'counseling.coordinate'], mod: 'bk' },
-      { label: 'Ekstrakurikuler', href: '/staf/ekskul', icon: 'ball', perms: ['activities.manage'], mod: 'ekskul', when: () => true },
+      { label: 'Bimbingan & Konseling', href: '/staf/bk', icon: 'heart', perms: ['counseling', 'counseling.coordinate', 'teach'], mod: 'bk' },
+      { label: 'Ekstrakurikuler', href: '/staf/ekskul', icon: 'ball', perms: ['activities.manage', 'activities.coach'], mod: 'ekskul' },
       { label: 'Kesiswaan', href: '/staf/kesiswaan', icon: 'star', perms: ['student_affairs', 'teach'], mod: 'kesiswaan' },
       { label: 'Organisasi & kegiatan', href: '/staf/organisasi', icon: 'flag', perms: ['organizations.manage'], mod: 'organisasi' },
       { label: 'Alumni', href: '/staf/alumni', icon: 'grad', perms: ['alumni.manage'], mod: 'alumni' },
@@ -92,6 +92,7 @@ export const FAMILY_NAV: Item[] = [
   { label: 'Layanan sekolah', href: '/keluarga/layanan', icon: 'inbox', mod: 'layanan' },
   { label: 'Tagihan', href: '/keluarga/tagihan', icon: 'wallet', mod: 'keuangan' },
   { label: 'Konseling (BK)', href: '/keluarga/bk', icon: 'heart', mod: 'bk' },
+  { label: 'Prestasi & laporan', href: '/keluarga/kesiswaan', icon: 'star', mod: 'kesiswaan' },
   { label: 'Perpustakaan', href: '/keluarga/perpustakaan', icon: 'library', mod: 'perpustakaan' },
   { label: 'Data siswa', href: '/keluarga/data', icon: 'user', mod: 'buku_induk' },
   { label: 'Penerimaan siswa baru', href: '/keluarga/penerimaan', icon: 'clipboard', mod: 'penerimaan' },

@@ -422,3 +422,5 @@ form.inline { display: inline; }
 .agenda--compact li.is-now { box-shadow: none; background: var(--info-bg); border-radius: 8px; padding-left: 8px; }
 .agenda--compact .grow { display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap; }
 .agenda--compact .grow small { display: inline; }
+/* baseline for bare controls (outside .fld); zero specificity so component styles win */
+:where(form) :where(input:not([type]), input[type='text'], input[type='number'], input[type='date'], input[type='email'], select, textarea) { border: 1px solid var(--line); border-radius: 8px; padding: 7px 9px; font: inherit; font-size: 0.88rem; background: #fff; color: var(--ink); }

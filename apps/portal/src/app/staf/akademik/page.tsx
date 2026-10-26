@@ -1,7 +1,7 @@
 import { staffPage } from '@/server/request'
 import { academicOverview, assignmentsOfTerm, homeroomsOfYear, staffOptions } from '@/modules/academic/service'
 import { fmtDate } from '@/server/time'
-import { ActionButton, ActionForm, Badge, Card, Check, Empty, Field, Flash, PageHead, Select, sp1, Submit, Tabs, type SP } from '@/ui/kit'
+import { ActionButton, ActionForm, Badge, Card, Check, Empty, Field, Flash, LinkBtn, PageHead, Select, sp1, Submit, Tabs, type SP } from '@/ui/kit'
 
 export const metadata = { title: 'Data akademik' }
 
@@ -23,7 +23,7 @@ export default async function Academic({ searchParams }: { searchParams: Promise
   const back = `${base}?tab=${tab}${year ? `&tahun=${year.id}` : ''}`
   return (
     <>
-      <PageHead title="Data akademik" sub="Tahun ajaran, rombel, mata pelajaran dan penugasan mengajar." />
+      <PageHead title="Data akademik" sub="Tahun ajaran, rombel, mata pelajaran dan penugasan mengajar." actions={<LinkBtn tone="ghost" icon="grad" href="/staf/akademik/kenaikan">Kenaikan kelas & kelulusan</LinkBtn>} />
       <Flash sp={sp} />
       <Tabs
         current={`${base}?tab=${tab}`}

@@ -29,6 +29,13 @@
       "when": 1793044143183,
       "tag": "0003_akademik_harian",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1793045536706,
+      "tag": "0004_nilai_rapor_kesiswaan",
+      "breakpoints": true
     }
   ]
 }
