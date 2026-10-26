@@ -489,9 +489,13 @@ figcaption, .caption { font-size: 0.9rem; color: var(--text-2); margin-top: 8px;
 .nav > ul > li > a:hover { background: var(--teal-soft); color: var(--teal-ink-2); }
 .nav > ul > li > a.is-active { color: var(--teal-ink); box-shadow: inset 0 -2px 0 var(--gold); border-radius: 0; }
 .nav__chev { opacity: 0.6; transition: transform 0.2s; }
-.has-sub:hover .nav__chev, .has-sub:focus-within .nav__chev { transform: rotate(180deg); }
+.has-sub:hover .nav__chev, .has-sub:has(:focus-visible) .nav__chev { transform: rotate(180deg); }
 .nav__sub { position: absolute; left: -8px; top: 100%; padding-top: 8px; min-width: 260px; opacity: 0; visibility: hidden; transform: translateY(6px); transition: opacity 0.18s, transform 0.18s var(--ease), visibility 0.18s; }
-.has-sub:hover .nav__sub, .has-sub:focus-within .nav__sub { opacity: 1; visibility: visible; transform: none; }
+/* open on hover, or on keyboard focus (:focus-visible) — not on a leftover mouse-click focus */
+.has-sub:hover .nav__sub, .has-sub:has(:focus-visible) .nav__sub { opacity: 1; visibility: visible; transform: none; }
+/* only one dropdown at a time: the item under the mouse wins */
+.nav > ul:hover > .has-sub:not(:hover) .nav__sub { opacity: 0; visibility: hidden; transform: translateY(6px); }
+.nav > ul:hover > .has-sub:not(:hover) .nav__chev { transform: none; }
 .nav__sub ul { list-style: none; margin: 0; padding: 8px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; box-shadow: 0 24px 48px -24px rgba(15, 32, 54, 0.4); }
 .nav__sub a { display: block; padding: 9px 12px; border-radius: 8px; color: var(--ink); text-decoration: none; font: 600 14.5px var(--font-head); }
 .nav__sub a span { display: block; font: 400 13px var(--font-body); color: var(--text-2); }
