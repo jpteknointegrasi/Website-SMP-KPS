@@ -1228,3 +1228,6 @@ html.theme-switching *, html.theme-switching *::before, html.theme-switching *::
 .site-footer__legal { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 8px 18px; }
 .site-footer .site-footer__admin { display: inline-flex; align-items: center; gap: 5px; padding: 2px 9px; border: 1px solid rgba(255, 255, 255, 0.22); border-radius: 999px; font-size: 12px; color: rgba(255, 255, 255, 0.75); }
 .site-footer .site-footer__admin:hover { color: #fff; border-color: var(--gold); text-decoration: none; }
+.community__actions { display: flex; flex-wrap: wrap; gap: 10px; }
+.community__photo a { display: block; height: 100%; }
+@media (max-width: 559px) { .community__actions .btn { flex: 1 1 100%; } }
