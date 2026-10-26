@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import React, { useEffect, useRef, useState } from 'react'
 import { Icon } from '../ui/Icon'
+import { ThemeToggle } from './ThemeToggle'
 
 type Item = {
   label: string
@@ -137,6 +138,7 @@ export const Header = ({
             <Link href="/cari" className="icon-btn" aria-label="Cari">
               <Icon name="search" size={20} />
             </Link>
+            <ThemeToggle />
             {portalUrl ? (
               <a
                 href={portalUrl}

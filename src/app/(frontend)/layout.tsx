@@ -8,6 +8,7 @@ import { Footer } from '@/components/layout/Footer'
 import { getFlags, getGlobals, getLinkFlags, hrefAllowed, listSocialAccounts } from '@/lib/queries'
 import { Analytics } from '@/components/ui/Analytics'
 import type { Media } from '@/payload-types'
+import { themeInitScript } from '@/lib/theme'
 
 export const dynamic = 'force-dynamic'
 
@@ -28,7 +29,14 @@ export const metadata: Metadata = {
   robots: process.env.NOINDEX === 'true' ? { index: false, follow: false } : undefined,
 }
 
-export const viewport: Viewport = { themeColor: '#142A46', width: 'device-width', initialScale: 1 }
+export const viewport: Viewport = {
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#142A46' },
+    { media: '(prefers-color-scheme: dark)', color: '#0b1828' },
+  ],
+  width: 'device-width',
+  initialScale: 1,
+}
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const [{ settings, nav }, flags, linkFlags] = await Promise.all([getGlobals(), getFlags(), getLinkFlags()])
@@ -40,7 +48,11 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const navFiltered = { ...nav, footer: (nav.footer ?? []).filter((f) => hrefAllowed(f.href, linkFlags)) }
   const logo = settings.logo && typeof settings.logo === 'object' ? (settings.logo as Media) : null
   return (
-    <html lang="id">
+    // data-theme is set by the inline script before hydration
+    <html lang="id" suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
+      </head>
       <body>
         <a href="#main" className="skip-link">
           Lewati ke konten utama
