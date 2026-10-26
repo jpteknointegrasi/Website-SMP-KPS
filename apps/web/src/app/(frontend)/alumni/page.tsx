@@ -1,6 +1,7 @@
 import { getSchoolNames } from '@/lib/queries'
 import { schoolMeta } from '@/lib/meta'
 import Link from 'next/link'
+import { AppAlumniStories } from '@/components/sections/portal'
 import { findBySlug, getGlobals, getHomepage, listCollection } from '@/lib/queries'
 import { PageHeader, Container } from '@/components/ui/bits'
 import { PageBlocks } from '@/components/content/PageBlocks'
@@ -47,6 +48,7 @@ export default async function Page() {
               </>
             )}
           </div>
+          <AppAlumniStories />
           {items.length ? (
             <>
               <h2 className="h2">Cerita alumni</h2>

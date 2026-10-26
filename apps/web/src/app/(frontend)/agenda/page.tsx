@@ -6,6 +6,7 @@ import { AUDIENCE, EVENT_AUDIENCE, EVENT_STATUS, dayParts, formatEventWhen, form
 import { requestTimezone, zoneLong } from '@/lib/tz'
 import { eventDayKeys, localYmd, monthGrid, parseMonth, shiftMonth, ymKey } from '@/lib/calendar'
 import type { Event, EventCategory } from '@/payload-types'
+import { AppCalendar } from '@/components/sections/portal'
 
 export const generateMetadata = schoolMeta(({ name }) => ({ title: 'Agenda & Kalender Akademik', description: `Kalender kegiatan ${name}: akademik, ujian, libur, penerimaan dan kegiatan sekolah.`, alternates: { canonical: '/agenda' } }))
 type SP = { searchParams: Promise<{ waktu?: string; status?: string; page?: string; tampilan?: string; bulan?: string; kategori?: string; sasaran?: string }> }
@@ -178,6 +179,7 @@ export default async function Page({ searchParams }: SP) {
               <Link key={k} className="chip" href={q({ status: k, page: undefined })} aria-current={status === k ? 'true' : undefined}>{v}</Link>
             ))}
           </nav>
+          {!past ? <AppCalendar /> : null}
           {events.length ? (
             [...groups.entries()].map(([m, list]) => (
               <div key={m} className="block">

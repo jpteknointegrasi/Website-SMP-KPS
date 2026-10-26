@@ -3,6 +3,7 @@ import { currentTenant } from '@/lib/payload'
 import { getSchoolNames } from '@/lib/queries'
 import { schoolMeta } from '@/lib/meta'
 import Link from 'next/link'
+import { AppAdmissionPaths } from '@/components/sections/portal'
 import { getCurrentAdmissions, getFlags, getGlobals, getLinkFlags, listFaqs } from '@/lib/queries'
 import { PageHeader, Container, EmptyState } from '@/components/ui/bits'
 import { RichText } from '@/components/ui/RichText'
@@ -75,6 +76,7 @@ export default async function Page() {
                   ) : null}
                 </div>
 
+                {viaPortal ? <AppAdmissionPaths /> : null}
                 {interestOn || visitsOn ? (
                   <div className="next-steps">
                     {interestOn ? (

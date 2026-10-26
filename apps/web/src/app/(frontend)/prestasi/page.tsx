@@ -1,5 +1,6 @@
 import { schoolMeta } from '@/lib/meta'
 import Link from 'next/link'
+import { AppAchievements } from '@/components/sections/portal'
 import type { Where } from 'payload'
 import { listCollection, findBySlug, listPosts } from '@/lib/queries'
 import { formatDate } from '@/lib/format'
@@ -95,6 +96,7 @@ export default async function Page({ searchParams }: SP) {
               action={archive ? { label: 'Lihat arsip dokumentasi', href: `/galeri/${archive.slug}` } : undefined}
             />
           )}
+          <AppAchievements />
           <Pagination page={page} totalPages={res.totalPages} base="/prestasi" params={{ tahun: sp.tahun, tingkat: sp.tingkat, kategori: sp.kategori }} />
           {archive && archive.cover ? (
             <div className="block image-text" style={{ marginTop: 56 }}>
