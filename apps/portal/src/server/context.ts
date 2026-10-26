@@ -2,10 +2,10 @@
  * Who is acting, for which school, against which database. Built per request (pages, routes) or directly in tests and
  * scripts. Every module receives a Ctx; nothing reads the request elsewhere.
  */
-import { and, eq, gt, isNull } from 'drizzle-orm'
+import { and, desc, eq, gt, isNull } from 'drizzle-orm'
 import type { SchoolInfo, StaffMember } from '@sekolahku/core'
 import type { SchoolDb } from '@/db/school-db'
-import { accountSessions, accounts, persons, staffMembers, staffRoles } from '@/db/schema'
+import { accountSessions, accounts, auditEvents, persons, staffMembers, staffRoles, supportGrants } from '@/db/schema'
 import { IMPLICIT_ROLES, permissionsOf, type Permission } from './roles'
 import { sha256 } from './secrets'
 import { forbidden, fail } from './errors'
@@ -19,6 +19,8 @@ export type StaffActor = {
   webRole: string
   roles: Set<string>
   perms: Set<Permission>
+  /** Platform operator under a school-issued, time-limited support grant: read-only, no restricted data. */
+  support?: { grantId: string; expiresAt: Date }
 }
 export type AccountActor = {
   kind: 'account'
@@ -94,6 +96,37 @@ export async function loadStaff(db: SchoolDb, m: StaffMember, now = new Date()):
     .where(and(eq(staffRoles.staffId, row.id), isNull(staffRoles.revokedAt)))
   const roles = new Set<string>([...granted.map((g) => g.role), ...(IMPLICIT_ROLES[m.role] ?? [])])
   return { kind: 'staff', id: row.id, webUserId: webId, name: row.displayName || m.name, email, webRole: m.role, roles, perms: permissionsOf(roles) }
+}
+
+/** Read-only permissions of a support grant: no restricted (BK/UKS) data, no finance, no writes. */
+const SUPPORT_PERMS: Permission[] = ['students.read', 'audit.view', 'dashboard.view']
+
+/**
+ * The platform operator (CMS Super Admin) inside this school's App, only while the school's App admin has issued a
+ * support grant to that e-mail (time-limited, revocable). Read-only; every visit is audited (§25, addendum v2.1).
+ */
+export async function loadSupport(db: SchoolDb, m: StaffMember, now = new Date()): Promise<StaffActor | null> {
+  const email = m.email.trim().toLowerCase()
+  const [g] = await db
+    .select()
+    .from(supportGrants)
+    .where(and(eq(supportGrants.operatorEmail, email), isNull(supportGrants.revokedAt), gt(supportGrants.expiresAt, now)))
+    .orderBy(desc(supportGrants.expiresAt))
+    .limit(1)
+  if (!g) return null
+  const key = `operator:${email}`
+  let [row] = await db.select().from(staffMembers).where(eq(staffMembers.email, key)).limit(1)
+  if (!row) [row] = await db.insert(staffMembers).values({ email: key, name: `Bantuan teknis (${m.name})`, active: false }).onConflictDoNothing().returning()
+  if (!row) [row] = await db.select().from(staffMembers).where(eq(staffMembers.email, key)).limit(1)
+  // audit the visit (at most every 15 minutes per grant)
+  const [last] = await db
+    .select({ at: auditEvents.occurredAt })
+    .from(auditEvents)
+    .where(and(eq(auditEvents.action, 'support.access'), eq(auditEvents.objectId, g.id)))
+    .orderBy(desc(auditEvents.occurredAt))
+    .limit(1)
+  if (!last || now.getTime() - last.at.getTime() > 900_000) await db.insert(auditEvents).values({ actorType: 'staff', actorId: row!.id, action: 'support.access', objectType: 'support_grant', objectId: g.id, meta: { operator: email } })
+  return { kind: 'staff', id: row!.id, webUserId: String(m.id), name: `Bantuan teknis (${m.name})`, email, webRole: 'superadmin', roles: new Set(['support']), perms: new Set(SUPPORT_PERMS), support: { grantId: g.id, expiresAt: g.expiresAt } }
 }
 
 /** The family/student account of a session cookie value (unexpired session, active account). */

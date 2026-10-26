@@ -4,6 +4,7 @@
  * repeated submit (double click, retry after a dropped connection) return the first result instead of acting twice.
  */
 import { eq, sql } from 'drizzle-orm'
+import { forbidden } from './errors'
 import { auditEvents, counters, notifications, operationKeys, outboxEvents } from '@/db/schema'
 import type { SchoolDb } from '@/db/school-db'
 import { actorRef, type Ctx } from './context'
@@ -27,6 +28,7 @@ export async function command<T>(
   opts: { key?: string | null; input?: unknown },
   run: (tx: Tx, fx: Effects) => Promise<T>,
 ): Promise<T> {
+  if (ctx.staff?.support) forbidden('Akses bantuan teknis hanya untuk melihat.')
   const audits: (typeof auditEvents.$inferInsert)[] = []
   const events: (typeof outboxEvents.$inferInsert)[] = []
   const notes: (typeof notifications.$inferInsert)[] = []

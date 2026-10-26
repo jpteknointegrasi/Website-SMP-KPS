@@ -54,7 +54,7 @@ await saveBranding(
   { shortName: cur.shortName || 'SMP Nasional KPS', city: cur.city || 'Balikpapan', address: cur.address || '[Alamat sekolah]', phone: cur.phone || '[Kontak sekolah]' },
   { logo: logo ? { name: logo, buffer: readFileSync(logo) } : null, hero: foto ? { name: foto, buffer: readFileSync(foto) } : null },
 )
-await putSetting(db, 'modules', { ...DEFAULT_MODULES, buku_induk: 'active', kartu: 'active', penerimaan: 'pilot', akademik: 'pilot', nilai_rapor: 'pilot', pengumuman: 'pilot', layanan: 'pilot', keuangan: 'configuring', bk: 'pilot', ekskul: 'pilot', kesiswaan: 'pilot', perpustakaan: 'configuring', uks: 'configuring', organisasi: 'configuring', alumni: 'configuring' }, sysId)
+await putSetting(db, 'modules', { ...DEFAULT_MODULES, buku_induk: 'active', kartu: 'active', penerimaan: 'pilot', akademik: 'pilot', nilai_rapor: 'pilot', pengumuman: 'pilot', layanan: 'pilot', keuangan: 'pilot', bk: 'pilot', ekskul: 'pilot', kesiswaan: 'pilot', perpustakaan: 'pilot', uks: 'pilot', organisasi: 'pilot', alumni: 'pilot' }, sysId)
 
 // admin staff (CMS e-mail) with broad roles
 const admin = arg('--admin')
@@ -302,6 +302,29 @@ if (!(await db.select().from(admissionCycles).where(eq(admissionCycles.code, 'PP
       await K.reviewAchievement(ctx, ach, true, null)
       await BK.requestCase(wctx, { studentId: alyaG.id, category: 'belajar', urgency: 'normal', request: 'Mohon bantuan mengatur waktu belajar di rumah (contoh).', preferredTime: 'Setelah pulang sekolah' })
       await K.submitReport(wctx, { category: 'sarana', description: 'Kran air di toilet lantai 2 bocor sejak minggu lalu (contoh).', occurredOn: null, location: 'Toilet lantai 2', hideIdentity: false, file: null })
+    }
+  }
+}
+// ---------- P4: library, UKS, organisations (synthetic) ----------
+{
+  const { libraryBooks, students: stT, accounts: accT3 } = await import('../src/db/schema')
+  if (!(await db.select({ id: libraryBooks.id }).from(libraryBooks).limit(1)).length) {
+    const L = await import('../src/modules/library/service')
+    const O = await import('../src/modules/organizations/service')
+    const H = await import('../src/modules/health/service')
+    await L.importBooks(ctx, ['PUS-001;Laskar Pelangi;Andrea Hirata;Bentang;2005;Novel;Rak A1;3', 'PUS-002;Bumi;Tere Liye;Gramedia;2014;Novel;Rak A1;2', 'PUS-003;Matematika Kelas VII;Tim Penulis;Kemendikbud;2022;Buku teks;Rak B2;10', 'PUS-004;IPA Kelas VII;Tim Penulis;Kemendikbud;2022;Buku teks;Rak B2;10', 'PUS-005;Atlas Indonesia dan Dunia;Tim Atlas;Contoh Pustaka;2020;Referensi;Rak C1;1', 'PUS-006;Kamus Besar Bahasa Indonesia;Badan Bahasa;Contoh Pustaka;2016;Referensi;Rak C1;2'].join('\n'))
+    const alyaP = (await db.select().from(stT).where(eq(stT.nis, '26001')))[0]
+    const books = await L.catalogue(db, null)
+    if (alyaP) {
+      await L.lend(ctx, books.find((b) => b.code === 'PUS-001')!.id, { studentId: alyaP.id })
+      const org = await O.saveOrg(ctx, { name: 'OSIS', description: 'Organisasi Siswa Intra Sekolah.', advisorId: (await db.select().from(staffMembers).where(eq(staffMembers.email, `guru2@${slug}.contoh.invalid`)))[0]?.id ?? null })
+      await O.setMember(ctx, org, alyaP.id, 'Sekretaris', true, true)
+      const sa = (await db.select().from(accT3).where(eq(accT3.login, 'siswa.alya')))[0]
+      if (sa) {
+        const sctx = makeCtx({ school, db, account: { kind: 'account', id: sa.id, personId: sa.personId, login: sa.login, name: 'Alya Putri', email: null, emailVerified: false, mustChangePassword: false, sessionId: 'demo' } })
+        await O.submitProposal(sctx, org, { title: 'Class meeting akhir semester', description: 'Lomba antarkelas (futsal, cerdas cermat, kebersihan kelas) setelah asesmen akhir semester.', startDate: '2026-12-14', endDate: '2026-12-16', location: 'Lingkungan sekolah', budget: 750000, participants: 'Seluruh siswa', isPublic: true })
+      }
+      await H.recordVisit(ctx, { studentId: alyaP.id, at: new Date(Date.now() - 2 * 86400_000), complaint: 'Pusing (contoh)', action: 'Istirahat 20 menit, minum air', notes: null, outcome: 'kembali_kelas', familyNote: 'Alya sempat beristirahat di UKS dan sudah kembali ke kelas.', notifyGuardian: true, followUpOn: null })
     }
   }
 }

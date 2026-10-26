@@ -180,10 +180,15 @@ export function SubmitPanel({ v, back }: { v: View; back: string }) {
 /** Bills and payment proof upload (family). */
 export function BillsPanel({ v, back, canPay }: { v: View; back: string; canPay: boolean }) {
   if (!v.bills.length) return null
+  return <BillsList bills={v.bills} back={back} canPay={canPay} />
+}
+
+/** Invoices with their payments and (when allowed) the proof-of-payment form. Shared by admissions and families. */
+export function BillsList({ bills, back, canPay, title = 'Tagihan' }: { bills: View['bills']; back: string; canPay: boolean; title?: string }) {
   return (
-    <Card title="Tagihan">
+    <Card title={title}>
       <ul className="list">
-        {v.bills.map((b) => (
+        {bills.map((b) => (
           <li key={b.id} style={{ alignItems: 'flex-start', flexWrap: 'wrap' }}>
             <div className="grow">
               <strong>{b.title}</strong> · {rupiah(b.amount)} <Status value={b.status} map={INVOICE_TONE} />

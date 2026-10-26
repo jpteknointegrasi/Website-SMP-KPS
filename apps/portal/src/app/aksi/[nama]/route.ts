@@ -39,6 +39,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ nama: s
     return go(withMessage('/', 'galat', 'Formulir tidak dapat dibaca (berkas terlalu besar?).'))
   }
   const back = safePath(data.get('_kembali')) ?? '/'
+  if (ctx.staff?.support) return go(withMessage(back, 'galat', 'Akses bantuan teknis hanya untuk melihat.'))
   let res: Response
   try {
     const r = await handler(ctx, new Form(data))

@@ -7,9 +7,9 @@ import { cache } from 'react'
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { hasProduct } from '@sekolahku/core'
-import { portalSchool, portalStaff } from '@/lib/context'
+import { portalOperator, portalSchool, portalStaff } from '@/lib/context'
 import { schoolDb } from '@/db/school-db'
-import { loadAccount, loadStaff, makeCtx, type Ctx } from './context'
+import { loadAccount, loadStaff, loadSupport, makeCtx, type Ctx } from './context'
 import type { Permission } from './roles'
 import { getBranding, getModules, moduleOpen, type ModuleCode } from './settings'
 
@@ -27,7 +27,8 @@ export const requestCtx = cache(async (): Promise<Ctx | null> => {
     return null
   }
   const member = await portalStaff()
-  const staff = member ? await loadStaff(db, member) : null
+  const operator = member ? null : await portalOperator()
+  const staff = member ? await loadStaff(db, member) : operator ? await loadSupport(db, operator) : null
   const account = await loadAccount(db, (await cookies()).get(SESSION_COOKIE)?.value)
   return makeCtx({ school, db, staff, account })
 })

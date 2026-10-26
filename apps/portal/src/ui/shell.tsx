@@ -4,6 +4,7 @@
  */
 import React from 'react'
 import Link from 'next/link'
+import { fmtDateTime } from '@/server/time'
 import { and, count, eq, isNull } from 'drizzle-orm'
 import { notifications } from '@/db/schema'
 import type { Ctx } from '@/server/context'
@@ -94,6 +95,8 @@ export const FAMILY_NAV: Item[] = [
   { label: 'Konseling (BK)', href: '/keluarga/bk', icon: 'heart', mod: 'bk' },
   { label: 'Prestasi & laporan', href: '/keluarga/kesiswaan', icon: 'star', mod: 'kesiswaan' },
   { label: 'Perpustakaan', href: '/keluarga/perpustakaan', icon: 'library', mod: 'perpustakaan' },
+  { label: 'Kesehatan (UKS)', href: '/keluarga/uks', icon: 'medical', mod: 'uks' },
+  { label: 'Organisasi siswa', href: '/keluarga/organisasi', icon: 'flag', mod: 'organisasi' },
   { label: 'Data siswa', href: '/keluarga/data', icon: 'user', mod: 'buku_induk' },
   { label: 'Penerimaan siswa baru', href: '/keluarga/penerimaan', icon: 'clipboard', mod: 'penerimaan' },
   { label: 'Akun saya', href: '/akun', icon: 'settings' },
@@ -194,6 +197,13 @@ export async function Shell({ ctx, branding, modules, children, who }: { ctx: Ct
           )}
         </div>
         <main id="main" className="content" tabIndex={-1}>
+          {ctx.staff?.support ? (
+            <div className="notice notice--warn" role="status" style={{ marginBottom: 16 }}>
+              <div>
+                <strong>Mode bantuan teknis — hanya melihat.</strong> Akses diberikan sekolah sampai {fmtDateTime(ctx.staff.support.expiresAt, ctx.tz)} dan setiap kunjungan tercatat di audit. Data BK, UKS dan keuangan tidak tersedia.
+              </div>
+            </div>
+          ) : null}
           {children}
         </main>
       </div>

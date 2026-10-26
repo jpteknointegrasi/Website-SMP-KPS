@@ -32,6 +32,14 @@ export const portalStaff = cache(async (): Promise<StaffMember | null> => {
   return m && m.role !== 'superadmin' && m.schoolId === school.id ? m : null
 })
 
+/** Platform Super Admin signed in on the CMS (only used together with a support grant issued by the school). */
+export const portalOperator = cache(async (): Promise<StaffMember | null> => {
+  const school = await portalSchool()
+  if (!school) return null
+  const m = await fetchStaff((await cookies()).get(STAFF_COOKIE)?.value)
+  return m && m.role === 'superadmin' ? m : null
+})
+
 /** State of the school's own App database, for status screens (never throws). */
 export const portalDbState = cache(async (): Promise<'ok' | SchoolDbError['code'] | 'unavailable'> => {
   const school = await portalSchool()
