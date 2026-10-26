@@ -99,7 +99,11 @@ export const Footer = ({ settings, nav, accounts = [] }: { settings: SiteSetting
         <span>
           © {new Date().getFullYear()} {settings.schoolName}. Semua hak dilindungi.
         </span>
-        <Link href="/kebijakan-privasi">Kebijakan Privasi</Link>
+        <span className="site-footer__legal">
+          <Link href="/kebijakan-privasi">Kebijakan Privasi</Link>
+          {/* Pintu masuk pengelola konten: kecil & redup, tidak diindeks mesin pencari */}
+          <a href="/admin" className="site-footer__admin" rel="nofollow">Admin CMS</a>
+        </span>
       </div>
     </footer>
   )
