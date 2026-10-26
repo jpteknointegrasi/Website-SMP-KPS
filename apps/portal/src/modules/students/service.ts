@@ -626,7 +626,13 @@ export async function myCorrections(ctx: Ctx) {
 
 export async function studentAudit(ctx: Ctx, studentId: string) {
   requireStaff(ctx, 'students.read')
-  return ctx.db.select().from(auditEvents).where(and(eq(auditEvents.objectType, 'student'), eq(auditEvents.objectId, studentId))).orderBy(desc(auditEvents.occurredAt)).limit(50)
+  // restricted modules (BK, UKS) never appear in the student history, whatever their object type
+  return ctx.db
+    .select()
+    .from(auditEvents)
+    .where(and(eq(auditEvents.objectType, 'student'), eq(auditEvents.objectId, studentId), sql`${auditEvents.action} NOT LIKE 'health.%' AND ${auditEvents.action} NOT LIKE 'counseling.%'`))
+    .orderBy(desc(auditEvents.occurredAt))
+    .limit(50)
 }
 
 export { linkedChildren }

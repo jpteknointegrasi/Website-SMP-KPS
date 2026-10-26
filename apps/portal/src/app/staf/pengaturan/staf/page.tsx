@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { asc, isNull } from 'drizzle-orm'
 import { staffMembers, staffRoles } from '@/db/schema'
 import { staffPage } from '@/server/request'
-import { ROLES, IMPLICIT_ROLES } from '@/server/roles'
+import { ROLES, IMPLICIT_ROLES, isGuardedRole } from '@/server/roles'
 import { fmtDateTime } from '@/server/time'
 import { roleOptions } from '@/modules/admin/service'
 import { ActionForm, Avatar, Badge, Card, Field, Flash, PageHead, Submit, type SP } from '@/ui/kit'
@@ -11,7 +11,7 @@ export const metadata = { title: 'Staf & peran' }
 
 /** ACC-01 (staf): App roles per staff member. Staff sign in with their CMS account; roles live here. */
 export default async function StaffList({ searchParams }: { searchParams: Promise<SP> }) {
-  const ctx = await staffPage('/staf/pengaturan/staf', ['staff.manage'])
+  const ctx = await staffPage('/staf/pengaturan/staf', ['staff.manage', 'roles.restricted'])
   const sp = await searchParams
   const rows = await ctx.db.select().from(staffMembers).orderBy(asc(staffMembers.name))
   const roles = await ctx.db.select().from(staffRoles).where(isNull(staffRoles.revokedAt))
@@ -60,6 +60,7 @@ export default async function StaffList({ searchParams }: { searchParams: Promis
             </tbody>
           </table>
         </Card>
+        {ctx.staff.perms.has('staff.manage') ? (
         <Card title="Daftarkan staf">
           <ActionForm action="staf.tambah" back="/staf/pengaturan/staf">
             <Field name="email" type="email" label="Email akun CMS staf" required hint="Staf masuk dengan akun CMS ber-email ini; peran langsung berlaku." />
@@ -76,15 +77,17 @@ export default async function StaffList({ searchParams }: { searchParams: Promis
                   .filter((r) => r.group === g)
                   .map((r) => (
                     <label key={r.value} className="check">
-                      <input type="checkbox" name="peran" value={r.value} />
+                      <input type="checkbox" name="peran" value={r.value} disabled={isGuardedRole(r.value)} />
                       <span>{r.label}</span>
                     </label>
                   ))}
               </fieldset>
             ))}
+            <p className="small muted">Peran pimpinan, BK dan UKS diberikan dari halaman staf setelah staf tersebut masuk pertama kali; peran BK/UKS hanya oleh pimpinan (atau Koordinator BK).</p>
             <Submit icon="plus">Daftarkan</Submit>
           </ActionForm>
         </Card>
+        ) : null}
       </div>
     </>
   )

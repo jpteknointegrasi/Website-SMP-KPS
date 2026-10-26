@@ -140,7 +140,9 @@ export async function createStudentInvoice(ctx: Ctx, i: { studentIds: string[]; 
   })
 }
 
+/** Invoices of an application (callers check application access) or of a student (checked here). */
 export async function invoicesFor(ctx: Ctx, where: { applicationId?: string; studentId?: string }) {
+  if (where.studentId && !hasPerm(ctx, 'finance.manage', 'finance.verify') && !(ctx.account && (await visibleStudentIds(ctx, 'finance')).has(where.studentId))) forbidden()
   const rows = await ctx.db
     .select()
     .from(invoices)

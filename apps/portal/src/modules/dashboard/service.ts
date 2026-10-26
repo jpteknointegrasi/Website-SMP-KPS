@@ -101,7 +101,7 @@ const csvCell = (v: unknown) => {
   const s = v === null || v === undefined ? '' : String(v)
   // neutralise spreadsheet formulas (CSV injection)
   const safe = /^[=+\-@\t\r]/.test(s) ? `'${s}` : s
-  return /[",\n;]/.test(safe) ? `"${safe.replace(/"/g, '""')}"` : safe
+  return /[",\r\n;]/.test(safe) ? `"${safe.replace(/"/g, '""')}"` : safe
 }
 const toCsv = (rows: unknown[][]) => '﻿' + rows.map((r) => r.map(csvCell).join(',')).join('\r\n') + '\r\n'
 

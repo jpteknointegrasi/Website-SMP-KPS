@@ -32,7 +32,7 @@ import { command, type Db } from '@/server/command'
 import { fail, forbidden, notFound } from '@/server/errors'
 import { getBranding } from '@/server/settings'
 import { recap } from '../attendance/service'
-import { homeroomStudents, visibleStudentIds } from '../scope'
+import { guardianAccounts, homeroomStudents, visibleStudentIds } from '../scope'
 import { sql } from 'drizzle-orm'
 import { today } from '@/server/time'
 
@@ -223,7 +223,7 @@ export async function releaseCards(ctx: Ctx, homeroomId: string, termId: string)
       const [st] = await tx.select({ accountId: students.accountId }).from(students).where(eq(students.id, c.studentId))
       const title = c.versionNo > 1 ? 'Rapor diperbarui' : 'Rapor sudah dapat dilihat'
       if (st?.accountId) fx.notify({ type: 'account', id: st.accountId }, { title, link: '/portal/keluarga/rapor' })
-      const gs = await tx.select({ accountId: guardians.accountId }).from(guardianLinks).innerJoin(guardians, eq(guardians.id, guardianLinks.guardianId)).where(and(eq(guardianLinks.studentId, c.studentId), eq(guardianLinks.status, 'active'), eq(guardianLinks.canViewAcademic, true)))
+      const gs = await guardianAccounts(tx, [c.studentId], today(ctx.tz, ctx.now), { academic: true })
       for (const g of gs) if (g.accountId) fx.notify({ type: 'account', id: g.accountId }, { title, link: `/portal/keluarga/rapor?anak=${c.studentId}` })
     }
     fx.event('reports.released', { homeroomId, termId, count: cards.length })
@@ -260,7 +260,10 @@ export async function reviewQueue(ctx: Ctx, termId: string) {
 /** Released versions of a student's report cards (family view), newest term first. */
 export async function releasedReports(ctx: Ctx, studentId: string) {
   if (ctx.account && !(await visibleStudentIds(ctx, 'academic')).has(studentId)) forbidden()
-  if (!ctx.account) requireStaff(ctx)
+  if (!ctx.account) {
+    requireStaff(ctx)
+    if (!hasPerm(ctx, 'reports.review', 'reports.release', 'academic.manage', 'students.read')) forbidden()
+  }
   const rows = await ctx.db
     .select({ v: reportCardVersions, c: reportCards, term: terms.name, termStart: terms.startDate })
     .from(reportCardVersions)

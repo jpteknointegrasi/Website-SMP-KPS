@@ -2,7 +2,7 @@
  * Attribute rules shared by modules (§25): which students a family account may see (verified, active guardian links
  * inside their validity period), which student an account is, which homerooms/assignments a teacher holds.
  */
-import { and, eq, gte, isNull, lte, or, sql } from 'drizzle-orm'
+import { and, eq, gte, inArray, isNull, lte, or, sql } from 'drizzle-orm'
 import { academicYears, classPlacements, enrollments, gradeLevels, guardianLinks, guardians, homerooms, persons, students, teachingAssignments, terms } from '@/db/schema'
 import type { Ctx } from '@/server/context'
 import type { Db } from '@/server/command'
@@ -133,4 +133,26 @@ export async function isHomeroomTeacherOf(ctx: Ctx, studentId: string, db: Db = 
   if (!p) return false
   const [h] = await db.select({ t: homerooms.homeroomTeacherId }).from(homerooms).where(eq(homerooms.id, p.homeroomId))
   return h?.t === ctx.staff.id
+}
+
+/**
+ * Guardian accounts currently linked to students (active status AND within the link's validity dates), optionally
+ * only links with academic access. The single source for notifying/addressing guardians.
+ */
+export async function guardianAccounts(db: Db, studentIds: string[], date: string, opts: { academic?: boolean } = {}) {
+  if (!studentIds.length) return []
+  const rows = await db
+    .select({ accountId: guardians.accountId, studentId: guardianLinks.studentId })
+    .from(guardianLinks)
+    .innerJoin(guardians, eq(guardians.id, guardianLinks.guardianId))
+    .where(
+      and(
+        inArray(guardianLinks.studentId, studentIds),
+        eq(guardianLinks.status, 'active'),
+        or(isNull(guardianLinks.validFrom), lte(guardianLinks.validFrom, date)),
+        or(isNull(guardianLinks.validTo), gte(guardianLinks.validTo, date)),
+        opts.academic ? eq(guardianLinks.canViewAcademic, true) : undefined,
+      ),
+    )
+  return rows.filter((r): r is { accountId: string; studentId: string } => Boolean(r.accountId))
 }

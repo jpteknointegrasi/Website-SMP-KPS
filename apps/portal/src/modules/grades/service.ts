@@ -222,6 +222,7 @@ export async function returnResults(ctx: Ctx, assignmentId: string, note: string
 
 /** Reviewed tasks of the assignment not yet in the grade book (for "ambil dari tugas"). */
 export async function importableTasks(ctx: Ctx, assignmentId: string) {
+  await assertTeacher(ctx.db, ctx, assignmentId)
   const ts = await ctx.db.select().from(tasks).where(and(eq(tasks.assignmentId, assignmentId), inArray(tasks.status, ['published', 'closed'])))
   const used = new Set((await ctx.db.select({ t: gradeItems.taskId }).from(gradeItems).where(eq(gradeItems.assignmentId, assignmentId))).map((x) => x.t))
   return ts.filter((t) => !used.has(t.id))

@@ -293,10 +293,10 @@ export function TextArea({ name, label, hint, required, className, value, rows =
     </label>
   )
 }
-export function Check({ name, label, checked, value = 'on' }: { name: string; label: React.ReactNode; checked?: boolean; value?: string }) {
+export function Check({ name, label, checked, value = 'on', disabled }: { name: string; label: React.ReactNode; checked?: boolean; value?: string; disabled?: boolean }) {
   return (
-    <label className="check">
-      <input type="checkbox" name={name} value={value} defaultChecked={checked} />
+    <label className="check" style={disabled ? { opacity: 0.6 } : undefined}>
+      <input type="checkbox" name={name} value={value} defaultChecked={checked} disabled={disabled} />
       <span>{label}</span>
     </label>
   )

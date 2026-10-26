@@ -144,12 +144,16 @@ export async function caseView(ctx: Ctx, id: string) {
   const c = row!.c
   const handler = canHandle(ctx, c)
   const peek = isCounselor(ctx) && !c.assignedTo
-  const homeroom = await isHomeroomTeacherOf(ctx, c.studentId)
   const requester = c.requestedByType === 'staff' && c.requestedById === ctx.staff!.id
-  if (!handler && !peek && !homeroom && !requester) forbidden()
   const sessions = await ctx.db.select({ s: counselingSessions, counselor: sql<string>`coalesce(${staffMembers.displayName}, ${staffMembers.name})` }).from(counselingSessions).innerJoin(staffMembers, eq(staffMembers.id, counselingSessions.counselorId)).where(eq(counselingSessions.caseId, id)).orderBy(desc(counselingSessions.date))
-  const visible = handler ? sessions : homeroom ? sessions.filter((x) => x.s.shareWithHomeroom).map((x) => ({ ...x, s: { ...x.s, notes: null } })) : []
-  return { ...row!, handler, peek, sessions: visible, sessionCount: sessions.length }
+  // the homeroom teacher only sees a case once a counsellor shared something with homeroom
+  const sharedHome = sessions.filter((x) => x.s.shareWithHomeroom)
+  const homeroom = sharedHome.length > 0 && (await isHomeroomTeacherOf(ctx, c.studentId))
+  if (!handler && !peek && !homeroom && !requester) forbidden()
+  const visible = handler ? sessions : homeroom ? sharedHome.map((x) => ({ ...x, s: { ...x.s, notes: null } })) : []
+  // non-handlers get no raw request (except an unassigned case for counsellors, or the staff requester's own text)
+  const safe = { ...c, request: handler || peek || requester ? c.request : '', closingSummary: handler || requester ? c.closingSummary : null }
+  return { ...row!, c: safe, handler, peek, sessions: visible, sessionCount: handler ? sessions.length : visible.length }
 }
 
 /** Family view: requests made by this account, plus the child's cases with summaries shared with guardians. */
@@ -170,7 +174,7 @@ export async function familyCases(ctx: Ctx, studentId: string) {
     status: c.status,
     createdAt: c.createdAt,
     request: mine.includes(c) ? c.request : null,
-    closingSummary: c.status === 'closed' && (mine.includes(c) || isGuardian) ? c.closingSummary : null,
+    closingSummary: c.status === 'closed' && mine.includes(c) ? c.closingSummary : null,
     summaries: shared.filter((s) => s.caseId === c.id).map((s) => ({ date: s.date, text: s.sharedSummary })),
   }))
 }

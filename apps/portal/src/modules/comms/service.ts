@@ -10,7 +10,7 @@ import { command, type Db, type Effects } from '@/server/command'
 import { fail, forbidden, notFound } from '@/server/errors'
 import { DOCS, fileAccess, IMAGES, saveFile } from '@/server/files'
 import { today } from '@/server/time'
-import { activeYear, homeroomStudents } from '../scope'
+import { activeYear, guardianAccounts, homeroomStudents } from '../scope'
 import { scheduled } from '../jobs'
 import type { SchoolDb } from '@/db/school-db'
 import type { SchoolInfo } from '@sekolahku/core'
@@ -87,11 +87,7 @@ async function recipients(tx: Db, ctx: Ctx, aud: Audience) {
   if (!studentIds.length) return [...out.values()]
   if (aud.type !== 'guardians') for (const s of await tx.select({ id: students.id, accountId: students.accountId }).from(students).where(inArray(students.id, studentIds))) if (s.accountId) out.set(`a:${s.accountId}`, { type: 'account', id: s.accountId, studentId: s.id })
   if (aud.type !== 'students')
-    for (const g of await tx
-      .select({ accountId: guardians.accountId, studentId: guardianLinks.studentId })
-      .from(guardianLinks)
-      .innerJoin(guardians, eq(guardians.id, guardianLinks.guardianId))
-      .where(and(inArray(guardianLinks.studentId, studentIds), eq(guardianLinks.status, 'active'))))
+    for (const g of await guardianAccounts(tx, studentIds, d))
       if (g.accountId) out.set(`a:${g.accountId}`, { type: 'account', id: g.accountId, studentId: g.studentId })
   return [...out.values()]
 }

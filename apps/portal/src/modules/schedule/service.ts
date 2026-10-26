@@ -292,7 +292,7 @@ export async function openLesson(ctx: Ctx, entryId: string, date: string) {
   return command(ctx, 'lesson.open', {}, async (tx, fx) => {
     const [ex] = await tx.select().from(lessonSessions).where(and(eq(lessonSessions.entryId, entryId), eq(lessonSessions.date, date)))
     if (ex) {
-      if (!(await canTeach(tx, ctx, ex.assignmentId, date, ex.homeroomId))) forbidden('Anda tidak mengajar kelas ini.')
+      if (!(await canTeach(tx, ctx, ex.assignmentId, { date, homeroomId: ex.homeroomId, entryId: ex.entryId }))) forbidden('Anda tidak mengajar kelas ini.')
       return ex.id
     }
     const [e] = await tx.select().from(timetableEntries).where(eq(timetableEntries.id, entryId))
@@ -314,16 +314,22 @@ export async function openLesson(ctx: Ctx, entryId: string, date: string) {
   })
 }
 
-/** The teacher of an assignment (or substitute on that date) — attribute rule for class content. */
-export async function canTeach(db: Db, ctx: Ctx, assignmentId: string, date?: string, homeroomId?: string) {
+/**
+ * The teacher of an active assignment, or — for one lesson — the substitute named for that date, homeroom and
+ * period (a substitute for one period does not get the other lessons of the day). Curriculum staff always.
+ */
+export async function canTeach(db: Db, ctx: Ctx, assignmentId: string, lesson?: { date: string; homeroomId: string; entryId: string }) {
   if (!ctx.staff) return false
+  if (hasPerm(ctx, 'academic.manage')) return true
   const [a] = await db.select().from(teachingAssignments).where(eq(teachingAssignments.id, assignmentId))
-  if (a?.teacherId === ctx.staff.id) return true
-  if (date && homeroomId) {
-    const [sub] = await db.select().from(scheduleExceptions).where(and(eq(scheduleExceptions.date, date), eq(scheduleExceptions.homeroomId, homeroomId), eq(scheduleExceptions.substituteTeacherId, ctx.staff.id)))
-    if (sub) return true
+  if (!a) return false
+  if (a.teacherId === ctx.staff.id && a.active) return true
+  if (lesson) {
+    const [e] = await db.select({ slotId: timetableEntries.slotId }).from(timetableEntries).where(eq(timetableEntries.id, lesson.entryId))
+    const subs = await db.select().from(scheduleExceptions).where(and(eq(scheduleExceptions.date, lesson.date), eq(scheduleExceptions.homeroomId, lesson.homeroomId), eq(scheduleExceptions.kind, 'pengganti'), eq(scheduleExceptions.substituteTeacherId, ctx.staff.id)))
+    if (subs.some((x) => !x.slotId || x.slotId === e?.slotId)) return true
   }
-  return hasPerm(ctx, 'academic.manage')
+  return false
 }
 
 export async function saveJournal(ctx: Ctx, sessionId: string, j: { topic: string; notes: string | null; realization: string }) {
@@ -333,7 +339,7 @@ export async function saveJournal(ctx: Ctx, sessionId: string, j: { topic: strin
   await command(ctx, 'lesson.journal', {}, async (tx, fx) => {
     const [s] = await tx.select().from(lessonSessions).where(eq(lessonSessions.id, sessionId))
     if (!s) notFound('Sesi')
-    if (!(await canTeach(tx, ctx, s!.assignmentId, s!.date, s!.homeroomId))) forbidden()
+    if (!(await canTeach(tx, ctx, s!.assignmentId, { date: s!.date, homeroomId: s!.homeroomId, entryId: s!.entryId }))) forbidden()
     await tx.update(lessonSessions).set({ topic: j.topic.trim(), notes: j.notes, realization: j.realization, journalAt: ctx.now }).where(eq(lessonSessions.id, sessionId))
     fx.audit('lesson.journal', 'lesson', sessionId)
   })
@@ -352,11 +358,12 @@ export async function lessonDetail(ctx: Ctx, sessionId: string) {
     .innerJoin(timeSlots, eq(timeSlots.id, timetableEntries.slotId))
     .where(eq(lessonSessions.id, sessionId))
   if (!r) notFound('Sesi')
-  if (!(await canTeach(ctx.db, ctx, r!.s.assignmentId, r!.s.date, r!.s.homeroomId))) forbidden()
+  if (!(await canTeach(ctx.db, ctx, r!.s.assignmentId, { date: r!.s.date, homeroomId: r!.s.homeroomId, entryId: r!.s.entryId }))) forbidden()
   return r!
 }
 
 export async function journalsOf(ctx: Ctx, assignmentId: string) {
+  if (!(await canTeach(ctx.db, ctx, assignmentId))) forbidden()
   return ctx.db.select().from(lessonSessions).where(and(eq(lessonSessions.assignmentId, assignmentId), ne(lessonSessions.status, 'cancelled'))).orderBy(desc(lessonSessions.date)).limit(60)
 }
 

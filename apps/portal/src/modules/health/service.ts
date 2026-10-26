@@ -9,8 +9,8 @@ import { guardianLinks, guardians, healthVisits, homerooms, persons, students } 
 import { requireStaff, type Ctx } from '@/server/context'
 import { command } from '@/server/command'
 import { fail, forbidden } from '@/server/errors'
-import { isDate, localDate } from '@/server/time'
-import { isHomeroomTeacherOf, placementOn, visibleStudentIds } from '../scope'
+import { isDate, localDate, today } from '@/server/time'
+import { guardianAccounts, isHomeroomTeacherOf, placementOn, visibleStudentIds } from '../scope'
 
 export const OUTCOMES = { kembali_kelas: 'Kembali ke kelas', istirahat: 'Istirahat di UKS', pulang: 'Dipulangkan', rujuk: 'Dirujuk ke fasilitas kesehatan' } as const
 
@@ -30,7 +30,7 @@ export async function recordVisit(ctx: Ctx, v: { studentId: string; at: Date; co
       .returning({ id: healthVisits.id })
     const title = `Kunjungan UKS: ${OUTCOMES[v.outcome as keyof typeof OUTCOMES]}`
     if (notify) {
-      const gs = await tx.select({ accountId: guardians.accountId }).from(guardianLinks).innerJoin(guardians, eq(guardians.id, guardianLinks.guardianId)).where(and(eq(guardianLinks.studentId, v.studentId), eq(guardianLinks.status, 'active')))
+      const gs = await guardianAccounts(tx, [v.studentId], today(ctx.tz, ctx.now))
       for (const g of gs) if (g.accountId) fx.notify({ type: 'account', id: g.accountId }, { title, body: v.familyNote?.trim() || undefined, link: `/portal/keluarga/uks?anak=${v.studentId}` })
     }
     if (v.outcome === 'pulang' || v.outcome === 'rujuk') {
@@ -38,7 +38,7 @@ export async function recordVisit(ctx: Ctx, v: { studentId: string; at: Date; co
       const [h] = p ? await tx.select().from(homerooms).where(eq(homerooms.id, p.homeroomId)) : []
       if (h?.homeroomTeacherId) fx.notify({ type: 'staff', id: h.homeroomTeacherId }, { title: `Siswa perwalian ${h.name} ${v.outcome === 'pulang' ? 'dipulangkan' : 'dirujuk'} dari UKS`, link: '/portal/staf/presensi' })
     }
-    fx.audit('health.visit', 'student', v.studentId, { outcome: v.outcome })
+    fx.audit('health.visit', 'health_visit', row!.id, { outcome: v.outcome })
     return row!.id
   })
 }

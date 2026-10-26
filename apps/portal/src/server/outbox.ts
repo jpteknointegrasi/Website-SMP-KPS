@@ -41,7 +41,9 @@ export async function processOutbox(db: SchoolDb, school: SchoolInfo, limit = 25
       const h = handlers.get(e.type)
       try {
         if (h) await h({ id: e.id, type: e.type, payload: e.payload }, { db, school })
-        await tx.update(outboxEvents).set({ processedAt: new Date(), attempts: e.attempts + 1, lastError: h ? null : 'no-consumer' }).where(eq(outboxEvents.id, e.id))
+        // delivered mail keeps no body (it may hold one-time links such as password resets)
+        const payload = e.type === 'mail.send' && h ? { ...(e.payload as Record<string, unknown>), text: '[terkirim]', link: null } : e.payload
+        await tx.update(outboxEvents).set({ processedAt: new Date(), attempts: e.attempts + 1, lastError: h ? null : 'no-consumer', payload }).where(eq(outboxEvents.id, e.id))
       } catch (err) {
         const attempts = e.attempts + 1
         const delay = Math.min(2 ** attempts * 30, 6 * 3600) * 1000

@@ -10,7 +10,7 @@ import { command, type Db } from '@/server/command'
 import { fail, forbidden, notFound } from '@/server/errors'
 import { DOCS, fileAccess, saveFile } from '@/server/files'
 import { addDays, isDate, today, weekday } from '@/server/time'
-import { homeroomStudents, linkedChildren, placementOn, visibleStudentIds } from '../scope'
+import { homeroomStudents, isHomeroomTeacherOf, linkedChildren, placementOn, visibleStudentIds } from '../scope'
 import { canTeach } from '../schedule/service'
 
 export const STATUSES = { H: 'Hadir', S: 'Sakit', I: 'Izin', A: 'Tanpa keterangan', D: 'Dispensasi' } as const
@@ -68,7 +68,7 @@ export async function saveLessonAttendance(ctx: Ctx, sessionId: string, entries:
   return command(ctx, 'attendance.lesson', {}, async (tx, fx) => {
     const [ls] = await tx.select().from(lessonSessions).where(eq(lessonSessions.id, sessionId))
     if (!ls) notFound('Sesi')
-    if (!(await canTeach(tx, ctx, ls!.assignmentId, ls!.date, ls!.homeroomId))) forbidden()
+    if (!(await canTeach(tx, ctx, ls!.assignmentId, { date: ls!.date, homeroomId: ls!.homeroomId, entryId: ls!.entryId }))) forbidden()
     const allowed = new Set((await homeroomStudents(tx, ls!.homeroomId, ls!.date)).map((x) => x.studentId))
     for (const e of entries) {
       if (!allowed.has(e.studentId) || !isStatus(e.status)) continue
@@ -84,6 +84,7 @@ export async function saveLessonAttendance(ctx: Ctx, sessionId: string, entries:
 export async function lessonRoll(ctx: Ctx, sessionId: string) {
   const [ls] = await ctx.db.select().from(lessonSessions).where(eq(lessonSessions.id, sessionId))
   if (!ls) notFound('Sesi')
+  if (!(await canTeach(ctx.db, ctx, ls!.assignmentId, { date: ls!.date, homeroomId: ls!.homeroomId, entryId: ls!.entryId }))) forbidden()
   const list = await homeroomStudents(ctx.db, ls!.homeroomId, ls!.date)
   const rows = await ctx.db.select().from(lessonAttendance).where(eq(lessonAttendance.sessionId, sessionId))
   const daily = list.length ? await ctx.db.select().from(dailyAttendance).where(and(eq(dailyAttendance.date, ls!.date), inArray(dailyAttendance.studentId, list.map((s) => s.studentId)))) : []
@@ -229,11 +230,18 @@ export async function homeroomRecap(ctx: Ctx, homeroomId: string, from: string, 
   return Promise.all(list.map(async (s) => ({ ...s, recap: await recap(ctx.db, s.studentId, from, to) })))
 }
 
+/** Staff reading one student's attendance: student-record or curriculum staff, or the student's homeroom teacher. */
+async function assertStaffSeesStudent(ctx: Ctx, studentId: string) {
+  requireStaff(ctx)
+  if (!hasPerm(ctx, 'students.read', 'academic.manage') && !(await isHomeroomTeacherOf(ctx, studentId))) forbidden()
+}
 export async function studentDays(ctx: Ctx, studentId: string, from: string, to: string) {
   if (ctx.account && !(await visibleStudentIds(ctx, 'academic')).has(studentId)) forbidden()
+  if (!ctx.account) await assertStaffSeesStudent(ctx, studentId)
   return ctx.db.select().from(dailyAttendance).where(and(eq(dailyAttendance.studentId, studentId), between(dailyAttendance.date, from, to))).orderBy(desc(dailyAttendance.date))
 }
 export async function studentLeaves(ctx: Ctx, studentId: string) {
   if (ctx.account && !(await visibleStudentIds(ctx, 'academic')).has(studentId)) forbidden()
+  if (!ctx.account) await assertStaffSeesStudent(ctx, studentId)
   return ctx.db.select().from(leaveRequests).where(eq(leaveRequests.studentId, studentId)).orderBy(desc(leaveRequests.createdAt)).limit(30)
 }

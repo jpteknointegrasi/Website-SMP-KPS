@@ -60,6 +60,13 @@ export async function orgs(db: Db) {
 
 export async function orgDetail(ctx: Ctx, id: string) {
   const o = await load(ctx.db, id)
+  if (ctx.staff) {
+    if (!canManage(ctx, o)) forbidden('Anda bukan pembina organisasi ini.')
+  } else {
+    const own = await ownStudent(ctx)
+    const [m] = own ? await ctx.db.select().from(orgMembers).where(and(eq(orgMembers.orgId, id), eq(orgMembers.studentId, own.id), eq(orgMembers.active, true))) : []
+    if (!m) forbidden()
+  }
   const members = await ctx.db
     .select({ m: orgMembers, name: persons.fullName, nis: students.nis })
     .from(orgMembers)

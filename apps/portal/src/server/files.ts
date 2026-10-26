@@ -91,6 +91,8 @@ export const fileAccess = (contextType: string, c: Checker) => void checkers.set
 export async function canReadFile(ctx: Ctx, f: FileRow) {
   if (f.deletedAt) return false
   if (f.classification === 'public') return true
+  // support access is for looking at screens, never for downloading pupils' documents
+  if (ctx.staff?.support) return false
   const c = checkers.get(f.contextType)
   return c ? c(ctx, f) : false
 }

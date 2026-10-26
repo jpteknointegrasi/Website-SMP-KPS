@@ -4,7 +4,7 @@ import { staffMembers, staffRoles, supportGrants } from '@/db/schema'
 import { requireStaff, type Ctx } from '@/server/context'
 import { command } from '@/server/command'
 import { fail, notFound } from '@/server/errors'
-import { isRole, ROLES } from '@/server/roles'
+import { isGuardedRole, isRole, mayChangeRole, ROLES } from '@/server/roles'
 import { DEFAULT_BRANDING, getBranding, getModules, MODULE_STATES, MODULES, putSetting, type Branding, type ModuleState } from '@/server/settings'
 import { saveFile, IMAGES } from '@/server/files'
 import { isEmail } from '../identity/service'
@@ -15,6 +15,7 @@ export async function addStaff(ctx: Ctx, input: { email: string; name: string; d
   if (!isEmail(email)) fail('Email staf tidak valid. Gunakan email akun CMS staf tersebut.', 'invalid', 'email')
   if (!input.name.trim()) fail('Isi nama staf.', 'invalid', 'nama')
   for (const r of input.roles) if (!isRole(r)) fail('Peran tidak dikenal.')
+  if (input.roles.some(isGuardedRole)) fail('Peran pimpinan, BK dan UKS diberikan setelah staf masuk pertama kali dengan akunnya (bukan saat pendaftaran email).')
   return command(ctx, 'staff.add', { input }, async (tx, fx) => {
     const [exists] = await tx.select({ id: staffMembers.id }).from(staffMembers).where(eq(staffMembers.email, email))
     if (exists) fail('Staf dengan email ini sudah terdaftar.', 'conflict', 'email')
@@ -39,14 +40,29 @@ export async function updateStaff(ctx: Ctx, id: string, input: { displayName: st
   })
 }
 
+/**
+ * Sets a staff member's roles. Roles the caller may not change (restricted BK/UKS roles without pimpinan/coordinator
+ * rights, guarded roles on oneself, ordinary roles without staff.manage) keep their current state; trying to ADD one
+ * is refused.
+ */
 export async function setStaffRoles(ctx: Ctx, id: string, roles: string[]) {
-  const s = requireStaff(ctx, 'staff.manage')
+  const s = requireStaff(ctx, 'staff.manage', 'roles.restricted')
   for (const r of roles) if (!isRole(r)) fail('Peran tidak dikenal.')
   await command(ctx, 'staff.roles', {}, async (tx, fx) => {
     const [row] = await tx.select().from(staffMembers).where(eq(staffMembers.id, id))
     if (!row) notFound('Staf')
     const current = await tx.select().from(staffRoles).where(and(eq(staffRoles.staffId, id), isNull(staffRoles.revokedAt)))
-    const want = new Set(roles)
+    const asked = new Set(roles)
+    const want = new Set<string>()
+    for (const r of Object.keys(ROLES)) {
+      const has = current.some((c) => c.role === r)
+      if (mayChangeRole(s, id, r)) {
+        if (asked.has(r)) want.add(r)
+      } else {
+        if (asked.has(r) && !has) fail(isGuardedRole(r) && id === s.id ? 'Peran pimpinan, BK dan UKS tidak dapat diberikan kepada diri sendiri.' : `Peran ${ROLES[r]!.label} hanya dapat diberikan oleh pimpinan sekolah${r === 'petugas_uks' ? '' : ' atau Koordinator BK'}.`)
+        if (has) want.add(r)
+      }
+    }
     // an admin cannot remove their own admin role (avoid locking the school out)
     if (id === s.id && current.some((c) => c.role === 'school_admin') && !want.has('school_admin') && s.webRole !== 'admin')
       fail('Anda tidak dapat mencabut peran Admin App dari akun Anda sendiri.')
@@ -59,6 +75,7 @@ export async function setStaffRoles(ctx: Ctx, id: string, roles: string[]) {
       if (!current.some((c) => c.role === r)) {
         await tx.insert(staffRoles).values({ staffId: id, role: r, grantedBy: s.id })
         fx.audit('staff.role_granted', 'staff', id, { role: r })
+        if (isGuardedRole(r)) fx.notify({ type: 'staff', id }, { title: `Anda diberi peran ${ROLES[r]?.label ?? r} di App sekolah`, link: '/portal/staf' })
       }
   })
 }

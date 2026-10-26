@@ -44,15 +44,16 @@ export const PERMISSIONS = {
   'alumni.manage': 'Alumni & komunitas',
   'dashboard.view': 'Dashboard & laporan pimpinan',
   'exports': 'Ekspor data (tujuan terbatas)',
+  'roles.restricted': 'Memberi/mencabut peran BK & UKS (bukan untuk diri sendiri)',
 } as const
 export type Permission = keyof typeof PERMISSIONS
 
 const ALL = Object.keys(PERMISSIONS) as Permission[]
-const RESTRICTED: Permission[] = ['counseling', 'counseling.coordinate', 'health.manage']
+const RESTRICTED: Permission[] = ['counseling', 'counseling.coordinate', 'health.manage', 'roles.restricted']
 
 export const ROLES: Record<string, { label: string; group: string; perms: Permission[] }> = {
   school_admin: { label: 'Admin App Sekolah', group: 'Tata kelola', perms: ALL.filter((p) => !RESTRICTED.includes(p)) },
-  pimpinan: { label: 'Pimpinan (Kepala/Waka)', group: 'Tata kelola', perms: ['dashboard.view', 'students.read', 'reports.review', 'audit.view'] },
+  pimpinan: { label: 'Pimpinan (Kepala/Waka)', group: 'Tata kelola', perms: ['dashboard.view', 'students.read', 'reports.review', 'audit.view', 'roles.restricted'] },
   tata_usaha: {
     label: 'Tata Usaha (Administrasi Siswa)',
     group: 'Administrasi',
@@ -64,7 +65,7 @@ export const ROLES: Record<string, { label: string; group: string; perms: Permis
   guru: { label: 'Guru', group: 'Akademik', perms: ['teach'] },
   kesiswaan: { label: 'Waka Kesiswaan', group: 'Kesiswaan', perms: ['student_affairs', 'activities.manage', 'organizations.manage', 'alumni.manage', 'students.read'] },
   bk: { label: 'Guru BK / Konselor', group: 'Kesiswaan', perms: ['counseling', 'students.read'] },
-  koordinator_bk: { label: 'Koordinator BK', group: 'Kesiswaan', perms: ['counseling', 'counseling.coordinate', 'students.read'] },
+  koordinator_bk: { label: 'Koordinator BK', group: 'Kesiswaan', perms: ['counseling', 'counseling.coordinate', 'students.read', 'roles.restricted'] },
   pembina: { label: 'Pembina Ekstrakurikuler', group: 'Kesiswaan', perms: ['activities.coach'] },
   humas: { label: 'Humas / Komunikasi', group: 'Layanan', perms: ['announcements.publish'] },
   pustakawan: { label: 'Pustakawan', group: 'Layanan', perms: ['library.manage', 'cards.verify'] },
@@ -77,6 +78,26 @@ export const ROLES: Record<string, { label: string; group: string; perms: Permis
   operator_siswa: { label: 'Operator Daftar Ulang & Konversi', group: 'Penerimaan', perms: ['admissions.reenroll', 'admissions.convert', 'students.read'] },
 }
 export type AppRole = keyof typeof ROLES
+
+/**
+ * Roles that open restricted data (BK notes, UKS records) and the approver role that may grant them. Rule (§13.3,
+ * §22): nobody grants or removes these for themselves; restricted roles are granted only by a principal (pimpinan)
+ * — or, for BK roles, by the BK coordinator — never by `staff.manage` alone. The school admin therefore cannot
+ * give itself access to counselling or health records.
+ */
+export const RESTRICTED_ROLES = ['bk', 'koordinator_bk', 'petugas_uks'] as const
+export const GUARDED_ROLES = [...RESTRICTED_ROLES, 'pimpinan'] as const
+export const isRestrictedRole = (r: string) => (RESTRICTED_ROLES as readonly string[]).includes(r)
+export const isGuardedRole = (r: string) => (GUARDED_ROLES as readonly string[]).includes(r)
+/** May the grantor (holding `grantorRoles`) grant or remove `role` for another staff member? */
+export const mayGrantRestricted = (grantorRoles: Set<string>, role: string) =>
+  !isRestrictedRole(role) || grantorRoles.has('pimpinan') || ((role === 'bk' || role === 'koordinator_bk') && grantorRoles.has('koordinator_bk'))
+/** Whether `actor` may change `role` on staff member `targetId` (guarded roles never on oneself). */
+export const mayChangeRole = (actor: { id: string; roles: Set<string>; perms: Set<Permission> }, targetId: string, role: string) => {
+  if (targetId === actor.id && isGuardedRole(role)) return false
+  if (isRestrictedRole(role)) return mayGrantRestricted(actor.roles, role)
+  return actor.perms.has('staff.manage')
+}
 export const isRole = (r: string): r is AppRole => r in ROLES
 
 /** CMS role → App roles held implicitly (the school's Admin Teknis administers the App). */

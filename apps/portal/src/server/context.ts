@@ -2,11 +2,11 @@
  * Who is acting, for which school, against which database. Built per request (pages, routes) or directly in tests and
  * scripts. Every module receives a Ctx; nothing reads the request elsewhere.
  */
-import { and, desc, eq, gt, isNull } from 'drizzle-orm'
+import { and, desc, eq, gt, inArray, isNull } from 'drizzle-orm'
 import type { SchoolInfo, StaffMember } from '@sekolahku/core'
 import type { SchoolDb } from '@/db/school-db'
 import { accountSessions, accounts, auditEvents, persons, staffMembers, staffRoles, supportGrants } from '@/db/schema'
-import { IMPLICIT_ROLES, permissionsOf, type Permission } from './roles'
+import { GUARDED_ROLES, IMPLICIT_ROLES, permissionsOf, type Permission } from './roles'
 import { sha256 } from './secrets'
 import { forbidden, fail } from './errors'
 
@@ -74,7 +74,16 @@ export async function loadStaff(db: SchoolDb, m: StaffMember, now = new Date()):
       .from(staffMembers)
       .where(and(eq(staffMembers.email, email), isNull(staffMembers.webUserId)))
       .limit(1)
-    if (pre) [row] = await db.update(staffMembers).set({ webUserId: webId, name: m.name, webRole: m.role, lastSeenAt: now }).where(eq(staffMembers.id, pre.id)).returning()
+    if (pre) {
+      ;[row] = await db.update(staffMembers).set({ webUserId: webId, name: m.name, webRole: m.role, lastSeenAt: now }).where(eq(staffMembers.id, pre.id)).returning()
+      // binding by e-mail alone is not proof of identity: roles that open restricted data or approve them
+      // (BK, UKS, pimpinan) granted before the first sign-in are withdrawn and must be granted again to the bound account
+      const guarded = await db.select().from(staffRoles).where(and(eq(staffRoles.staffId, pre.id), isNull(staffRoles.revokedAt), inArray(staffRoles.role, [...GUARDED_ROLES])))
+      for (const g of guarded) {
+        await db.update(staffRoles).set({ revokedAt: now, revokedBy: 'system:binding' }).where(eq(staffRoles.id, g.id))
+        await db.insert(auditEvents).values({ actorType: 'system', action: 'staff.role_withdrawn_on_binding', objectType: 'staff', objectId: pre.id, meta: { role: g.role } })
+      }
+    }
     else {
       const [byEmail] = await db.select().from(staffMembers).where(eq(staffMembers.email, email)).limit(1)
       // e-mail already bound to ANOTHER CMS account: refuse rather than merge identities

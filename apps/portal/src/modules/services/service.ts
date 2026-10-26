@@ -9,7 +9,7 @@ import { actorName, hasPerm, requireStaff, type Ctx } from '@/server/context'
 import { command, nextNumber, type Db } from '@/server/command'
 import { fail, forbidden, notFound } from '@/server/errors'
 import { DOCS, fileAccess, saveFile } from '@/server/files'
-import { placementOn, visibleStudentIds } from '../scope'
+import { isHomeroomTeacherOf, placementOn, visibleStudentIds } from '../scope'
 import { localDate } from '@/server/time'
 
 export const STATUS: Record<string, string> = { submitted: 'Diajukan', in_progress: 'Diproses', needs_info: 'Perlu informasi', completed: 'Selesai', rejected: 'Ditolak', cancelled: 'Dibatalkan' }
@@ -51,6 +51,7 @@ export async function submitRequest(ctx: Ctx, input: { typeId: string; studentId
     const [t] = await tx.select().from(serviceTypes).where(and(eq(serviceTypes.id, input.typeId), eq(serviceTypes.active, true)))
     if (!t) notFound('Jenis layanan')
     if (input.studentId && ctx.account && !(await visibleStudentIds(ctx, 'any', tx)).has(input.studentId)) forbidden()
+    if (input.studentId && ctx.staff && !hasPerm(ctx, 'students.read', 'services.process') && !(await isHomeroomTeacherOf(ctx, input.studentId, tx))) forbidden()
     if (t!.category === 'surat' && !input.studentId) fail('Pilih siswa yang dimaksud.')
     for (const q of t!.questions) if (q.required && !input.answers[q.key]?.trim()) fail(`Isi: ${q.label}.`)
     if (t!.requiresFile && !input.file) fail('Lampirkan dokumen yang diperlukan.')

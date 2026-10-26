@@ -60,7 +60,7 @@ await putSetting(db, 'modules', { ...DEFAULT_MODULES, buku_induk: 'active', kart
 const admin = arg('--admin')
 if (admin) {
   const existing = (await db.select().from(staffMembers).where(eq(staffMembers.email, admin.toLowerCase())))[0]
-  if (!existing) await (await import('../src/modules/admin/service')).addStaff(ctx, { email: admin, name: 'Admin Demo', roles: all.filter((r) => r !== 'pimpinan'), displayName: null, nip: null, position: null })
+  if (!existing) await (await import('../src/modules/admin/service')).addStaff(ctx, { email: admin, name: 'Admin Demo', roles: all.filter((r) => !['pimpinan', 'bk', 'koordinator_bk', 'petugas_uks'].includes(r)), displayName: null, nip: null, position: null })
 }
 
 // academic

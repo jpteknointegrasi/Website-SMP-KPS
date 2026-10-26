@@ -73,7 +73,7 @@ export const STAFF_NAV: Group[] = [
     items: [
       { label: 'Dashboard pimpinan', href: '/staf/dashboard', icon: 'chart', perms: ['dashboard.view'] },
       { label: 'Akun keluarga', href: '/staf/akun', icon: 'key', perms: ['family.manage'] },
-      { label: 'Staf & peran', href: '/staf/pengaturan/staf', icon: 'shield', perms: ['staff.manage'] },
+      { label: 'Staf & peran', href: '/staf/pengaturan/staf', icon: 'shield', perms: ['staff.manage', 'roles.restricted'] },
       { label: 'Aktivasi modul', href: '/staf/pengaturan/modul', icon: 'layers', perms: ['settings.manage'] },
       { label: 'Pengaturan sekolah', href: '/staf/pengaturan', icon: 'settings', perms: ['settings.manage'], exact: true },
       { label: 'Audit & operasional', href: '/staf/audit', icon: 'eye', perms: ['audit.view'] },

@@ -5,6 +5,7 @@ export function safePath(v: unknown) {
   if (typeof v !== 'string') return null
   const s = v.trim()
   if (!s.startsWith('/') || s.startsWith('//') || s.includes('\\') || /[\r\n]/.test(s)) return null
-  return s.startsWith(`${BASE}/`) ? s.slice(BASE.length) : s
+  const out = s.startsWith(`${BASE}/`) ? s.slice(BASE.length) : s
+  return out.startsWith('//') ? null : out
 }
 

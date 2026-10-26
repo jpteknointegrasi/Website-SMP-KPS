@@ -9,7 +9,7 @@ import { hasPerm, requireStaff, type Ctx } from '@/server/context'
 import { command, type Db } from '@/server/command'
 import { fail, forbidden, notFound } from '@/server/errors'
 import { isDate, today } from '@/server/time'
-import { activeYear, linkedChildren, ownStudent } from '../scope'
+import { activeYear, guardianAccounts, linkedChildren, ownStudent } from '../scope'
 
 export const PREDICATES = ['Sangat baik', 'Baik', 'Cukup', 'Perlu bimbingan'] as const
 export const MEMBER_STATUS = { applied: 'Menunggu izin orang tua', consented: 'Menunggu keputusan pembina', active: 'Anggota', rejected: 'Tidak diterima', withdrawn: 'Mengundurkan diri' } as const
@@ -70,7 +70,7 @@ export async function apply(ctx: Ctx, activityId: string, studentId: string, mot
       id = cur.id
     } else id = (await tx.insert(activityMembers).values({ activityId, studentId, ...values }).returning({ id: activityMembers.id }))[0]!.id
     if (!consented) {
-      const gs = await tx.select({ accountId: guardians.accountId }).from(guardianLinks).innerJoin(guardians, eq(guardians.id, guardianLinks.guardianId)).where(and(eq(guardianLinks.studentId, studentId), eq(guardianLinks.status, 'active')))
+      const gs = await guardianAccounts(tx, [studentId], today(ctx.tz, ctx.now))
       for (const g of gs) if (g.accountId) fx.notify({ type: 'account', id: g.accountId }, { title: `Persetujuan ekstrakurikuler: ${a.name}`, link: `/portal/keluarga/ekskul?anak=${studentId}` })
     } else if (a.coachId) fx.notify({ type: 'staff', id: a.coachId }, { title: `Pendaftar baru ${a.name}`, link: `/portal/staf/ekskul/${activityId}` })
     fx.audit('activities.apply', 'activity', activityId, { student: studentId, consented })
