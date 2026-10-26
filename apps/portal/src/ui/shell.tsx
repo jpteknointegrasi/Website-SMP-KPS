@@ -94,7 +94,7 @@ export const FAMILY_NAV: Item[] = [
   { label: 'Konseling (BK)', href: '/keluarga/bk', icon: 'heart', mod: 'bk' },
   { label: 'Perpustakaan', href: '/keluarga/perpustakaan', icon: 'library', mod: 'perpustakaan' },
   { label: 'Data siswa', href: '/keluarga/data', icon: 'user', mod: 'buku_induk' },
-  { label: 'Penerimaan', href: '/penerimaan', icon: 'clipboard', mod: 'penerimaan' },
+  { label: 'Penerimaan siswa baru', href: '/keluarga/penerimaan', icon: 'clipboard', mod: 'penerimaan' },
   { label: 'Akun saya', href: '/akun', icon: 'settings' },
 ]
 

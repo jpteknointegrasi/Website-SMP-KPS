@@ -34,7 +34,7 @@ export default async function FamilyHome({ searchParams }: { searchParams: Promi
           {moduleOpen(modules, 'penerimaan', 'family') ? (
             <Card title="Mendaftarkan anak ke sekolah ini?">
               <p>Isi formulir penerimaan siswa baru, unggah berkas, dan pantau hasilnya dari portal.</p>
-              <Link className="btn" href="/penerimaan">
+              <Link className="btn" href="/keluarga/penerimaan">
                 Buka penerimaan siswa baru
               </Link>
             </Card>

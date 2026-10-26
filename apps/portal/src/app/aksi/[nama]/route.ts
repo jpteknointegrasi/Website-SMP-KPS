@@ -20,7 +20,8 @@ function withMessage(path: string, key: 'ok' | 'galat', msg?: string, field?: st
 
 const go = (path: string, cookies: { name: string; value: string; maxAge: number }[] = []) => {
   const h = new Headers({ Location: `${BASE}${path}`, 'Cache-Control': 'no-store' })
-  const secure = process.env.NODE_ENV === 'production' ? '; Secure' : ''
+  // PORTAL_INSECURE_COOKIES=true only for local testing over plain http
+  const secure = process.env.NODE_ENV === 'production' && process.env.PORTAL_INSECURE_COOKIES !== 'true' ? '; Secure' : ''
   for (const c of cookies) h.append('Set-Cookie', `${c.name}=${c.value}; Path=${BASE}; HttpOnly; SameSite=Lax; Max-Age=${c.maxAge}${secure}`)
   return new Response(null, { status: 303, headers: h })
 }

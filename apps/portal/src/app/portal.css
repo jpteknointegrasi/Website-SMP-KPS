@@ -359,3 +359,19 @@ form.inline { display: inline; }
 .sheet--back > * { direction: ltr; }
 @media print { .sheet { box-shadow: none; margin: 0; page-break-after: always; break-after: page; } }
 @media screen and (max-width: 900px) { .sheet { zoom: 0.45; } }
+
+/* ---------- public admissions (PUB-02) ---------- */
+.pubbar { display: flex; align-items: center; gap: 16px; padding: 12px 28px; background: #fff; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+.pubbar__brand { display: flex; gap: 10px; align-items: center; text-decoration: none; color: var(--navy); flex: 1; }
+.pubbar__brand img { width: 44px; height: 44px; object-fit: contain; }
+.pubbar__brand strong { display: block; text-transform: uppercase; }
+.pubbar__brand small { display: block; letter-spacing: 0.3em; text-transform: uppercase; font-size: 0.7rem; }
+.pubbar nav { display: flex; gap: 16px; align-items: center; }
+.pubbar nav a:not(.btn) { color: var(--navy); text-decoration: none; font-weight: 600; font-size: 0.9rem; }
+.pubhero { min-height: 340px; display: flex; align-items: center; padding: 40px 28px; background: var(--soft) center/cover no-repeat; }
+.pubhero h1 { font-size: clamp(1.8rem, 4vw, 2.6rem); margin: 4px 0 8px; }
+.pubhero .lead { font-size: 1.1rem; color: var(--ink); }
+.pubhero .btn { padding: 12px 22px; font-size: 1rem; }
+.eyebrow { margin: 0; color: var(--brand); font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; font-size: 0.8rem; }
+.h-ico { width: 18px; height: 18px; vertical-align: -3px; color: var(--brand); }
+@media (max-width: 720px) { .pubhero { background-image: none !important; } .pubbar nav a:not(.btn) { display: none; } }

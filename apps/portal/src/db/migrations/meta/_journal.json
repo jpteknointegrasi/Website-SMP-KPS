@@ -15,6 +15,13 @@
       "when": 1793040404312,
       "tag": "0001_buku_induk_kartu",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1793042884959,
+      "tag": "0002_penerimaan_keuangan",
+      "breakpoints": true
     }
   ]
 }

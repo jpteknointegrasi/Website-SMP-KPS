@@ -106,6 +106,37 @@ if (!(await C.approvedTemplate(db))) {
   const t = await C.saveTemplateDraft(ctx, 'Kartu Siswa', C.DEFAULT_CARD)
   await C.approveTemplate(ctx, t)
 }
+// admissions example: an open cycle with families at different stages
+import('../src/modules/admissions/decisions')
+const cfg = await import('../src/modules/admissions/config')
+const apply = await import('../src/modules/admissions/apply')
+const review = await import('../src/modules/admissions/review')
+const { accounts, persons, admissionCycles } = await import('../src/db/schema')
+const { hashPassword } = await import('../src/server/secrets')
+if (!(await db.select().from(admissionCycles).where(eq(admissionCycles.code, 'PPDB27'))).length) {
+  if (!ov.years.some((y) => y.name === '2027/2028')) await A.saveYear(ctx, { name: '2027/2028', startDate: '2027-07-12', endDate: '2028-06-24' })
+  const cid = await cfg.createCycle(ctx, { code: 'PPDB27', name: 'Penerimaan Siswa Baru 2027/2028', targetYear: '2027/2028', targetGrade: 'VII' })
+  const d = (await cfg.cycleDetail(db, cid))!
+  await cfg.savePath(ctx, cid, { id: d.paths[0]!.id, name: 'Reguler', description: 'Jalur umum.', quota: 64, registrationFee: 150000, reenrollFee: 1500000, documents: cfg.DEFAULT_DOCUMENTS, components: cfg.DEFAULT_COMPONENTS, checklist: cfg.DEFAULT_CHECKLIST, active: true })
+  await cfg.savePath(ctx, cid, { name: 'Prestasi', description: 'Untuk calon siswa dengan prestasi akademik/non-akademik.', quota: 16, registrationFee: 150000, reenrollFee: 1500000, documents: [...cfg.DEFAULT_DOCUMENTS, { code: 'sertifikat', label: 'Sertifikat prestasi', required: true }], components: cfg.DEFAULT_COMPONENTS, checklist: cfg.DEFAULT_CHECKLIST, active: true })
+  await cfg.updateCycle(ctx, cid, { name: 'Penerimaan Siswa Baru 2027/2028', openAt: new Date(Date.now() - 86400_000), closeAt: new Date(Date.now() + 60 * 86400_000), selectionEnabled: true, offerDays: 7, reenrollDays: 14, requireNik: false, info: 'Pendaftaran dibuka untuk calon siswa kelas VII. [Biaya dan persyaratan resmi diumumkan sekolah]', dataNotice: 'Data digunakan untuk proses penerimaan siswa baru dan disimpan sesuai kebijakan sekolah.', helpContact: '[Kontak panitia penerimaan]' }, null)
+  await db.update(admissionCycles).set({ status: 'open', approvedBy: 'demo', approvedAt: new Date() }).where(eq(admissionCycles.id, cid))
+  const families = [['ortu.alya@contoh.invalid', 'Alya Ramadhani'], ['ortu.bima@contoh.invalid', 'Bima Saputra'], ['ortu.citra@contoh.invalid', 'Citra Ayu']] as const
+  for (const [i, [email, child]] of families.entries()) {
+    const [p] = await db.insert(persons).values({ fullName: `Orang Tua ${child.split(' ')[0]}`, email }).returning()
+    const [acc] = await db.insert(accounts).values({ login: email, email, personId: p!.id, passwordHash: await hashPassword('Contoh-Keluarga-2026'), emailVerifiedAt: new Date(), verifiedBy: 'demo' }).returning()
+    const fctx = makeCtx({ school, db, account: { kind: 'account', id: acc!.id, personId: p!.id, login: email, name: p!.fullName, email, emailVerified: true, mustChangePassword: false, sessionId: 'demo' } })
+    const app = await apply.startApplication(fctx, { cycleId: cid, pathId: d.paths[0]!.id, childName: child })
+    await apply.saveApplicationData(fctx, app, { fullName: child, gender: i % 2 ? 'L' : 'P', birthPlace: 'Balikpapan', birthDate: '2014-0' + (i + 3) + '-12', religion: 'Islam', address: '[Alamat contoh]', originSchool: 'SD Contoh', guardianName: p!.fullName, guardianRelation: 'ibu', guardianPhone: '081200000000' }, null)
+    if (i === 2) continue // stays a draft
+    const tiny = Buffer.concat([Buffer.from('%PDF-1.4\n'), Buffer.from('contoh')])
+    const png = Buffer.from('89504e470d0a1a0a0000000d4948445200000001000000010806000000', 'hex')
+    await apply.uploadApplicationDocument(fctx, app, 'pasfoto', { name: 'foto.png', buffer: png })
+    for (const c of ['akta', 'kk']) await apply.uploadApplicationDocument(fctx, app, c, { name: `${c}.pdf`, buffer: tiny })
+    await apply.submitApplication(fctx, app, { confirm: true })
+    if (i === 0) await review.startReview(ctx, app)
+  }
+}
 console.log(`✓ Data contoh untuk ${school.name} siap (${NAMES.length} siswa contoh, 4 rombel, ${SUBJ.length} mapel).`)
 await closeSchoolDbs()
 process.exit(0)
