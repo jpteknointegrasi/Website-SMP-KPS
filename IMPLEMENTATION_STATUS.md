@@ -59,3 +59,12 @@ Uji: 71 tes lulus (`npm test`): 30 unit addendum, 17 integrasi addendum, 24 lama
 4. Adaptor email + SMTP resmi (opsional) dan object storage S3 untuk produksi.
 5. Inventarisasi lengkap URL WordPress lama → lengkapi `REDIRECT_MAP.csv`.
 6. Staging, uji restore (OPS-01), lalu cutover sesuai otorisasi pemilik proyek.
+
+## Sekolahku App lengkap (cabang `platform-produk`, 27 Okt 2026)
+Seluruh modul App M01–M21 selesai beserta integrasi Website ↔ App; status per bagian: `docs/BLUEPRINT_ADDENDUM_v2.1.md` §G,
+panduan: `docs/PANDUAN_APP.md`. Uji: core 8, web 125, portal 50 (APP, PPDB, DAY, LIFE, CMP, SEC); build web & portal lulus;
+alur utama diuji di browser (mode produksi) termasuk tampilan ponsel. Audit keamanan independen: 1 temuan tinggi (admin dapat
+memberi dirinya peran BK/UKS) dan 6 sedang — semua diperbaiki dan dites.
+
+Catatan terbuka: isi email tersimpan di `mail_log` bila SMTP belum diatur (produksi wajib SMTP); peran bantuan teknis masih
+memakai izin baca Buku Induk (tanpa unduh berkas); karya siswa dari App ke website belum dibuat; PDF memakai cetak browser.

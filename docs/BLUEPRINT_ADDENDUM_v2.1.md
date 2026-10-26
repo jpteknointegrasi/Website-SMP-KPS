@@ -128,9 +128,14 @@ sekolahku/
 | Website mengikuti langganan Web; pendaftaran diarahkan ke portal bila App aktif | completed | TEN-12, uji jalan bersama |
 | Kerangka App: `/portal`, PWA, registri sekolah, database per sekolah, migrasi, login staf bersama | completed | POR-01..03 (7 tes), uji jalan Web + App di satu domain |
 | Audit keamanan independen tahap produk | completed | 5 temuan terkonfirmasi + 5 risiko desain, semua diperbaiki dan dites (TEN-13, POR-03, core) |
-| P0 identitas App (akun pendaftar/wali/siswa, person, membership) | backlog | Berikutnya |
-| M14 penerimaan penuh (§19, §41) | backlog | Setelah P0 |
-| Event Web ↔ App (bagian D) | backlog | Setelah M14 |
-| Job worker (outbox, notifikasi, PDF) dan object storage privat | backlog | Diperlukan sebelum M14 tayang |
+| P0 identitas App, Buku Induk, kartu QR (M01–M03) | completed | APP-01..07 |
+| M14 penerimaan penuh + inti tagihan (M17) | completed | PPDB-01..07 (termasuk persetujuan bersamaan & kuota) |
+| Akademik harian, pengumuman, layanan TU (M04–M07, M12–M13) | completed | DAY-01..05 |
+| Nilai & rapor, kenaikan kelas, BK, ekskul, kesiswaan (M08–M11) | completed | LIFE-01..05 |
+| Perpustakaan, UKS, organisasi, alumni, dashboard & ekspor, akses bantuan (M16–M21) | completed | CMP-01..06 |
+| Event Web ↔ App (bagian D): agenda publik, prestasi & cerita alumni berizin, jalur pendaftaran | completed | Endpoint `/portal/api/publik/*`, dibaca website sisi server |
+| Job worker (outbox, jadwal) dan object storage privat (S3/R2) | completed | `/portal/api/jobs` + `CRON_SECRET`; `STORAGE_DRIVER=s3` wajib di produksi |
+| Audit keamanan independen tahap App | completed | 1 tinggi + 6 sedang + beberapa rendah, diperbaiki dan dites (SEC-01..02) |
 
-Halaman `/portal/penerimaan` (Penerimaan Siswa Baru) saat ini menyatakan dengan jujur bahwa portal penerimaan sedang disiapkan. Pendaftaran kunjungan/open house **bukan** bagian App: itu fitur Web di `/kunjungan` dan sudah berjalan (F05). Jangan aktifkan langganan App untuk sekolah nyata sebelum M14 lulus gate §50.3.
+Panduan operasional: `docs/PANDUAN_APP.md`. Semua uji: core 8, web 125, portal 50. **Belum di produksi**: jangan aktifkan
+langganan App untuk sekolah nyata sebelum diuji di Preview pada branch database terpisah (PANDUAN_APP §4).
