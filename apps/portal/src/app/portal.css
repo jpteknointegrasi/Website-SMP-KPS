@@ -82,6 +82,8 @@ p { margin: 0 0 10px; }
   .mobilebar summary::-webkit-details-marker { display: none; }
   .mobilebar summary img { width: 34px; height: 34px; background: #fff; border-radius: 50%; padding: 2px; }
   .mobilebar summary strong { flex: 1; font-size: 0.9rem; }
+  .mobilebar summary svg { width: 26px; height: 26px; flex: none; }
+  .mobilebar[open] .nav { padding-bottom: 12px; }
   .mobilebar .nav { max-height: 70vh; overflow-y: auto; }
   .topbar { padding: 10px 16px; position: static; }
   .content { padding: 16px 16px 88px; }
