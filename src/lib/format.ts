@@ -49,6 +49,6 @@ export const AUDIENCE: Record<string, string> = {
   alumni: 'Alumni',
 }
 /** Audience filter values for the agenda (subset shown as chips). */
-export const EVENT_AUDIENCE = ['kelas_7', 'kelas_8', 'kelas_9', 'orang_tua', 'calon_siswa', 'guru'] as const
+export const EVENT_AUDIENCE = ['kelas_7', 'kelas_8', 'kelas_9', 'orang_tua', 'calon_siswa', 'guru', 'alumni'] as const
 
 export const WORK_CATS: Record<string, string> = { tulisan: 'Tulisan', seni: 'Seni', sains: 'Sains', teknologi: 'Teknologi', video: 'Video', proyek_sosial: 'Proyek sosial' }

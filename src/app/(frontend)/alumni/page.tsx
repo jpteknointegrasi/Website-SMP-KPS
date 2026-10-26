@@ -1,5 +1,7 @@
 import Link from 'next/link'
-import { findBySlug, getAlumniPage, getGlobals, getHomepage, listCollection } from '@/lib/queries'
+import { findBySlug, getAlumniPage, getGlobals, getHomepage, listAlumniEvents, listCollection } from '@/lib/queries'
+import { EventFacts, eventInvitation } from '@/components/sections/EventBanner'
+import { Countdown } from '@/components/ui/motion'
 import { Container } from '@/components/ui/bits'
 import { PageBlocks } from '@/components/content/PageBlocks'
 import { Img } from '@/components/ui/Img'
@@ -47,13 +49,12 @@ const LinkOut = ({ href, children, className }: { href: string; children: React.
   )
 
 export default async function Page() {
-  const now = new Date().toISOString()
   const [cms, { settings }, home, page, events, stories] = await Promise.all([
     getAlumniPage(),
     getGlobals(),
     getHomepage(),
     findBySlug<CmsPage>('pages', 'alumni'),
-    listCollection('events', { where: { and: [{ audience: { in: ['alumni'] } }, { startAt: { greater_than_equal: now } }] }, sort: 'startAt', limit: 3, depth: 0 }),
+    listAlumniEvents(4),
     // only stories with recorded publication consent
     listCollection('testimonials', { where: { consent: { equals: true } }, sort: '-updatedAt', limit: 6 }),
   ])
@@ -88,7 +89,8 @@ export default async function Page() {
           return [{ src: big, thumb, width: m.width ?? 800, height: m.height ?? 600, alt: m.alt ?? '', caption: g.caption ?? '' }]
         })
   ).map((g, i) => ({ ...g, id: i + 1 }))
-  const upcoming = events.docs as unknown as Event[]
+  const featured = (events[0] as Event | undefined) ?? null
+  const upcoming = events.slice(1)
   const quotes = stories.docs as unknown as Testimonial[]
   const aboutParas = text(cms.aboutText, D.aboutText).split(/\n\s*\n/).filter(Boolean)
   const fromInstagram = (u?: string | null) => Boolean(u && /instagram\.com/i.test(u))
@@ -99,6 +101,7 @@ export default async function Page() {
         <Container>
           <nav className="ika-nav" aria-label="Bagian halaman alumni">
             <ul>
+              {featured ? <li><a href="#acara">Acara</a></li> : null}
               <li><a href="#tentang">Tentang</a></li>
               <li><a href="#portal">Portal Alumni</a></li>
               <li><a href="#pengurus">Pengurus</a></li>
@@ -160,6 +163,8 @@ export default async function Page() {
           ))}
         </ul>
       </Container>
+
+      {featured ? <FeaturedEvent e={featured} /> : null}
 
       <section className="section ika-sec" id="tentang" aria-labelledby="ika-about">
         <Container className="ika-about">
@@ -267,7 +272,7 @@ export default async function Page() {
                 </ul>
               ) : (
                 <>
-                  <p className="ika-agenda__title">{text(cms.agendaHeading, D.agendaHeading)}</p>
+                  <p className="ika-agenda__title">{featured ? 'Agenda berikutnya menyusul' : text(cms.agendaHeading, D.agendaHeading)}</p>
                   <p className="muted">{text(cms.agendaText, D.agendaText)}</p>
                 </>
               )}
@@ -366,5 +371,53 @@ export default async function Page() {
         </Container>
       </section>
     </>
+  )
+}
+
+/** The nearest alumni event (Agenda with audience "Alumni"): invitation, facts, rundown. */
+const FeaturedEvent = ({ e }: { e: Event }) => {
+  const cover = asMedia(e.cover)
+  const doc = eventInvitation(e)
+  const upcoming = new Date(e.startAt).getTime() > Date.now() && e.eventStatus === 'scheduled'
+  return (
+    <section className="section ika-sec ika-event" id="acara" aria-labelledby="ika-event">
+      <Container>
+        <div className="ika-event__card">
+          <div className="ika-event__main">
+            <p className="evb__eyebrow">{e.eventStatus === 'postponed' ? 'Ditunda · ' : ''}Acara terdekat · Undangan</p>
+            <h2 id="ika-event" className="ika-event__title">{e.title}</h2>
+            {e.excerpt ? <p className="evb__lead">{e.excerpt}</p> : null}
+            <EventFacts e={e} />
+            {upcoming ? <div className="evb__count"><Countdown to={e.startAt} allDay={e.allDay} /></div> : null}
+            <div className="evb__actions">
+              {doc ? (
+                <a className="btn btn--gold" href={doc.url!} download={doc.originalFilename ?? undefined} data-cta="alumni-undangan">
+                  <Icon name="download" size={18} /> Unduh undangan (PDF)
+                </a>
+              ) : null}
+              <a className="btn btn--line" href={`/agenda/${e.slug}/ics`} download data-cta="alumni-ics">
+                <Icon name="calendar" size={18} /> Simpan ke kalender
+              </a>
+              <Link className="btn btn--line" href={`/agenda/${e.slug}`}>Detail acara</Link>
+            </div>
+          </div>
+          {e.rundown?.length ? (
+            <div className="ika-event__rundown">
+              <h3>Susunan acara</h3>
+              <ol className="rundown">
+                {e.rundown.map((r) => (
+                  <li key={r.id ?? r.time + r.activity} className={r.highlight ? 'is-highlight' : undefined}>
+                    <time>{r.time}</time>
+                    <span>{r.activity}</span>
+                  </li>
+                ))}
+              </ol>
+            </div>
+          ) : cover ? (
+            <div className="ika-event__poster"><Img media={cover} sizes="(min-width: 1024px) 380px, 90vw" /></div>
+          ) : null}
+        </div>
+      </Container>
+    </section>
   )
 }

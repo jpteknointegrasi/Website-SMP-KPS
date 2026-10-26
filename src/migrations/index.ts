@@ -3,6 +3,7 @@ import * as migration_20261025_110113_hero_slides from './20261025_110113_hero_s
 import * as migration_20261025_111618_blob_storage from './20261025_111618_blob_storage';
 import * as migration_20261025_150726_addendum_p0p1 from './20261025_150726_addendum_p0p1';
 import * as migration_20261026_055721_ika_alumni_page from './20261026_055721_ika_alumni_page';
+import * as migration_20261026_061423_event_banner_rundown from './20261026_061423_event_banner_rundown';
 
 export const migrations = [
   {
@@ -28,6 +29,11 @@ export const migrations = [
   {
     up: migration_20261026_055721_ika_alumni_page.up,
     down: migration_20261026_055721_ika_alumni_page.down,
-    name: '20261026_055721_ika_alumni_page'
+    name: '20261026_055721_ika_alumni_page',
+  },
+  {
+    up: migration_20261026_061423_event_banner_rundown.up,
+    down: migration_20261026_061423_event_banner_rundown.down,
+    name: '20261026_061423_event_banner_rundown'
   },
 ];

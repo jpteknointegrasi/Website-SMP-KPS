@@ -773,6 +773,25 @@
       "recommended_use": "Blok Komunitas & Alumni beranda; halaman Alumni",
       "editorial_note": "Teks pada spanduk latar tidak terbaca jelas",
       "auto_publish": true
+    },
+    {
+      "id": "KPS-IKA01",
+      "url": "",
+      "page": "Diberikan pemilik proyek (Adjie), 26 Oktober 2026",
+      "alt": "Undangan Pelantikan Pengurus Ikatan Keluarga Alumni Sekolah Nasional KPS, Jumat 30 Oktober 2026 pukul 13.30–15.30 WITA di Ghrya Kreativitas Mahakam, Sekolah Nasional KPS Balikpapan",
+      "context": "Undangan Pelantikan Pengurus IKA KPS 2026",
+      "file": "assets/alumni/undangan-pelantikan-ika-kps-2026.jpg",
+      "web_file": "",
+      "width": 1100,
+      "height": 1555,
+      "bytes": 269240,
+      "sha256": "9ae3365521adcd06242043ebf3e7ccf05ae64ea4b7c32bca93b712239b4cf193",
+      "downloaded_at": "2026-10-26",
+      "review": "Disetujui pemilik proyek",
+      "visual_description": "Undangan Pelantikan Pengurus Ikatan Keluarga Alumni Sekolah Nasional KPS, Jumat 30 Oktober 2026 pukul 13.30–15.30 WITA di Ghrya Kreativitas Mahakam, Sekolah Nasional KPS Balikpapan",
+      "recommended_use": "Banner acara beranda; agenda; halaman Alumni",
+      "editorial_note": "Halaman 1 dari PDF undangan resmi",
+      "auto_publish": true
     }
   ],
   "failures": []

@@ -257,9 +257,34 @@ export const Events = defineContent({
     },
     excerpt(200),
     body,
+    {
+      name: 'rundown',
+      type: 'array',
+      label: 'Susunan acara (rundown)',
+      admin: { initCollapsed: true, description: 'Opsional. Tampil di halaman agenda dan banner.' },
+      fields: [
+        {
+          type: 'row',
+          fields: [
+            { name: 'time', type: 'text', label: 'Waktu', required: true, admin: { width: '25%', placeholder: '13:00 - 13:45' } },
+            { name: 'activity', type: 'text', label: 'Kegiatan', required: true, admin: { width: '60%' } },
+            { name: 'highlight', type: 'checkbox', label: 'Sorot', admin: { width: '15%' } },
+          ],
+        },
+      ],
+    },
+    { name: 'dressCode', type: 'text', label: 'Pakaian (opsional)', admin: { placeholder: 'Batik / Smart Casual' } },
     safeUrlField('registrationUrl', 'Tautan pendaftaran kegiatan (opsional)'),
     { name: 'attachments', type: 'relationship', relationTo: 'documents', hasMany: true, label: 'Lampiran publik' },
     cover('Gambar (opsional)'),
+    {
+      name: 'homeBanner',
+      type: 'checkbox',
+      label: 'Tampilkan sebagai banner di beranda',
+      defaultValue: false,
+      index: true,
+      admin: { position: 'sidebar', description: 'Banner tampil sampai acara selesai, lalu hilang otomatis. Bila ada beberapa, yang paling dekat yang tampil. Gambar (opsional) dipakai di banner.' },
+    },
     {
       name: 'sequence',
       type: 'number',

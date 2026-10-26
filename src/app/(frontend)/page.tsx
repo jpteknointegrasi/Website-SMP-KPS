@@ -1,7 +1,7 @@
 import React from 'react'
 import { ALUMNI_PORTAL_FALLBACK } from '@/lib/alumni-defaults'
 import type { Metadata } from 'next'
-import { getCurrentAdmissions, getFlags, getGlobals, getHomepage, getPriorityAnnouncement, listAnnouncements, listCollection, listMediaItems, listPosts, listSocialAccounts, listUpcomingEvents } from '@/lib/queries'
+import { getBannerEvent, getCurrentAdmissions, getFlags, getGlobals, getHomepage, getPriorityAnnouncement, listAnnouncements, listCollection, listMediaItems, listPosts, listSocialAccounts, listUpcomingEvents } from '@/lib/queries'
 import {
   Achievements,
   AdmissionsCta,
@@ -23,11 +23,12 @@ import {
 import type { Achievement, Album, Announcement, Event, Extracurricular, Facility, Media, MediaItem, Post, Program } from '@/payload-types'
 import { payloadClient } from '@/lib/payload'
 import { BackToTop, PointerFX } from '@/components/ui/fx'
+import { EventBanner } from '@/components/sections/EventBanner'
 
 export const metadata: Metadata = { alternates: { canonical: '/' } }
 
 export default async function Home() {
-  const [home, { settings }, priority] = await Promise.all([getHomepage(), getGlobals(), getPriorityAnnouncement()])
+  const [home, { settings }, priority, bannerEvent] = await Promise.all([getHomepage(), getGlobals(), getPriorityAnnouncement(), getBannerEvent()])
   const sections = (home.sections ?? []).filter((s) => s.enabled)
   const lim = (type: string, d: number) => sections.find((s) => s.type === type)?.limit ?? d
   const has = (t: string) => sections.some((s) => s.type === t)
@@ -124,6 +125,8 @@ export default async function Home() {
         return null
     }
   }
+  const firstContent = sections.findIndex((s) => s.type !== 'search' && s.type !== 'quickLinks')
+  const bannerAt = firstContent < 0 ? sections.length : firstContent
   const communityImage = home.texts?.communityImage && typeof home.texts.communityImage === 'object' ? (home.texts.communityImage as Media) : null
 
   return (
@@ -131,8 +134,13 @@ export default async function Home() {
       <PriorityStrip a={priority} />
       <Hero hero={home.hero} settings={settings} />
       {sections.map((s, i) => (
-        <React.Fragment key={s.id ?? i}>{render(s.type)}</React.Fragment>
+        <React.Fragment key={s.id ?? i}>
+          {/* highlighted event: right after the search/quick-link strip at the top */}
+          {bannerEvent && i === bannerAt ? <EventBanner e={bannerEvent} /> : null}
+          {render(s.type)}
+        </React.Fragment>
       ))}
+      {bannerEvent && bannerAt === sections.length ? <EventBanner e={bannerEvent} /> : null}
       <PointerFX />
       <BackToTop />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(ld).replace(/</g, '\\u003c') }} />

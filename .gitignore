@@ -61,3 +61,7 @@ scripts/_*
 
 # local database backups (contain personal data)
 backups/
+
+# local upload folders (production uses Vercel Blob)
+/documents
+/private-media

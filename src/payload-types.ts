@@ -724,11 +724,27 @@ export interface Event {
     [k: string]: unknown;
   } | null;
   /**
+   * Opsional. Tampil di halaman agenda dan banner.
+   */
+  rundown?:
+    | {
+        time: string;
+        activity: string;
+        highlight?: boolean | null;
+        id?: string | null;
+      }[]
+    | null;
+  dressCode?: string | null;
+  /**
    * Gunakan https://… atau tautan internal yang diawali "/".
    */
   registrationUrl?: string | null;
   attachments?: (number | Document)[] | null;
   cover?: (number | null) | Media;
+  /**
+   * Banner tampil sampai acara selesai, lalu hilang otomatis. Bila ada beberapa, yang paling dekat yang tampil. Gambar (opsional) dipakai di banner.
+   */
+  homeBanner?: boolean | null;
   /**
    * Naik otomatis saat jadwal/status berubah agar aplikasi kalender memperbarui acara.
    */
@@ -2388,9 +2404,19 @@ export interface EventsSelect<T extends boolean = true> {
   eventStatus?: T;
   excerpt?: T;
   content?: T;
+  rundown?:
+    | T
+    | {
+        time?: T;
+        activity?: T;
+        highlight?: T;
+        id?: T;
+      };
+  dressCode?: T;
   registrationUrl?: T;
   attachments?: T;
   cover?: T;
+  homeBanner?: T;
   sequence?: T;
   seo?:
     | T
