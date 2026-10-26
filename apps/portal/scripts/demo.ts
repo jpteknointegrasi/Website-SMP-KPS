@@ -8,7 +8,7 @@
  */
 import 'dotenv/config'
 import { readFileSync } from 'fs'
-import { eq } from 'drizzle-orm'
+import { and, eq, gt, isNull } from 'drizzle-orm'
 import { schoolById } from '@sekolahku/core/registry'
 import pg from 'pg'
 import { closeSchoolDbs, schoolDb } from '../src/db/school-db'
@@ -135,6 +135,128 @@ if (!(await db.select().from(admissionCycles).where(eq(admissionCycles.code, 'PP
     for (const c of ['akta', 'kk']) await apply.uploadApplicationDocument(fctx, app, c, { name: `${c}.pdf`, buffer: tiny })
     await apply.submitApplication(fctx, app, { confirm: true })
     if (i === 0) await review.startReview(ctx, app)
+  }
+}
+
+// ---------- daily academics (P2): teachers, timetable, attendance, tasks, announcements, services ----------
+{
+  const sched = await import('../src/modules/schedule/service')
+  const att = await import('../src/modules/attendance/service')
+  const learn = await import('../src/modules/learning/service')
+  const comms = await import('../src/modules/comms/service')
+  const svc = await import('../src/modules/services/service')
+  const { staffRoles, guardianLinks, accounts: accT, persons: perT, timeSlots } = await import('../src/db/schema')
+  const { hashPassword: hp } = await import('../src/server/secrets')
+  const { addDays: plus, today: todayOf, weekday: wd } = await import('../src/server/time')
+  if (!(await db.select().from(timeSlots)).length) {
+    await sched.saveSlots(ctx, [
+      { ordinal: 1, label: 'Jam 1', startTime: '07:15', endTime: '07:55', kind: 'lesson' },
+      { ordinal: 2, label: 'Jam 2', startTime: '07:55', endTime: '08:35', kind: 'lesson' },
+      { ordinal: 3, label: 'Jam 3', startTime: '08:35', endTime: '09:15', kind: 'lesson' },
+      { ordinal: 4, label: 'Istirahat', startTime: '09:15', endTime: '09:35', kind: 'break' },
+      { ordinal: 5, label: 'Jam 4', startTime: '09:35', endTime: '10:15', kind: 'lesson' },
+      { ordinal: 6, label: 'Jam 5', startTime: '10:15', endTime: '10:55', kind: 'lesson' },
+      { ordinal: 7, label: 'Jam 6', startTime: '10:55', endTime: '11:35', kind: 'lesson' },
+      { ordinal: 8, label: 'Ishoma', startTime: '11:35', endTime: '12:15', kind: 'break' },
+      { ordinal: 9, label: 'Jam 7', startTime: '12:15', endTime: '12:55', kind: 'lesson' },
+      { ordinal: 10, label: 'Jam 8', startTime: '12:55', endTime: '13:35', kind: 'lesson' },
+    ])
+    // synthetic teachers (never real people); the demo admin teaches MTK & Informatika in VII A and is its wali kelas
+    const T: string[] = []
+    const GURU = ['Bu Sari (contoh)', 'Pak Andi (contoh)', 'Bu Rina (contoh)', 'Pak Dedi (contoh)', 'Bu Wati (contoh)', 'Pak Yusuf (contoh)', 'Bu Lia (contoh)', 'Pak Hadi (contoh)', 'Bu Nur (contoh)', 'Pak Rudi (contoh)']
+    for (const [i, name] of GURU.entries()) {
+      const email = `guru${i + 1}@${slug}.contoh.invalid`
+      const [g] = await db.insert(staffMembers).values({ email, name, active: true }).onConflictDoNothing().returning()
+      const gid = g?.id ?? (await db.select().from(staffMembers).where(eq(staffMembers.email, email)))[0]!.id
+      if (g) await db.insert(staffRoles).values({ staffId: gid, role: 'guru', grantedBy: 'demo' })
+      T.push(gid)
+    }
+    const adminRow = admin ? (await db.select().from(staffMembers).where(eq(staffMembers.email, admin.toLowerCase())))[0] : undefined
+    const ovT = await A.academicOverview(ctx)
+    const term1 = ovT.terms.find((t) => t.yearId === yearId && t.ordinal === 1)!
+    const subj = ovT.subjects
+    const groups: [string, number][] = [
+      ['VII A', 0],
+      ['VII B', 5],
+    ]
+    for (const [hn, off] of groups) {
+      for (const [i, sb] of subj.entries()) {
+        let teacher = T[off + (i % 5)]!
+        if (hn === 'VII A' && adminRow && (sb.code === 'MTK' || sb.code === 'INF')) teacher = adminRow.id
+        await A.saveAssignment(ctx, { termId: term1.id, homeroomId: room[hn]!, subjectId: sb.id, teacherId: teacher, hoursPerWeek: sb.code === 'MTK' || sb.code === 'BIND' ? 5 : 3 })
+      }
+    }
+    if (adminRow) await A.saveHomeroom(ctx, { id: room['VII A'], yearId, gradeLevelId: lvl('VII'), name: 'VII A', homeroomTeacherId: adminRow.id, room: 'R7A', capacity: 32 })
+    const asg = await A.assignmentsOfTerm(ctx, term1.id)
+    const lessonSlots = (await sched.slots(db)).filter((s) => s.kind === 'lesson')
+    const ver = await sched.newVersion(ctx, term1.id, 'Jadwal contoh')
+    for (const [gi, [hn]] of groups.entries()) {
+      const mine = asg.filter((a) => a.a.homeroomId === room[hn])
+      for (let day = 1; day <= 5; day++)
+        for (const [j, sl] of lessonSlots.entries()) {
+          if (day === 5 && j >= 6) continue // Jumat pulang lebih awal
+          const a = mine[(day * 3 + Math.floor(j / 2) + gi * 2) % mine.length]!
+          await sched.setCell(ctx, ver, { homeroomId: room[hn]!, day, slotId: sl.id, assignmentId: a.a.id, room: null })
+        }
+    }
+    const clash = await sched.conflicts(db, ver)
+    const { timetableEntries, tasks: tasksT } = await import('../src/db/schema')
+    for (const c of clash) for (const id of c.entryIds.slice(1)) await db.delete(timetableEntries).where(eq(timetableEntries.id, id))
+    await sched.publishVersion(ctx, ver, '2026-07-13')
+    const d0 = todayOf(ctx.tz)
+    await sched.saveEvent(ctx, { title: 'Asesmen Tengah Semester', kind: 'ujian', startDate: plus(d0, 14), endDate: plus(d0, 18), audience: 'all', isPublic: true, description: 'Jadwal per mapel diumumkan wali kelas.' })
+    await sched.saveEvent(ctx, { title: 'Libur Hari Guru (contoh)', kind: 'libur', startDate: plus(d0, 28), endDate: plus(d0, 28), audience: 'all', isPublic: false, description: null })
+    await sched.saveEvent(ctx, { title: 'Rapat dewan guru', kind: 'rapat', startDate: plus(d0, 3), endDate: plus(d0, 3), audience: 'staff', isPublic: false, description: null })
+
+    // family accounts linked to Alya (VII A): guardian + student login (synthetic, @contoh.invalid)
+    const alya = (await db.select({ id: students.id, personId: students.personId }).from(students).where(eq(students.nis, '26001')))[0]
+    if (alya) {
+      const [link] = await db.select().from(guardianLinks).where(eq(guardianLinks.studentId, alya.id))
+      const pw = await hp('Contoh-Keluarga-2026')
+      const [wp] = await db.insert(perT).values({ fullName: 'Ibu Alya (contoh)', email: 'wali.alya@contoh.invalid' }).returning()
+      const [wa] = await db.insert(accT).values({ login: 'wali.alya@contoh.invalid', email: 'wali.alya@contoh.invalid', personId: wp!.id, passwordHash: pw, emailVerifiedAt: new Date(), verifiedBy: 'demo' }).returning()
+      const wctx = makeCtx({ school, db, account: { kind: 'account', id: wa!.id, personId: wp!.id, login: wa!.login, name: wp!.fullName, email: wa!.email, emailVerified: true, mustChangePassword: false, sessionId: 'demo' } })
+      if (link) await S.redeemCode(wctx, (await S.issueGuardianCode(ctx, link.id)).code)
+      const [sa] = await db.insert(accT).values({ login: 'siswa.alya', personId: alya.personId, passwordHash: pw, verifiedBy: 'demo' }).returning()
+      await db.update(students).set({ accountId: sa!.id }).where(eq(students.id, alya.id))
+      const sctx = makeCtx({ school, db, account: { kind: 'account', id: sa!.id, personId: alya.personId, login: 'siswa.alya', name: 'Alya Putri', email: null, emailVerified: false, mustChangePassword: false, sessionId: 'demo' } })
+
+      await att.requestLeave(wctx, { studentId: alya.id, kind: 'izin', fromDate: plus(d0, 1), toDate: plus(d0, 1), reason: 'Acara keluarga (contoh).', file: null })
+
+      // learning: material + tasks in MTK VII A
+      const mtk = asg.find((a) => a.homeroom === 'VII A' && a.subjectCode === 'MTK')!
+      await learn.saveMaterial(ctx, { assignmentId: mtk.a.id, title: 'Bilangan bulat dan operasinya', unit: 'Bab 1', body: 'Ringkasan materi: penjumlahan, pengurangan, perkalian dan pembagian bilangan bulat beserta contoh soal.', links: [], publish: true }, [])
+      const t1 = await learn.saveTask(ctx, { assignmentId: mtk.a.id, title: 'Latihan bilangan bulat', kind: 'tugas', instructions: 'Kerjakan soal nomor 1–10 di buku paket halaman 12. Unggah foto jawaban atau ketik jawabanmu.', dueAt: new Date(Date.now() + 3 * 86400_000), maxScore: 100, allowLate: true, submissionType: 'file_or_text', publish: true }, [])
+      const t2 = await learn.saveTask(ctx, { assignmentId: mtk.a.id, title: 'Kuis pecahan', kind: 'kuis', instructions: 'Kuis singkat 10 soal.', dueAt: new Date(Date.now() + 86400_000), maxScore: 100, allowLate: false, submissionType: 'file_or_text', publish: true }, [])
+      await learn.submitTask(sctx, t2, 'Jawaban kuis: 1) 3/4 2) 1/2 … (contoh)', [])
+      await db.update(tasksT).set({ dueAt: new Date(Date.now() - 2 * 86400_000) }).where(eq(tasksT.id, t2))
+      await learn.reviewSubmission(ctx, t2, alya.id, { score: 85, feedback: 'Bagus! Perhatikan penyederhanaan pecahan di soal 7.', needsRevision: false })
+      void t1
+
+      // announcements & a service request
+      await comms.saveAnnouncement(ctx, { title: 'Asesmen Tengah Semester Ganjil', body: 'Asesmen Tengah Semester dilaksanakan dua pekan lagi. Jadwal per mata pelajaran akan dibagikan wali kelas. Mohon orang tua mendampingi anak belajar di rumah.', audience: { type: 'families' }, publishAt: null, requiresAck: true, pinned: true, publish: true }, [])
+      await comms.saveAnnouncement(ctx, { title: 'Pengumpulan nilai harian', body: 'Bapak/Ibu guru dimohon melengkapi nilai harian dan jurnal mengajar sebelum akhir bulan.', audience: { type: 'staff' }, publishAt: null, requiresAck: false, pinned: false, publish: true }, [])
+      const types = await svc.catalogue(db)
+      await svc.submitRequest(wctx, { typeId: types.find((t) => t.code === 'ket_aktif')!.id, studentId: alya.id, answers: { keperluan: 'Persyaratan beasiswa (contoh)' }, purpose: null, file: null })
+    }
+  }
+}
+// attendance history for VII A (demo placements are back-dated to the start of the year so history can exist)
+{
+  const { dailyAttendance, classPlacements } = await import('../src/db/schema')
+  const att = await import('../src/modules/attendance/service')
+  const { addDays: plus, today: todayOf, weekday: wd } = await import('../src/server/time')
+  const { homeroomStudents } = await import('../src/modules/scope')
+  if (!(await db.select({ id: dailyAttendance.id }).from(dailyAttendance).limit(1)).length) {
+    await db.update(classPlacements).set({ validFrom: '2026-07-13' }).where(and(gt(classPlacements.validFrom, '2026-07-13'), isNull(classPlacements.validTo)))
+    const d0 = todayOf(ctx.tz)
+    const pupils = await homeroomStudents(db, room['VII A']!, d0)
+    for (let k = 0, n = 0; n < 6 && k < 14; k++) {
+      const day = plus(d0, -k)
+      if (wd(day) === 0 || wd(day) === 6) continue
+      n++
+      await att.saveDaily(ctx, room['VII A']!, day, pupils.map((p, i) => ({ studentId: p.studentId, status: (i + k) % 9 === 0 ? 'S' : (i + k) % 13 === 0 ? 'I' : 'H', note: null })))
+    }
   }
 }
 console.log(`✓ Data contoh untuk ${school.name} siap (${NAMES.length} siswa contoh, 4 rombel, ${SUBJ.length} mapel).`)

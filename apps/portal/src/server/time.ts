@@ -75,3 +75,8 @@ export const fmtTime = (v: Date, tz: string) => {
   return `${pad(p.hh)}.${pad(p.mm)}`
 }
 export const fmtDayDate = (date: string) => `${DAYS[weekday(date)]}, ${fmtDate(date)}`
+/** "08:30" wall clock (for comparing with time-slot strings). */
+export const clock = (v: Date, tz: string) => {
+  const p = localParts(v, tz)
+  return `${pad(p.hh)}:${pad(p.mm)}`
+}
