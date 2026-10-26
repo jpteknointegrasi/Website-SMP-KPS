@@ -65,16 +65,18 @@ Email login bersifat unik di seluruh platform: satu akun hanya untuk satu sekola
 - Di CMS, staf yang membuka menu Pengaturan/Beranda/Navigasi/Fitur Aktif langsung diarahkan ke dokumen sekolahnya (`components/admin/SingletonList.tsx`).
 - Field baru di Pengaturan Sekolah: **Nama singkat** (mis. "KPS", dipakai di "Tentang KPS" dan "Cerita dari KPS"), **Gambar pratinjau tautan**, dan **email Notifikasi** untuk pesan kontak serta minat.
 
-## 6. Fitur & paket
+## 6. Langganan produk & fitur
 
-`readFlags()` = pilihan sekolah ∩ fitur yang diizinkan paketnya (`lib/flags.ts`, `PLAN_FEATURES`):
+Sekolahku Web dan Sekolahku App dijual terpisah: setiap sekolah punya langganan **Web** dan **App** masing-masing (paket + status Aktif/Uji coba/Dijeda), lihat `docs/BLUEPRINT_ADDENDUM_v2.1.md`. Tanpa langganan Web yang aktif, website sekolah tidak tayang dan endpoint website tertutup; portal tetap dapat dipakai bila App aktif.
 
-| Paket | Fitur yang bisa dinyalakan |
+`readFlags()` = pilihan sekolah ∩ fitur yang diizinkan paket Web-nya (`packages/core` → `WEB_PLAN_FEATURES`):
+
+| Paket Web | Fitur yang bisa dinyalakan |
 |---|---|
 | Basic | Kalender bulanan, Video & media sosial |
 | Pro | + Form minat, Kunjungan sekolah, Karya siswa, Statistik pengunjung |
 
-SMP Nasional KPS dimigrasikan sebagai **Pro**, sehingga tidak ada fitur yang hilang. Paket hanya membatasi; tagihan belum dibuat (lihat §10).
+SMP Nasional KPS dimigrasikan sebagai **Web Pro** (App: tidak berlangganan), sehingga tidak ada fitur yang hilang. Paket hanya membatasi; tagihan belum dibuat (lihat §10).
 
 ## 7. Zona waktu
 

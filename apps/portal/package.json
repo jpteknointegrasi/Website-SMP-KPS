@@ -1,0 +1,39 @@
+{
+  "name": "@sekolahku/portal",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Sekolahku App: portal PWA di /portal (penerimaan siswa baru, akademik, layanan). Satu database per sekolah.",
+  "type": "module",
+  "scripts": {
+    "dev": "next dev -p 3001",
+    "build": "next build",
+    "start": "next start -p 3001",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "db:generate": "drizzle-kit generate",
+    "migrate": "tsx scripts/migrate.ts"
+  },
+  "dependencies": {
+    "@sekolahku/core": "*",
+    "drizzle-orm": "0.45.2",
+    "next": "16.3.3",
+    "pg": "8.20.0",
+    "react": "19.2.6",
+    "react-dom": "19.2.6",
+    "server-only": "^0.0.1"
+  },
+  "devDependencies": {
+    "@types/node": "22.19.9",
+    "@types/pg": "8.20.0",
+    "@types/react": "19.2.14",
+    "@types/react-dom": "19.2.3",
+    "dotenv": "16.4.7",
+    "drizzle-kit": "0.31.7",
+    "tsx": "4.23.15",
+    "typescript": "5.7.3",
+    "vitest": "4.0.18"
+  },
+  "engines": {
+    "node": ">=22.12"
+  }
+}

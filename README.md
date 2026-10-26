@@ -1,7 +1,18 @@
-# Website & CMS SMP Nasional KPS
+# Sekolahku — Website & Portal Sekolah
 
-Website publik sekolah + CMS untuk staf, dibangun dengan **Next.js 16 + TypeScript + Payload CMS 3 + PostgreSQL**.
-Spesifikasi: `content/BRIEF_LENGKAP_WEBSITE_SMP_KPS_UNTUK_CLAUDE.md`. Status pekerjaan: `IMPLEMENTATION_STATUS.md`.
+Monorepo dua produk yang dijual terpisah, di atas satu inti (lihat `docs/BLUEPRINT_ADDENDUM_v2.1.md`):
+
+| Folder | Produk | Teknologi |
+|---|---|---|
+| `apps/web` | **Sekolahku Web**: website publik + CMS, minat, kunjungan/open house (sekolah pertama: SMP Nasional KPS) | Next.js 16 + Payload CMS 3 + PostgreSQL |
+| `apps/portal` | **Sekolahku App**: portal PWA di `/portal` (penerimaan siswa baru, akademik, layanan); database per sekolah | Next.js 16 + Drizzle + PostgreSQL |
+| `packages/core` | Inti bersama: sekolah/domain, zona waktu, langganan produk, login staf bersama, penyegelan rahasia | TypeScript |
+
+Perintah dijalankan dari folder utama (npm workspaces): `npm ci`, `npm run dev` (website, :3000), `npm run dev:portal`
+(portal, :3001), `npm test` (semua), `npm run portal:migrate -- --sekolah <kode>`. Berkas `.env` ada di `apps/web/.env`
+dan `apps/portal/.env` (contoh: `.env.example` di masing-masing folder). Perintah website di bawah dijalankan di `apps/web`.
+
+Spesifikasi website: `apps/web/content/BRIEF_LENGKAP_WEBSITE_SMP_KPS_UNTUK_CLAUDE.md`. Status pekerjaan: `IMPLEMENTATION_STATUS.md`.
 
 > **Cabang `platform-sekolah`: platform multi-sekolah (SaaS).** Satu deployment melayani banyak sekolah; SMP Nasional KPS
 > adalah sekolah pertama. Arsitektur & isolasi data: `SAAS_ARCHITECTURE.md`. Operasional (menambah sekolah, domain,

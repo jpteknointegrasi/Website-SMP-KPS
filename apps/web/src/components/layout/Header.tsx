@@ -141,8 +141,7 @@ export const Header = ({
               <a
                 href={portalUrl}
                 className="btn btn--outline btn--sm hide-md"
-                target="_blank"
-                rel="noopener noreferrer"
+                {...(portalUrl.startsWith('/') ? {} : { target: '_blank', rel: 'noopener noreferrer' })}
               >
                 Portal Sekolah
               </a>
@@ -202,7 +201,7 @@ export const Header = ({
             Informasi Pendaftaran
           </Link>
           {portalUrl ? (
-            <a href={portalUrl} className="btn btn--line" target="_blank" rel="noopener noreferrer">
+            <a href={portalUrl} className="btn btn--line" {...(portalUrl.startsWith("/") ? {} : { target: "_blank", rel: "noopener noreferrer" })}>
               Portal Sekolah
             </a>
           ) : null}

@@ -1,5 +1,7 @@
 # Panduan Operasional Platform Multi-Sekolah
 
+> **Monorepo (cabang `platform-produk`):** website ada di `apps/web`, portal di `apps/portal`. Di Vercel dibuat **dua project** dari repo yang sama: (1) Sekolahku Web — *Root Directory* `apps/web` (semua domain sekolah diarahkan ke sini); (2) Sekolahku App — *Root Directory* `apps/portal`, alamat bawaannya dipakai sebagai `PORTAL_ORIGIN` di project Web. `PLATFORM_SECRET`, `PAYLOAD_SECRET` dan `PORTAL_PROXY_SECRET` harus sama di kedua project; `PLATFORM_DATABASE_URL` portal = database Web. Lihat `docs/BLUEPRINT_ADDENDUM_v2.1.md`.
+
 Untuk pemilik platform (Super Admin). Arsitekturnya dijelaskan di `SAAS_ARCHITECTURE.md`.
 
 ## A. Variabel lingkungan (Vercel → Settings → Environment Variables)
@@ -77,7 +79,8 @@ npm run sekolah:baru:prod -- --nama "SMA Negeri 1 Contoh" --kode sman1 --zona As
 | Tugas | Cara |
 |---|---|
 | Menangguhkan sekolah (mis. belum bayar) | Platform → Sekolah → Status *Ditangguhkan*. Situs dan login sekolah itu tertutup ≤ 60 detik; data tetap ada |
-| Naik/turun paket | Ubah *Paket*. Fitur di luar paket otomatis mati |
+| Naik/turun paket | Platform → Sekolah → *Langganan produk*: paket & status Web dan App terpisah. Fitur di luar paket otomatis mati |
+| Mengaktifkan Sekolahku App | Buat database PostgreSQL baru untuk sekolah itu, tempel URL-nya di *Database App* (tersimpan terenkripsi), set paket App, lalu `npm run portal:migrate -- --sekolah <kode>` dari folder utama |
 | Pindah domain | Ubah daftar domain. Tambahkan juga domain baru di Vercel |
 | Backup satu sekolah | `BACKUP_TENANT=<kode>` lalu `npm run backup:prod` |
 | Menghapus sekolah | Ditolak bila masih berisi data. Tangguhkan saja, atau kosongkan datanya dulu |
