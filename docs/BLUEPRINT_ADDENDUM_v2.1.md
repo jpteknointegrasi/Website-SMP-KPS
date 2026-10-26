@@ -133,4 +133,4 @@ sekolahku/
 | Event Web ↔ App (bagian D) | backlog | Setelah M14 |
 | Job worker (outbox, notifikasi, PDF) dan object storage privat | backlog | Diperlukan sebelum M14 tayang |
 
-Halaman `/portal/pendaftaran` saat ini menyatakan dengan jujur bahwa portal pendaftaran sedang disiapkan. Jangan aktifkan langganan App untuk sekolah nyata sebelum M14 lulus gate §50.3.
+Halaman `/portal/penerimaan` (Penerimaan Siswa Baru) saat ini menyatakan dengan jujur bahwa portal penerimaan sedang disiapkan. Pendaftaran kunjungan/open house **bukan** bagian App: itu fitur Web di `/kunjungan` dan sudah berjalan (F05). Jangan aktifkan langganan App untuk sekolah nyata sebelum M14 lulus gate §50.3.

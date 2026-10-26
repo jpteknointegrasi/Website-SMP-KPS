@@ -40,7 +40,7 @@ export const WEB_PLAN_FEATURES: Record<string, readonly string[]> = {
 
 /**
  * Who runs admissions (Blueprint §19.1 modes, decided by what the school bought):
- *   'app'  — full admissions in the portal (/portal/pendaftaran); the website links there
+ *   'app'  — full admissions (Penerimaan Siswa Baru) in the portal (/portal/penerimaan); the website links there
  *   'web'  — information (and an external link if the school sets one) on the website only
  * Interest form and school visits / open house always stay in the website (semi-public), whatever this returns.
  */

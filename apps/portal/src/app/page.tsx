@@ -39,7 +39,7 @@ export default async function PortalHome() {
       ) : null}
 
       <section className="grid" aria-label="Layanan portal">
-        <a className="tile" href="/portal/pendaftaran">
+        <a className="tile" href="/portal/penerimaan">
           <strong>Penerimaan Siswa Baru</strong>
           <span>Pendaftaran, berkas, hasil dan daftar ulang</span>
         </a>

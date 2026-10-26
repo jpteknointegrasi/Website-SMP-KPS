@@ -68,7 +68,7 @@ export default async function Page() {
                   ) : null}
                   {viaPortal ? (
                     <div>
-                      <a className={`btn ${openPortal ? 'btn--gold btn--lg' : 'btn--ghost'}`} href={`${PORTAL_BASE_PATH}/pendaftaran`} data-cta="daftar-portal">
+                      <a className={`btn ${openPortal ? 'btn--gold btn--lg' : 'btn--ghost'}`} href={`${PORTAL_BASE_PATH}/penerimaan`} data-cta="daftar-portal">
                         {openPortal ? 'Daftar di Portal Penerimaan' : 'Masuk Portal Penerimaan (cek status pendaftaran)'}
                       </a>
                     </div>
