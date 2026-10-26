@@ -4,6 +4,7 @@
  *   app — Sekolahku App: portal (PWA) for applicants, students, guardians, teachers, BK, staff; full admissions
  * Each product checks its own entitlement on the server. Neither product reads the other's tables.
  */
+import { timingSafeEqual } from 'crypto'
 import { isLive, type SchoolInfo } from './schools'
 
 export const PRODUCTS = ['web', 'app'] as const
@@ -52,13 +53,25 @@ export const PORTAL_BASE_PATH = '/portal'
 export const PORTAL_HOST_HEADER = 'x-sekolahku-host'
 export const PORTAL_PROXY_HEADER = 'x-sekolahku-proxy'
 
+const sameSecret = (a: string, b: string) => {
+  const x = Buffer.from(a)
+  const y = Buffer.from(b)
+  return x.length === y.length && timingSafeEqual(x, y)
+}
+
 /**
  * The school host of a portal request: the forwarded school host when the request came through the website with the
- * right shared secret (PORTAL_PROXY_SECRET), otherwise the request's own Host. Never trusts a forwarded host alone.
+ * right shared secret (PORTAL_PROXY_SECRET). Never trusts a forwarded host alone. With `requireProxy` (production) a
+ * request that did not come through the website gets null — so a misconfiguration fails closed instead of showing
+ * some school's portal; without it (development) the request's own Host is used.
  */
-export function portalRequestHost(h: { get(name: string): string | null }, secret = process.env.PORTAL_PROXY_SECRET) {
+export function portalRequestHost(
+  h: { get(name: string): string | null },
+  secret = process.env.PORTAL_PROXY_SECRET,
+  opts: { requireProxy?: boolean } = {},
+) {
   const forwarded = h.get(PORTAL_HOST_HEADER)
   const given = h.get(PORTAL_PROXY_HEADER)
-  if (forwarded && secret && secret.length >= 16 && given === secret) return forwarded
-  return h.get('host')
+  if (forwarded && given && secret && secret.length >= 16 && sameSecret(given, secret)) return forwarded
+  return opts.requireProxy ? null : h.get('host')
 }

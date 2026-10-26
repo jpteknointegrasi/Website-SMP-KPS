@@ -1,42 +1,14 @@
 /**
- * Staff sign-in shared by both products. Staff sign in once on the school's website CMS (Payload); because the
- * portal lives on the same domain under /portal, the browser sends the same `payload-token` cookie and the portal
- * accepts it here. This module only checks the token's signature and expiry; callers must also confirm the session
- * still exists and the account is active (registry.staffSession), so a logout or deactivation takes effect at once.
+ * Staff sign-in shared by both products. Staff sign in once on the school's website CMS (Payload); the portal lives on
+ * the same domain under /portal, so the browser sends the same `payload-token` cookie. The portal does NOT hold the
+ * CMS signing secret: it asks the website who the token belongs to (GET /api/users/me). Payload itself then checks the
+ * signature, the session (a logout takes effect at once) and the account. A compromised portal therefore cannot forge
+ * CMS sessions.
  */
-import { createHash, createHmac, timingSafeEqual } from 'crypto'
 
 export const STAFF_COOKIE = 'payload-token'
 
-export type StaffToken = { id: number; collection: string; sid?: string; email?: string; exp: number; iat?: number }
-
-/** The HMAC key Payload derives from PAYLOAD_SECRET (payload/dist/index.js: sha256(secret).hex.slice(0, 32)). */
-export const payloadJwtKey = (payloadSecret = process.env.PAYLOAD_SECRET || '') =>
-  createHash('sha256').update(payloadSecret).digest('hex').slice(0, 32)
-
-const b64 = (s: string) => Buffer.from(s, 'base64url')
-
-/** Verifies an HS256 Payload token; returns its claims or null (bad signature, expired, malformed). */
-export function verifyStaffToken(token: string | undefined | null, opts: { secret?: string; now?: number } = {}): StaffToken | null {
-  if (!token) return null
-  const parts = token.split('.')
-  if (parts.length !== 3) return null
-  const [h, p, sig] = parts as [string, string, string]
-  try {
-    const header = JSON.parse(b64(h).toString('utf8')) as { alg?: string }
-    if (header.alg !== 'HS256') return null
-    const expected = createHmac('sha256', payloadJwtKey(opts.secret)).update(`${h}.${p}`).digest()
-    const given = b64(sig)
-    if (given.length !== expected.length || !timingSafeEqual(given, expected)) return null
-    const claims = JSON.parse(b64(p).toString('utf8')) as StaffToken
-    const now = Math.floor((opts.now ?? Date.now()) / 1000)
-    if (typeof claims.exp !== 'number' || claims.exp <= now) return null
-    if (claims.collection !== 'users' || typeof claims.id !== 'number') return null
-    return claims
-  } catch {
-    return null
-  }
-}
+export type StaffMember = { id: number; name: string; email: string; role: string; schoolId: number | null }
 
 /** Reads a cookie value from a Cookie header. */
 export const cookieValue = (cookieHeader: string | null | undefined, name: string) => {
@@ -45,4 +17,31 @@ export const cookieValue = (cookieHeader: string | null | undefined, name: strin
     if (i > 0 && part.slice(0, i).trim() === name) return decodeURIComponent(part.slice(i + 1).trim())
   }
   return null
+}
+
+const idOf = (v: unknown): number | null =>
+  typeof v === 'number' ? v : v && typeof v === 'object' && 'id' in v && typeof (v as { id: unknown }).id === 'number' ? (v as { id: number }).id : null
+
+/**
+ * The staff member behind a CMS session token, as confirmed by the website (`webOrigin`, e.g. the website deployment's
+ * internal address). Null for a missing/invalid/logged-out token, an inactive account, or when the website cannot
+ * be reached (fails closed). A JWT-shaped string is required so arbitrary cookie values are never forwarded.
+ */
+export async function fetchStaff(token: string | null | undefined, webOrigin = process.env.WEB_ORIGIN, timeoutMs = 4000): Promise<StaffMember | null> {
+  if (!token || !webOrigin || !/^[\w-]+\.[\w-]+\.[\w-]+$/.test(token)) return null
+  try {
+    const res = await fetch(new URL('/api/users/me', webOrigin), {
+      headers: { authorization: `JWT ${token}`, accept: 'application/json' },
+      cache: 'no-store',
+      redirect: 'error',
+      signal: AbortSignal.timeout(timeoutMs),
+    })
+    if (!res.ok) return null
+    const body = (await res.json()) as { user?: Record<string, unknown> | null }
+    const u = body.user
+    if (!u || typeof u.id !== 'number' || u.active === false) return null
+    return { id: u.id, name: String(u.name ?? ''), email: String(u.email ?? ''), role: String(u.role ?? ''), schoolId: idOf(u.tenant) }
+  } catch {
+    return null
+  }
 }

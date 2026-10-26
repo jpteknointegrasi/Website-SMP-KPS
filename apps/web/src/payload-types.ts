@@ -473,6 +473,10 @@ export interface Tenant {
      * Satu database per sekolah. Tempel URL koneksi (postgres://…) untuk mengatur atau mengganti; disimpan terenkripsi dan tidak pernah ditampilkan lagi. Kosongkan untuk tidak mengubah. Setelah itu jalankan: npm run portal:migrate -- --sekolah <kode>.
      */
     databaseInput?: string | null;
+    /**
+     * Hanya memutus portal dari database itu; database dan isinya tidak dihapus.
+     */
+    databaseClear?: boolean | null;
     databaseConfigured?: boolean | null;
   };
   /**
@@ -3762,6 +3766,7 @@ export interface TenantsSelect<T extends boolean = true> {
         status?: T;
         database?: T;
         databaseInput?: T;
+        databaseClear?: T;
         databaseConfigured?: T;
       };
   timezone?: T;

@@ -1,3 +1,4 @@
+import { hasProduct } from '@sekolahku/core'
 import { currentTenant, siteUrl } from '@/lib/payload'
 import { findBySlug } from '@/lib/queries'
 import { buildIcs } from '@/lib/ics'
@@ -5,6 +6,7 @@ import type { Event } from '@/payload-types'
 
 export async function GET(_req: Request, ctx: { params: Promise<{ slug: string }> }) {
   const { slug } = await ctx.params
+  if (!hasProduct(await currentTenant(), 'web')) return new Response('Agenda tidak ditemukan', { status: 404 })
   const e = await findBySlug<Event>('events', slug, 0)
   if (!e) return new Response('Agenda tidak ditemukan', { status: 404 })
   const school = await currentTenant()

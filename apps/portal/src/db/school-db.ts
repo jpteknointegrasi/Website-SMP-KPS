@@ -5,7 +5,7 @@
 import pg from 'pg'
 import { drizzle, type NodePgDatabase } from 'drizzle-orm/node-postgres'
 import { migrate } from 'drizzle-orm/node-postgres/migrator'
-import { eq } from 'drizzle-orm'
+import { eq, getTableName, isTable } from 'drizzle-orm'
 import path from 'path'
 import { fileURLToPath } from 'url'
 import { appDatabaseUrl } from '@sekolahku/core/registry'
@@ -62,13 +62,30 @@ const MIGRATIONS = path.resolve(path.dirname(fileURLToPath(import.meta.url)), 'm
  */
 export async function migrateSchoolDb(school: SchoolInfo, urlOverride?: string) {
   const e = await open(school, urlOverride)
+  // Ownership is checked BEFORE anything is changed:
+  //  - stamped for another school → refused
+  //  - not stamped yet → only an EMPTY database is accepted (protects e.g. the platform database pasted by mistake)
+  const owner = await e.pool.query<{ school_id: number; school_slug: string }>(
+    `SELECT school_id, school_slug FROM school_meta WHERE id = 1`,
+  ).catch(() => null)
+  const stamped = owner?.rows[0]
+  if (stamped && stamped.school_id !== school.id)
+    throw new SchoolDbError('wrong_school', `Database ini sudah milik sekolah lain (id ${stamped.school_id}, ${stamped.school_slug}).`)
+  if (!stamped) {
+    // tables of our own schema are allowed (an earlier run stopped before stamping); anything else is not ours
+    const ours = Object.values(schema).filter(isTable).map((t) => getTableName(t))
+    const tables = await e.pool.query<{ n: string }>(
+      `SELECT count(*) AS n FROM information_schema.tables
+       WHERE table_schema NOT IN ('pg_catalog', 'information_schema', 'drizzle') AND NOT (table_schema = 'public' AND table_name = ANY($1))`,
+      [ours],
+    )
+    if (Number(tables.rows[0]!.n) > 0)
+      throw new SchoolDbError('wrong_school', 'Database ini tidak kosong dan belum ditandai sebagai database App sekolah. Gunakan database baru yang kosong.')
+  }
   await migrate(e.db, { migrationsFolder: MIGRATIONS })
-  const existing = await e.db.select().from(schema.schoolMeta).where(eq(schema.schoolMeta.id, 1))
-  if (existing[0] && existing[0].schoolId !== school.id)
-    throw new SchoolDbError('wrong_school', `Database ini sudah milik sekolah lain (id ${existing[0].schoolId}, ${existing[0].schoolSlug}).`)
-  if (!existing[0]) await e.db.insert(schema.schoolMeta).values({ id: 1, schoolId: school.id, schoolSlug: school.slug })
+  if (!stamped) await e.db.insert(schema.schoolMeta).values({ id: 1, schoolId: school.id, schoolSlug: school.slug })
   e.verified = true
-  return { stamped: !existing[0] }
+  return { stamped: !stamped }
 }
 
 /** Closes all connections (scripts and tests). */

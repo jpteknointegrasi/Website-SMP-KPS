@@ -1,11 +1,14 @@
 import type { MetadataRoute } from 'next'
-import { payloadClient, siteUrl } from '@/lib/payload'
+import { currentTenant, payloadClient, siteUrl } from '@/lib/payload'
+import { hasProduct } from '@sekolahku/core'
 import { readFlags } from '@/lib/flags'
 
 export const dynamic = 'force-dynamic'
 
 /** Only published, public URLs (read through public access rules: no drafts, demo or archived records). */
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  const school = await currentTenant()
+  if (!school || !hasProduct(school, 'web')) return []
   const SITE = await siteUrl()
   const statics = ['', '/tentang', '/tentang/sejarah', '/tentang/visi-misi', '/tentang/pimpinan-guru', '/tentang/fasilitas', '/pembelajaran', '/kehidupan-siswa', '/prestasi', '/informasi', '/berita', '/pengumuman', '/agenda', '/galeri', '/unduhan', '/transparansi-bos', '/panduan', '/layanan', '/alumni', '/pendaftaran', '/kontak', '/kebijakan-privasi']
   const payload = await payloadClient()

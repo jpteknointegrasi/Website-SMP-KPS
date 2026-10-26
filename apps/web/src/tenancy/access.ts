@@ -1,6 +1,7 @@
 import type { Access, AccessArgs, PayloadRequest, Where } from 'payload'
 import { isStaff, isSuperAdmin } from '../access/roles'
-import { idOf, isLive, tenantByHost } from './resolve'
+import { idOf, tenantByHost } from './resolve'
+import { hasProduct } from '@sekolahku/core'
 
 type MaybeUser = PayloadRequest['user'] | null | undefined
 
@@ -32,7 +33,8 @@ export async function requestTenantId(req: PayloadRequest): Promise<number | nul
   const host = req.headers?.get?.('host')
   if (!host || !req.payload) return null
   const t = await tenantByHost(req.payload, host)
-  return isLive(t) ? t.id : null
+  // visitors only reach a school's content while it subscribes to Sekolahku Web
+  return t && hasProduct(t, 'web') ? t.id : null
 }
 
 /** Where-constraint limiting a query to the request's school. `true` = unrestricted (Super Admin without a chosen school). */

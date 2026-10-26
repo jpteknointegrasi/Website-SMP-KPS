@@ -330,3 +330,33 @@ describe('TEN-12 langganan per produk (Web / App dijual terpisah)', () => {
     await raw.update({ collection: 'tenants', id: A.id, overrideAccess: true, data: { app: { plan: 'none', status: 'trial' } } as never })
   })
 })
+
+describe('TEN-13 temuan audit tahap produk', () => {
+  it('riwayat versi data sekolah hanya untuk Super Admin', async () => {
+    await expect(raw.findVersions({ collection: 'tenants', user: staff.Aadmin, overrideAccess: false })).rejects.toThrow()
+    const r = await raw.findVersions({ collection: 'tenants', user: superAdmin, overrideAccess: false, limit: 1 })
+    expect(r.totalDocs).toBeGreaterThan(0)
+  })
+  it('nilai database App yang dikirim langsung diabaikan; hanya input yang disegel; bisa dihapus', async () => {
+    const sel = async () => ((await raw.db.drizzle.execute(`SELECT app_database FROM tenants WHERE id = ${B.id}` as never)) as unknown as { rows: { app_database: string | null }[] }).rows[0]!.app_database
+    await raw.update({ collection: 'tenants', id: B.id, user: superAdmin, overrideAccess: false, data: { app: { plan: 'pilot', status: 'trial', database: 'postgres://x:y@evil/z' } } as never })
+    expect(await sel()).toBeNull()
+    await raw.update({ collection: 'tenants', id: B.id, user: superAdmin, overrideAccess: false, data: { app: { databaseInput: 'postgres://u:p@db/b' } } as never })
+    const sealed = await sel()
+    expect(sealed?.startsWith('v1.')).toBe(true)
+    await raw.update({ collection: 'tenants', id: B.id, user: superAdmin, overrideAccess: false, data: { app: { database: 'postgres://x:y@evil/z' } } as never })
+    expect(await sel()).toBe(sealed)
+    await raw.update({ collection: 'tenants', id: B.id, user: superAdmin, overrideAccess: false, data: { app: { databaseClear: true, plan: 'none' } } as never })
+    expect(await sel()).toBeNull()
+  })
+  it('tanpa langganan Web, REST publik tidak membaca konten sekolah itu', async () => {
+    await raw.update({ collection: 'tenants', id: B.id, overrideAccess: true, data: { web: { plan: 'none', status: 'active' } } as never })
+    clearTenantCache()
+    const r = await api('GET', B.domain, `posts?where[slug][equals]=ppdb-${RUN}`)
+    expect(r.status === 403 || r.json?.docs?.length === 0).toBe(true)
+    await raw.update({ collection: 'tenants', id: B.id, overrideAccess: true, data: { web: { plan: 'basic', status: 'active' } } as never })
+    clearTenantCache()
+    const back = await api('GET', B.domain, `posts?where[slug][equals]=ppdb-${RUN}`)
+    expect(back.json.docs.length).toBe(1)
+  })
+})

@@ -27,6 +27,8 @@ export const Tenants: CollectionConfig = {
     create: superAdminOnly,
     update: superAdminOnly,
     delete: superAdminOnly,
+    // history holds every school's contacts and subscriptions: platform operator only
+    readVersions: superAdminOnly,
   },
   versions: { maxPerDoc: 20 },
   lockDocuments: false,
@@ -42,15 +44,20 @@ export const Tenants: CollectionConfig = {
     ],
     beforeChange: [
       // App database URL: sealed before it is stored; the plain value is never kept.
+      // The stored value can only come from this hook: whatever `database` a request sends is ignored.
       ({ data, originalDoc }) => {
-        const input = (data.app as { databaseInput?: string } | undefined)?.databaseInput?.trim()
-        if (data.app) delete (data.app as { databaseInput?: string }).databaseInput
+        const app = (data.app ?? {}) as { databaseInput?: string; databaseClear?: boolean; database?: string | null }
+        const input = app.databaseInput?.trim()
+        const clear = app.databaseClear === true
+        delete app.databaseInput
+        delete app.databaseClear
+        let sealed: string | null = (originalDoc?.app as { database?: string | null } | undefined)?.database ?? null
         if (input) {
           if (!/^postgres(ql)?:\/\/\S+$/i.test(input)) throw new APIError('URL database App harus diawali postgres:// atau postgresql://', 400, null, true)
-          data.app = { ...(data.app ?? {}), database: sealSecret(input) }
-        } else if (data.app && originalDoc?.app?.database && !(data.app as { database?: string }).database) {
-          ;(data.app as { database?: string }).database = originalDoc.app.database
-        }
+          sealed = sealSecret(input)
+        } else if (clear) sealed = null
+        app.database = sealed
+        data.app = app
         return data
       },
       // A domain can only point at one school.
@@ -171,6 +178,14 @@ export const Tenants: CollectionConfig = {
                 description:
                   'Satu database per sekolah. Tempel URL koneksi (postgres://…) untuk mengatur atau mengganti; disimpan terenkripsi dan tidak pernah ditampilkan lagi. Kosongkan untuk tidak mengubah. Setelah itu jalankan: npm run portal:migrate -- --sekolah <kode>.',
               },
+            },
+            {
+              name: 'databaseClear',
+              type: 'checkbox',
+              label: 'Hapus pengaturan database App',
+              virtual: true,
+              access: { create: fieldSuperAdminOnly, update: fieldSuperAdminOnly },
+              admin: { description: 'Hanya memutus portal dari database itu; database dan isinya tidak dihapus.' },
             },
             {
               name: 'databaseConfigured',

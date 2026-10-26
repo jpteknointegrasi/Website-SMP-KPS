@@ -3,10 +3,10 @@
  * App databases. Everything created here is removed afterwards.
  */
 import pg from 'pg'
-import { createHmac, randomBytes } from 'crypto'
+import { randomBytes } from 'crypto'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
-import { payloadJwtKey, sealSecret, verifyStaffToken } from '@sekolahku/core'
-import { appDatabaseUrl, clearRegistryCache, schoolByHost, schoolById, staffSession } from '@sekolahku/core/registry'
+import { sealSecret } from '@sekolahku/core'
+import { appDatabaseUrl, clearRegistryCache, schoolByHost, schoolById } from '@sekolahku/core/registry'
 import { SchoolDbError, closeSchoolDbs, migrateSchoolDb, schoolDb } from '@/db/school-db'
 
 const RUN = `p${Date.now().toString(36)}`
@@ -14,7 +14,6 @@ const platform = new pg.Pool({ connectionString: process.env.PLATFORM_DATABASE_U
 const admin = new pg.Pool({ connectionString: process.env.TEST_PG_ADMIN_URL })
 const dbUrl = (name: string) => process.env.TEST_PG_ADMIN_URL!.replace(/\/[^/]+$/, `/${name}`)
 const ids: Record<string, number> = {}
-const users: number[] = []
 
 async function school(key: 'a' | 'b') {
   const db = `app_${RUN}_${key}`
@@ -37,7 +36,6 @@ beforeAll(async () => {
 
 afterAll(async () => {
   await closeSchoolDbs()
-  for (const u of users) await platform.query('DELETE FROM users WHERE id = $1', [u])
   for (const id of Object.values(ids)) await platform.query('DELETE FROM tenants WHERE id = $1', [id])
   for (const k of ['a', 'b']) await admin.query(`DROP DATABASE IF EXISTS app_${RUN}_${k} WITH (FORCE)`)
   await platform.end()
@@ -81,27 +79,30 @@ describe('POR-02 database per sekolah', () => {
   })
 })
 
-describe('POR-03 sesi staf bersama dengan CMS sekolah', () => {
-  const sign = (claims: object) => {
-    const h = Buffer.from(JSON.stringify({ alg: 'HS256', typ: 'JWT' })).toString('base64url')
-    const p = Buffer.from(JSON.stringify(claims)).toString('base64url')
-    return `${h}.${p}.${createHmac('sha256', payloadJwtKey()).update(`${h}.${p}`).digest('base64url')}`
-  }
-  it('sesi aktif diterima; setelah logout (sesi dihapus) atau akun nonaktif ditolak', async () => {
-    const u = await platform.query<{ id: number }>(
-      `INSERT INTO users (name, email, role, active, tenant_id, updated_at, created_at) VALUES ('Staf ${RUN}', $1, 'admin', true, $2, now(), now()) RETURNING id`,
-      [`${RUN}@test.invalid`, ids.a],
-    )
-    const id = u.rows[0]!.id
-    users.push(id)
-    const sid = randomBytes(8).toString('hex')
-    await platform.query(`INSERT INTO users_sessions (_order, _parent_id, id, created_at, expires_at) VALUES (1, $1, $2, now(), now() + interval '1 hour')`, [id, sid])
-    const token = verifyStaffToken(sign({ id, collection: 'users', sid, exp: Math.floor(Date.now() / 1000) + 600 }))!
-    expect((await staffSession(token))?.schoolId).toBe(ids.a)
-    await platform.query('DELETE FROM users_sessions WHERE id = $1', [sid])
-    expect(await staffSession(token)).toBeNull()
-    await platform.query(`INSERT INTO users_sessions (_order, _parent_id, id, created_at, expires_at) VALUES (1, $1, $2, now(), now() + interval '1 hour')`, [id, sid])
-    await platform.query('UPDATE users SET active = false WHERE id = $1', [id])
-    expect(await staffSession(token)).toBeNull()
+describe('POR-03 migrasi tidak pernah mengubah database yang bukan miliknya', () => {
+  it('database tidak kosong yang belum ditandai (mis. database platform) ditolak tanpa diubah', async () => {
+    const name = `app_${RUN}_c`
+    await admin.query(`CREATE DATABASE ${name}`)
+    const c = new pg.Pool({ connectionString: dbUrl(name) })
+    try {
+      await c.query('CREATE TABLE users (id serial primary key)')
+      const a = (await schoolById(ids.a!))!
+      await closeSchoolDbs()
+      await expect(migrateSchoolDb(a, dbUrl(name))).rejects.toMatchObject({ code: 'wrong_school' })
+      const t = await c.query(`SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' ORDER BY 1`)
+      expect(t.rows.map((r) => r.table_name)).toEqual(['users']) // nothing added
+    } finally {
+      await c.end()
+      await closeSchoolDbs()
+      await admin.query(`DROP DATABASE IF EXISTS ${name} WITH (FORCE)`)
+    }
+  })
+  it('alamat tak dikenal tidak jatuh ke sekolah bawaan bila fallback dimatikan (produksi)', async () => {
+    process.env.DEFAULT_TENANT_SLUG = `${RUN}-a`
+    clearRegistryCache()
+    expect((await schoolByHost(`acak-${RUN}.contoh.test`))?.id).toBe(ids.a)
+    expect(await schoolByHost(`acak-${RUN}.contoh.test`, { allowDefault: false })).toBeNull()
+    delete process.env.DEFAULT_TENANT_SLUG
+    clearRegistryCache()
   })
 })

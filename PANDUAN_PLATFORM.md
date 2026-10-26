@@ -95,3 +95,17 @@ npm run sekolah:baru:prod -- --nama "SMA Negeri 1 Contoh" --kode sman1 --zona As
 - semua jadwal masih WITA.
 
 Bila sudah ada sekolah lain, pulihkan dari branch Neon yang dibuat di langkah B1.
+
+## F. Role database hanya-baca untuk Sekolahku App
+
+Portal hanya perlu membaca daftar sekolah dan domainnya dari database platform. Jalankan sekali di database platform (Neon → SQL Editor), lalu pakai role ini untuk `PLATFORM_DATABASE_URL` di project Sekolahku App:
+
+```sql
+CREATE ROLE sekolahku_portal_ro LOGIN PASSWORD '<kata-sandi-acak-panjang>';
+GRANT CONNECT ON DATABASE <nama_database> TO sekolahku_portal_ro;
+GRANT USAGE ON SCHEMA public TO sekolahku_portal_ro;
+GRANT SELECT ON public.tenants, public.tenants_domains TO sekolahku_portal_ro;
+```
+
+Role ini tidak bisa membaca konten, akun staf, data calon orang tua, atau tabel lain, dan tidak bisa mengubah apa pun.
+

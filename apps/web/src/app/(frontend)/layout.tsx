@@ -46,6 +46,7 @@ export async function generateMetadata(): Promise<Metadata> {
   const school = await currentTenant()
   const robots = process.env.NOINDEX === 'true' ? { index: false, follow: false } : undefined
   if (!school) return { title: 'Sekolah tidak ditemukan', robots: { index: false, follow: false } }
+  if (!hasProduct(school, 'web')) return { title: school.name, robots: { index: false, follow: false } }
   const [{ settings }, site] = await Promise.all([getGlobals(), siteUrl()])
   const name = settings.schoolName || school.name
   const full = settings.city ? `${name} ${settings.city}` : name

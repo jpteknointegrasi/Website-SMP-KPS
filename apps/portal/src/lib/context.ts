@@ -1,13 +1,19 @@
 import 'server-only'
 import { cache } from 'react'
 import { cookies, headers } from 'next/headers'
-import { STAFF_COOKIE, hasProduct, isLive, portalRequestHost, verifyStaffToken, type SchoolInfo } from '@sekolahku/core'
-import { schoolByHost, staffSession, type StaffMember } from '@sekolahku/core/registry'
+import { STAFF_COOKIE, fetchStaff, hasProduct, isLive, portalRequestHost, type SchoolInfo, type StaffMember } from '@sekolahku/core'
+import { schoolByHost } from '@sekolahku/core/registry'
 import { SchoolDbError, schoolDb } from '@/db/school-db'
+
+/** In production the portal only answers requests passed on by the website (fails closed on misconfiguration). */
+const PRODUCTION = process.env.NODE_ENV === 'production'
 
 /** The school whose domain this portal request came in on (live schools only). */
 export const portalSchool = cache(async (): Promise<SchoolInfo | null> => {
-  const s = await schoolByHost(portalRequestHost(await headers()))
+  const host = portalRequestHost(await headers(), process.env.PORTAL_PROXY_SECRET, { requireProxy: PRODUCTION })
+  if (!host) return null
+  // DEFAULT_TENANT_SLUG is a development convenience only: never let an unknown address fall back to a school
+  const s = await schoolByHost(host, { allowDefault: !PRODUCTION })
   return isLive(s) ? s : null
 })
 
@@ -15,17 +21,15 @@ export const portalSchool = cache(async (): Promise<SchoolInfo | null> => {
 export const portalEnabled = cache(async () => hasProduct(await portalSchool(), 'app'))
 
 /**
- * Staff member signed in on the school's website CMS (same domain → same cookie). Only staff of THIS school, or the
- * platform Super Admin, count; a valid session for another school is ignored here.
+ * Staff member of THIS school signed in on the school's website CMS (same domain → same cookie), as confirmed by the
+ * website. The platform Super Admin is not let in automatically (Blueprint §25, addendum v2.1): support access to a
+ * school's App data needs its own time-limited, audited grant (to be built with the first data module).
  */
 export const portalStaff = cache(async (): Promise<StaffMember | null> => {
   const school = await portalSchool()
   if (!school) return null
-  const token = verifyStaffToken((await cookies()).get(STAFF_COOKIE)?.value)
-  if (!token) return null
-  const m = await staffSession(token)
-  if (!m) return null
-  return m.role === 'superadmin' || m.schoolId === school.id ? m : null
+  const m = await fetchStaff((await cookies()).get(STAFF_COOKIE)?.value)
+  return m && m.role !== 'superadmin' && m.schoolId === school.id ? m : null
 })
 
 /** State of the school's own App database, for status screens (never throws). */

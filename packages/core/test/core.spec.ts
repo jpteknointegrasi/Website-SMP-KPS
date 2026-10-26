@@ -1,17 +1,17 @@
-import { createHmac } from 'crypto'
-import { describe, expect, it } from 'vitest'
+import { createServer, type Server } from 'http'
+import type { AddressInfo } from 'net'
+import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import {
   admissionsMode,
   cookieValue,
+  fetchStaff,
   hasProduct,
   normalizeHost,
   openSecret,
-  payloadJwtKey,
   portalRequestHost,
   redactUrl,
   sealSecret,
   subdomainSlug,
-  verifyStaffToken,
   type SchoolInfo,
 } from '../src'
 
@@ -58,6 +58,9 @@ describe('produk dijual terpisah', () => {
     expect(portalRequestHost(h({ host: 'portal.vercel.app', 'x-sekolahku-host': 'www.a.sch.id', 'x-sekolahku-proxy': 'salah' }), secret)).toBe('portal.vercel.app')
     expect(portalRequestHost(h({ host: 'portal.vercel.app', 'x-sekolahku-host': 'www.a.sch.id' }), secret)).toBe('portal.vercel.app')
     expect(portalRequestHost(h({ host: 'p', 'x-sekolahku-host': 'w', 'x-sekolahku-proxy': 'pendek' }), 'pendek')).toBe('p') // too short = off
+    // production: no valid pass-through → no school at all (fails closed)
+    expect(portalRequestHost(h({ host: 'portal.vercel.app' }), secret, { requireProxy: true })).toBeNull()
+    expect(portalRequestHost(h({ host: 'p', 'x-sekolahku-host': 'www.a.sch.id', 'x-sekolahku-proxy': secret }), secret, { requireProxy: true })).toBe('www.a.sch.id')
   })
 })
 
@@ -78,22 +81,44 @@ describe('rahasia tersegel', () => {
   })
 })
 
-describe('sesi staf bersama', () => {
-  const secret = 'payload-secret-uji'
-  const sign = (claims: object, k = payloadJwtKey(secret)) => {
-    const h = Buffer.from(JSON.stringify({ alg: 'HS256', typ: 'JWT' })).toString('base64url')
-    const p = Buffer.from(JSON.stringify(claims)).toString('base64url')
-    return `${h}.${p}.${createHmac('sha256', k).update(`${h}.${p}`).digest('base64url')}`
-  }
-  const exp = Math.floor(Date.now() / 1000) + 600
-  it('token Payload yang sah diterima; palsu, kedaluwarsa atau koleksi lain ditolak', () => {
-    expect(verifyStaffToken(sign({ id: 5, collection: 'users', sid: 'abc', exp }), { secret })?.id).toBe(5)
-    expect(verifyStaffToken(sign({ id: 5, collection: 'users', exp }, 'kunci-lain'), { secret })).toBeNull()
-    expect(verifyStaffToken(sign({ id: 5, collection: 'users', exp: exp - 1200 }), { secret })).toBeNull()
-    expect(verifyStaffToken(sign({ id: 5, collection: 'applicants', exp }), { secret })).toBeNull()
-    expect(verifyStaffToken('a.b', { secret })).toBeNull()
-    const none = `${Buffer.from(JSON.stringify({ alg: 'none' })).toString('base64url')}.${Buffer.from(JSON.stringify({ id: 1, collection: 'users', exp })).toString('base64url')}.`
-    expect(verifyStaffToken(none, { secret })).toBeNull()
+describe('sesi staf bersama (dikonfirmasi website, portal tidak memegang rahasia CMS)', () => {
+  let server: Server
+  let origin = ''
+  const seen: string[] = []
+  beforeAll(async () => {
+    server = createServer((req, res) => {
+      seen.push(String(req.headers.authorization))
+      const tok = String(req.headers.authorization ?? '').replace(/^JWT /, '')
+      const users: Record<string, object> = {
+        'a.b.ok': { id: 7, name: 'Bu Ani', email: 'ani@a.sch.id', role: 'admissions', tenant: 3, active: true },
+        'a.b.populated': { id: 8, name: 'X', email: 'x@a', role: 'editor', tenant: { id: 4 }, active: true },
+        'a.b.off': { id: 9, name: 'Y', email: 'y@a', role: 'editor', tenant: 3, active: false },
+      }
+      res.setHeader('content-type', 'application/json')
+      if (tok === 'a.b.down') {
+        res.statusCode = 500
+        return res.end('{}')
+      }
+      res.end(JSON.stringify({ user: users[tok] ?? null }))
+    })
+    await new Promise<void>((r) => server.listen(0, '127.0.0.1', () => r()))
+    origin = `http://127.0.0.1:${(server.address() as AddressInfo).port}`
+  })
+  afterAll(() => new Promise<void>((r) => server.close(() => r())))
+
+  it('akun aktif dikembalikan dengan sekolahnya; token tidak sah/logout/nonaktif/gangguan = null', async () => {
+    expect(await fetchStaff('a.b.ok', origin)).toEqual({ id: 7, name: 'Bu Ani', email: 'ani@a.sch.id', role: 'admissions', schoolId: 3 })
+    expect((await fetchStaff('a.b.populated', origin))?.schoolId).toBe(4)
+    expect(await fetchStaff('a.b.logout', origin)).toBeNull()
+    expect(await fetchStaff('a.b.off', origin)).toBeNull()
+    expect(await fetchStaff('a.b.down', origin)).toBeNull()
+    expect(await fetchStaff('a.b.ok', 'http://127.0.0.1:1')).toBeNull() // website unreachable → fails closed
+  })
+  it('nilai cookie sembarang tidak pernah diteruskan', async () => {
+    const before = seen.length
+    expect(await fetchStaff('bukan token; injeksi', origin)).toBeNull()
+    expect(await fetchStaff(null, origin)).toBeNull()
+    expect(seen.length).toBe(before)
   })
   it('cookie dibaca dari header', () => {
     expect(cookieValue('a=1; payload-token=xyz%3D; b=2', 'payload-token')).toBe('xyz=')

@@ -39,6 +39,9 @@ export async function up({ db }: MigrateUpArgs): Promise<void> {
 export async function down({ db }: MigrateDownArgs): Promise<void> {
   const n = Number(((await db.execute(sql`SELECT count(*) AS n FROM tenants WHERE app_plan <> 'none' OR app_database IS NOT NULL`)).rows[0] as { n: string }).n)
   if (n > 0) throw new Error(`Rollback ditolak: ${n} sekolah berlangganan Sekolahku App atau punya database App.`)
+  // the old schema has no "no website" plan: rolling back would silently switch those websites on
+  const off = Number(((await db.execute(sql`SELECT count(*) AS n FROM tenants WHERE web_plan = 'none' OR web_status = 'paused'`)).rows[0] as { n: string }).n)
+  if (off > 0) throw new Error(`Rollback ditolak: ${off} sekolah tanpa/dijeda langganan Web akan tayang kembali.`)
   await db.execute(sql`
    CREATE TYPE "public"."enum_tenants_plan" AS ENUM('basic', 'pro');
   CREATE TYPE "public"."enum__tenants_v_version_plan" AS ENUM('basic', 'pro');

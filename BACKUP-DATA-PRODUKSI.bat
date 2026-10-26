@@ -23,7 +23,7 @@ if errorlevel 1 (
   pause
   exit /b 1
 )
-if not exist "node_modules\payload\" (
+if not exist "..\..\node_modules\payload\" (
   echo Memasang paket - sekali saja, beberapa menit...
   pushd "%~dp0" & call npm ci & popd
 )

@@ -83,6 +83,8 @@ sekolahku/
 - Setiap sekolah pengguna App punya database sendiri.
 - URL database disimpan **tersegel** (AES-256-GCM, `PLATFORM_SECRET`) di data sekolah. URL itu tidak pernah terbaca lewat API atau admin, termasuk oleh Super Admin.
 - Setiap database ditandai pemiliknya (`school_meta`). Setiap koneksi memeriksa tanda itu, sehingga salah konfigurasi tidak bisa menampilkan data sekolah lain.
+- Migrasi memeriksa pemilik **sebelum** mengubah apa pun: database milik sekolah lain, atau database tidak kosong yang belum ditandai (misalnya database platform yang tertempel), ditolak tanpa diubah.
+- Ke depan, gunakan role database terpisah per sekolah. Tanda `school_meta` hanya mencegah kesalahan, bukan serangan.
 - Skema sama untuk semua sekolah. Migrasi berversi dijalankan per sekolah atau untuk semua (`npm run portal:migrate -- --sekolah <kode>` / `--semua`).
 - `school_id` (§26) tetap ada sebagai tanda database, bukan kolom di setiap tabel.
 - Web tetap memakai satu database bersama dengan isolasi per sekolah (lihat `SAAS_ARCHITECTURE.md`).
@@ -90,11 +92,14 @@ sekolahku/
 **ADR-04 Satu portal di `/portal`.**
 
 - Web meneruskan `/portal/*` ke deployment App (`PORTAL_ORIGIN`). Web menambahkan host sekolah dan rahasia bersama (`PORTAL_PROXY_SECRET`).
-- App hanya memercayai host terusan bila rahasianya cocok. Permintaan langsung ke deployment App memakai host-nya sendiri dan tidak bisa menyamar sebagai sekolah.
+- App hanya memercayai host terusan bila rahasianya cocok (perbandingan waktu-konstan). **Di produksi, permintaan yang tidak lewat website ditolak**, dan alamat tak dikenal tidak pernah jatuh ke sekolah bawaan. Salah konfigurasi menutup portal, bukan menampilkan sekolah lain.
+- `/portal` punya penjaga CSRF sendiri: permintaan yang mengubah data harus berasal dari alamat sekolah itu sendiri.
 
 **ADR-05 Login.**
 
-- **Staf** masuk sekali di CMS sekolah. Karena domainnya sama, App menerima cookie sesi yang sama. App memeriksa tanda tangan, masa berlaku, keberadaan sesi (logout langsung berlaku), akun aktif, dan sekolah yang benar.
+- **Staf** masuk sekali di CMS sekolah. Karena domainnya sama, browser mengirim cookie sesi yang sama ke App. App **tidak menyimpan** kunci penandatangan CMS: App menanyakan ke website (`/api/users/me`) siapa pemilik sesi. Payload sendiri yang memeriksa tanda tangan, sesi (logout langsung berlaku) dan akun. App lalu memeriksa akun aktif dan sekolah yang benar. Bila website tidak menjawab, App menolak.
+- **Super Admin platform tidak otomatis masuk** ke portal sekolah mana pun (§25). Akses bantuan akan berupa izin sementara yang diaudit, dibangun bersama modul data pertama.
+- Database platform dibaca App lewat **role hanya-baca** untuk tabel sekolah dan domain saja.
 - **Pendaftar, wali dan siswa** punya akun di database App sekolahnya. Fitur ini adalah modul berikutnya (P0 identitas).
 
 **ADR-06 PWA.**
@@ -118,10 +123,11 @@ sekolahku/
 
 | Bagian | Status | Bukti |
 |---|---|---|
-| Monorepo + `packages/core` | completed | Web: 122 tes lulus + build; core: 7 tes |
+| Monorepo + `packages/core` | completed | Web: 125 tes lulus + build; core: 8 tes |
 | Langganan Web/App per sekolah + migrasi | completed | Migrasi diuji up → down → up; rollback menolak bila ada data App; TEN-12 |
 | Website mengikuti langganan Web; pendaftaran diarahkan ke portal bila App aktif | completed | TEN-12, uji jalan bersama |
-| Kerangka App: `/portal`, PWA, registri sekolah, database per sekolah, migrasi, login staf bersama | completed | POR-01..03 (6 tes), uji jalan Web + App di satu domain |
+| Kerangka App: `/portal`, PWA, registri sekolah, database per sekolah, migrasi, login staf bersama | completed | POR-01..03 (7 tes), uji jalan Web + App di satu domain |
+| Audit keamanan independen tahap produk | completed | 5 temuan terkonfirmasi + 5 risiko desain, semua diperbaiki dan dites (TEN-13, POR-03, core) |
 | P0 identitas App (akun pendaftar/wali/siswa, person, membership) | backlog | Berikutnya |
 | M14 penerimaan penuh (§19, §41) | backlog | Setelah P0 |
 | Event Web ↔ App (bagian D) | backlog | Setelah M14 |

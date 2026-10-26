@@ -7,6 +7,7 @@ import config from '@payload-config'
 import { isLive, tenantByHost, tenantById, type TenantInfo } from '@/tenancy/resolve'
 import { scopePayload, type TenantPayload } from '@/tenancy/scoped'
 import { setRequestTimezone } from './tz'
+import { hasProduct } from '@sekolahku/core'
 
 /** Unscoped Payload: platform-level work only (resolving schools, admin views). Never for public pages. */
 export const rawPayload = () => getPayload({ config })
@@ -37,7 +38,8 @@ export const currentTenant = cache(async (): Promise<TenantInfo | null> => {
  */
 export const payloadClient = cache(async (): Promise<TenantPayload> => {
   const t = await currentTenant()
-  if (!t) throw new TenantNotFoundError(fixed.getStore() ? `#${fixed.getStore()}` : ((await headers()).get('host') ?? ''))
+  // public pages and routes of the website: only for schools with an active Sekolahku Web subscription
+  if (!t || !hasProduct(t, 'web')) throw new TenantNotFoundError(fixed.getStore() ? `#${fixed.getStore()}` : ((await headers()).get('host') ?? ''))
   return scopePayload(await rawPayload(), t.id)
 })
 
