@@ -10,7 +10,7 @@ import path from 'path'
 import { fileURLToPath } from 'url'
 import { appDatabaseUrl } from '@sekolahku/core/registry'
 import type { SchoolInfo } from '@sekolahku/core'
-import * as schema from './schema'
+import * as schema from './schema/index'
 
 export type SchoolDb = NodePgDatabase<typeof schema>
 

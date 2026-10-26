@@ -1,0 +1,8 @@
+// Registers every module's form actions (imported by the action dispatcher).
+import './identity/actions'
+import './admin/actions'
+import './students/actions'
+import './cards/actions'
+import './students/queues'
+import './students/widgets'
+import './cards/widgets'

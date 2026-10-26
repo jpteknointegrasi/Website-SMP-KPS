@@ -17,7 +17,8 @@
     "seed": "npm run seed -w @sekolahku/web",
     "sekolah:baru": "npm run sekolah:baru -w @sekolahku/web --",
     "platform:superadmin": "npm run platform:superadmin -w @sekolahku/web --",
-    "portal:migrate": "npm run migrate -w @sekolahku/portal --"
+    "portal:migrate": "npm run migrate -w @sekolahku/portal --",
+    "portal:demo": "npm run demo -w @sekolahku/portal --"
   },
   "engines": {
     "node": ">=22.12"

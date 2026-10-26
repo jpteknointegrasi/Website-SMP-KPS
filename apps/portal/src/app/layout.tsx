@@ -14,7 +14,7 @@ export async function generateMetadata(): Promise<Metadata> {
   }
 }
 
-export const viewport: Viewport = { themeColor: '#142A46', width: 'device-width', initialScale: 1 }
+export const viewport: Viewport = { themeColor: '#0B2356', width: 'device-width', initialScale: 1 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -23,9 +23,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <a href="#main" className="skip">
           Lewati ke konten utama
         </a>
-        <main id="main" tabIndex={-1}>
-          {children}
-        </main>
+        {children}
         <ServiceWorker />
       </body>
     </html>
