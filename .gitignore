@@ -41,6 +41,8 @@ next-env.d.ts
 .env
 
 /media
+apps/web/media/
+apps/web/private-media/
 
 # Playwright
 node_modules/
@@ -52,12 +54,19 @@ node_modules/
 # database SQLite lokal
 /kps.db
 /kps.db-*
+apps/web/kps.db
+apps/web/kps.db-*
 
 # kredensial produksi untuk seed dari komputer lokal
 /.env.vercel
+apps/*/.env.vercel
 
 # local-only helper scripts (test data)
 scripts/_*
 
 # local database backups (contain personal data)
 backups/
+
+# monorepo build output
+apps/*/.next/
+apps/*/next-env.d.ts

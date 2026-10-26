@@ -2,6 +2,10 @@
 setlocal
 title Backup data website (produksi)
 cd /d "%~dp0"
+rem Monorepo: website ada di apps\web. File .env/.env.vercel lama di folder utama dipindahkan otomatis.
+if exist ".env" if not exist "apps\web\.env" move ".env" "apps\web\.env" >nul
+if exist ".env.vercel" if not exist "apps\web\.env.vercel" move ".env.vercel" "apps\web\.env.vercel" >nul
+cd /d "%~dp0apps\web"
 echo ================================================
 echo   Backup seluruh data website ke folder backups\
 echo ================================================
@@ -21,7 +25,7 @@ if errorlevel 1 (
 )
 if not exist "node_modules\payload\" (
   echo Memasang paket - sekali saja, beberapa menit...
-  call npm ci
+  pushd "%~dp0" & call npm ci & popd
 )
 call npm run backup:prod
 echo.

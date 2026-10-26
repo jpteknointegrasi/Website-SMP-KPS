@@ -2,6 +2,10 @@
 setlocal
 title Website SMP Nasional KPS (lokal)
 cd /d "%~dp0"
+rem Monorepo: website ada di apps\web. File .env/.env.vercel lama di folder utama dipindahkan otomatis.
+if exist ".env" if not exist "apps\web\.env" move ".env" "apps\web\.env" >nul
+if exist ".env.vercel" if not exist "apps\web\.env.vercel" move ".env.vercel" "apps\web\.env.vercel" >nul
+cd /d "%~dp0apps\web"
 
 echo ================================================
 echo   Website SMP Nasional KPS - jalankan di komputer ini
@@ -32,9 +36,9 @@ if not exist ".env" (
 rem Platform multi-sekolah: alamat localhost menampilkan sekolah KPS (isi paket konten awal).
 findstr /b /c:"DEFAULT_TENANT_SLUG=" .env >nul 2>nul || (echo.>>.env & echo DEFAULT_TENANT_SLUG=kps>>.env)
 
-if not exist "node_modules\@payloadcms\storage-vercel-blob\" (
+if not exist "..\..\node_modules\@payloadcms\storage-vercel-blob\" (
   echo [1/3] Memasang paket - sekali saja, beberapa menit...
-  call npm ci
+  pushd "%~dp0" & call npm ci & popd
   if errorlevel 1 (
     echo [!] Gagal memasang paket. Periksa koneksi internet lalu coba lagi.
     pause

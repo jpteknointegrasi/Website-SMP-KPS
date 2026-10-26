@@ -2,6 +2,10 @@
 setlocal
 title Isi data awal ke website produksi (Vercel)
 cd /d "%~dp0"
+rem Monorepo: website ada di apps\web. File .env/.env.vercel lama di folder utama dipindahkan otomatis.
+if exist ".env" if not exist "apps\web\.env" move ".env" "apps\web\.env" >nul
+if exist ".env.vercel" if not exist "apps\web\.env.vercel" move ".env.vercel" "apps\web\.env.vercel" >nul
+cd /d "%~dp0apps\web"
 
 echo ================================================
 echo   Mengisi konten dan foto awal ke database produksi
@@ -34,9 +38,9 @@ if errorlevel 1 (
   exit /b 1
 )
 
-if not exist "node_modules\@payloadcms\storage-vercel-blob\" (
+if not exist "..\..\node_modules\@payloadcms\storage-vercel-blob\" (
   echo Memasang paket - sekali saja, beberapa menit...
-  call npm ci
+  pushd "%~dp0" & call npm ci & popd
   if errorlevel 1 (
     echo [!] Gagal memasang paket.
     pause
