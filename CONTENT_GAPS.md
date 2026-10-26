@@ -40,5 +40,8 @@ Website tidak mengarang data. Bagian di bawah ini disembunyikan, diberi label "C
 | 34 | Pimpinan Yayasan (nama, jabatan, foto berizin) | Kelompok tersedia, belum ada data — tidak tampil | Yayasan | Guru & Pimpinan → Kelompok *Pimpinan Yayasan* |
 | 35 | Rincian HAKORDIA 2025: tanggal penyerahan, penyelenggara, tingkat | Berita & prestasi hanya memuat fakta dari pemilik proyek (Juara I, kategori Sekolah Integritas); tanggal tampil = tanggal unggah | Humas | Lengkapi di Prestasi (Tanggal, Penyelenggara, Tingkat) & Berita |
 | 36 | Foto asli HAKORDIA resolusi penuh | Foto yang diberikan: teks kecil pada piagam/papan tidak terbaca jelas | Humas | Ganti sampul dengan foto asli kamera bila ada |
+| 37 | Susunan lengkap pengurus IKA KPS sesuai SK (nama, jabatan, periode, foto resmi) | Tampil 2 nama dari caption @ika_kps: Adam Dustin Bhakti (Ketua), Inge Sondaryani (Ketua Dewan Penasihat) | Pengurus IKA KPS | Halaman Alumni (IKA KPS) → tab Pengurus |
+| 38 | Foto kegiatan IKA KPS resolusi asli | Memakai capture kecil dari Instagram @ika_kps (kredit dicantumkan) | Pengurus IKA KPS | Unggah di Foto & Gambar, pilih di tab Kegiatan/Galeri |
+| 39 | Konfirmasi formulir bergabung IKA KPS masih aktif | Tombol ke forms.gle dari bio Instagram (isi formulir belum diperiksa) | Pengurus IKA KPS | Tab Pembuka → Tautan formulir bergabung |
 
 Semua pengumuman & agenda berawalan "Contoh:" adalah data demo dan otomatis tersembunyi saat `SHOW_DEMO_CONTENT=false`.

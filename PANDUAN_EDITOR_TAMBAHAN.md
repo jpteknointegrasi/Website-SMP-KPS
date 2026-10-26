@@ -50,3 +50,10 @@ Setiap layanan punya **Status** (Aktif / Segera tersedia / Pemeliharaan) dan **U
 
 ## Guru & Pimpinan
 Isi **Mata pelajaran** (pisahkan dengan koma). Pengunjung bisa memfilter menurut kelompok dan mapel. Foto tampil hanya bila **Persetujuan publikasi foto** dicentang. Guru yang tidak aktif lagi: hapus centang **Masih aktif** (jangan dihapus) agar riwayat tetap ada. Jangan isi NIK, alamat rumah, nomor pribadi atau data kepegawaian.
+
+## Halaman Alumni (IKA KPS)
+*Beranda & Halaman → Halaman Alumni (IKA KPS)*. Tab: Pembuka · Tentang · Pengurus · Kegiatan · Galeri & Ajakan. Kolom atau daftar yang **dikosongkan memakai isi awal** dari materi IKA KPS. Mengisi satu daftar (mis. Kegiatan) menggantikan seluruh daftar awal tersebut.
+- **Portal Alumni** (https://alumniku.my.id/) diatur di *Pengaturan & Akses → Identitas & Kontak Sekolah → Tautan & Sosial → URL Portal Alumni*. Kosong = alamat tersebut.
+- **Instagram resmi** @ika_kps dan **formulir bergabung** ada di tab Pembuka.
+- **Pengurus**: isi hanya sesuai SK/konfirmasi pengurus. Jangan menambah nama atau jabatan perkiraan.
+- **Agenda alumni**: buat agenda biasa dengan *Sasaran = Alumni*; tiga agenda terdekat tampil otomatis di halaman ini.

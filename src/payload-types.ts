@@ -149,6 +149,7 @@ export interface Config {
   fallbackLocale: null;
   globals: {
     homepage: Homepage;
+    'alumni-page': AlumniPage;
     navigation: Navigation;
     'site-settings': SiteSetting;
     'feature-flags': FeatureFlag;
@@ -156,6 +157,7 @@ export interface Config {
   };
   globalsSelect: {
     homepage: HomepageSelect<false> | HomepageSelect<true>;
+    'alumni-page': AlumniPageSelect<false> | AlumniPageSelect<true>;
     navigation: NavigationSelect<false> | NavigationSelect<true>;
     'site-settings': SiteSettingsSelect<false> | SiteSettingsSelect<true>;
     'feature-flags': FeatureFlagsSelect<false> | FeatureFlagsSelect<true>;
@@ -695,7 +697,7 @@ export interface Event {
    */
   allDay?: boolean | null;
   category?: (number | null) | EventCategory;
-  audience?: ('semua' | 'kelas_7' | 'kelas_8' | 'kelas_9' | 'orang_tua' | 'calon_siswa' | 'guru')[] | null;
+  audience?: ('semua' | 'kelas_7' | 'kelas_8' | 'kelas_9' | 'orang_tua' | 'calon_siswa' | 'guru' | 'alumni')[] | null;
   /**
    * Hanya lokasi yang boleh diketahui umum.
    */
@@ -3426,6 +3428,120 @@ export interface Homepage {
   createdAt?: string | null;
 }
 /**
+ * Halaman /alumni untuk Ikatan Keluarga Alumni KPS. Bagian yang dikosongkan memakai isi awal. URL Portal Alumni diatur di Identitas & Kontak Sekolah → Tautan & Sosial.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "alumni-page".
+ */
+export interface AlumniPage {
+  id: number;
+  eyebrow?: string | null;
+  heading?: string | null;
+  headingAccent?: string | null;
+  tagline?: string | null;
+  intro?: string | null;
+  /**
+   * Kosongkan untuk memakai isi awal dari materi IKA KPS.
+   */
+  heroImage?: (number | null) | Media;
+  heroCaption?: string | null;
+  /**
+   * Formulir pendaftaran anggota IKA KPS. Kosongkan untuk memakai isi awal dari materi IKA KPS.
+   */
+  joinUrl?: string | null;
+  /**
+   * Kanal resmi IKA KPS. Kosongkan untuk memakai isi awal dari materi IKA KPS.
+   */
+  instagramUrl?: string | null;
+  aboutHeading?: string | null;
+  /**
+   * Pisahkan paragraf dengan baris kosong. Kosongkan untuk memakai isi awal dari materi IKA KPS.
+   */
+  aboutText?: string | null;
+  /**
+   * Kosong = foto Pelantikan Ikatan Alumni (foto Komunitas di beranda).
+   */
+  aboutImage?: (number | null) | Media;
+  /**
+   * Kosongkan untuk memakai isi awal dari materi IKA KPS.
+   */
+  values?:
+    | {
+        title: string;
+        icon?: ('users' | 'handshake' | 'star' | 'heart') | null;
+        text?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  committeeNote?: string | null;
+  /**
+   * Isi hanya sesuai SK atau konfirmasi pengurus. Kosong = data awal (Ketua IKA KPS dan Ketua Dewan Penasihat).
+   */
+  committee?:
+    | {
+        name: string;
+        role: string;
+        photo?: (number | null) | Media;
+        /**
+         * Mis. angkatan, bila disetujui yang bersangkutan.
+         */
+        note?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Mis. dokumen SK di menu Dokumen. Kosong = tombol disembunyikan.
+   */
+  committeeUrl?: string | null;
+  /**
+   * Tiga kartu tampil berurutan. Kosongkan untuk memakai isi awal dari materi IKA KPS.
+   */
+  activities?:
+    | {
+        title: string;
+        category?: string | null;
+        summary?: string | null;
+        image?: (number | null) | Media;
+        /**
+         * Artikel di website (/berita/...) atau unggahan Instagram.
+         */
+        url?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  agendaHeading?: string | null;
+  agendaText?: string | null;
+  /**
+   * Mis. seri IKA Spill The Tea. Kosongkan untuk memakai isi awal dari materi IKA KPS.
+   */
+  stories?:
+    | {
+        title: string;
+        text?: string | null;
+        image?: (number | null) | Media;
+        /**
+         * Gunakan https://… atau tautan internal yang diawali "/".
+         */
+        url?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Foto kegiatan, dibuka dalam pembesar. Kosongkan untuk memakai isi awal dari materi IKA KPS.
+   */
+  gallery?:
+    | {
+        image: number | Media;
+        caption?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  ctaHeading?: string | null;
+  ctaText?: string | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "navigation".
  */
@@ -3498,7 +3614,7 @@ export interface SiteSetting {
    */
   portalUrl?: string | null;
   /**
-   * Kosong = tombol portal alumni disembunyikan.
+   * Kosong = memakai https://alumniku.my.id/ (portal alumni KPS).
    */
   alumniUrl?: string | null;
   /**
@@ -3662,6 +3778,76 @@ export interface HomepageSelect<T extends boolean = true> {
         id?: T;
       };
   _status?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "alumni-page_select".
+ */
+export interface AlumniPageSelect<T extends boolean = true> {
+  eyebrow?: T;
+  heading?: T;
+  headingAccent?: T;
+  tagline?: T;
+  intro?: T;
+  heroImage?: T;
+  heroCaption?: T;
+  joinUrl?: T;
+  instagramUrl?: T;
+  aboutHeading?: T;
+  aboutText?: T;
+  aboutImage?: T;
+  values?:
+    | T
+    | {
+        title?: T;
+        icon?: T;
+        text?: T;
+        id?: T;
+      };
+  committeeNote?: T;
+  committee?:
+    | T
+    | {
+        name?: T;
+        role?: T;
+        photo?: T;
+        note?: T;
+        id?: T;
+      };
+  committeeUrl?: T;
+  activities?:
+    | T
+    | {
+        title?: T;
+        category?: T;
+        summary?: T;
+        image?: T;
+        url?: T;
+        id?: T;
+      };
+  agendaHeading?: T;
+  agendaText?: T;
+  stories?:
+    | T
+    | {
+        title?: T;
+        text?: T;
+        image?: T;
+        url?: T;
+        id?: T;
+      };
+  gallery?:
+    | T
+    | {
+        image?: T;
+        caption?: T;
+        id?: T;
+      };
+  ctaHeading?: T;
+  ctaText?: T;
   updatedAt?: T;
   createdAt?: T;
   globalType?: T;

@@ -2,6 +2,7 @@ import 'server-only'
 import type { Where } from 'payload'
 import { payloadClient } from './payload'
 import type {
+  AlumniPage,
   Homepage,
   Navigation,
   SiteSetting,
@@ -30,6 +31,11 @@ export async function getGlobals() {
     payload.findGlobal({ slug: 'navigation', depth: 0, ...pub }) as Promise<Navigation>,
   ])
   return { settings, nav }
+}
+
+export async function getAlumniPage() {
+  const payload = await payloadClient()
+  return (await payload.findGlobal({ slug: 'alumni-page', depth: 1, ...pub })) as AlumniPage
 }
 
 export async function getHomepage() {

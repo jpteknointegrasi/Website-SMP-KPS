@@ -163,6 +163,7 @@ export const AUDIENCE_OPTIONS = [
   { label: 'Orang tua', value: 'orang_tua' },
   { label: 'Calon siswa', value: 'calon_siswa' },
   { label: 'Guru', value: 'guru' },
+  { label: 'Alumni', value: 'alumni' },
 ]
 
 export const EventCategories: CollectionConfig = {

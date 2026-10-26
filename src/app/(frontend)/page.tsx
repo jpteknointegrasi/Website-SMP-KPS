@@ -1,4 +1,5 @@
 import React from 'react'
+import { ALUMNI_PORTAL_FALLBACK } from '@/lib/alumni-defaults'
 import type { Metadata } from 'next'
 import { getCurrentAdmissions, getFlags, getGlobals, getHomepage, getPriorityAnnouncement, listAnnouncements, listCollection, listMediaItems, listPosts, listSocialAccounts, listUpcomingEvents } from '@/lib/queries'
 import {
@@ -116,7 +117,7 @@ export default async function Home() {
       case 'facilities':
         return <FacilitiesSection items={(facilities?.docs ?? []) as Facility[]} />
       case 'communityAlumni':
-        return <CommunityAlumni eyebrow={t.communityEyebrow} heading={t.communityHeading} text={t.communityText} alumniTitle={t.alumniTitle} alumniText={t.alumniText} alumniUrl={settings.alumniUrl} image={communityImage} />
+        return <CommunityAlumni eyebrow={t.communityEyebrow} heading={t.communityHeading} text={t.communityText} alumniTitle={t.alumniTitle} alumniText={t.alumniText} alumniUrl={settings.alumniUrl || ALUMNI_PORTAL_FALLBACK} image={communityImage} />
       case 'admissionsCta':
         return <AdmissionsCta eyebrow={t.ctaEyebrow} heading={t.ctaHeading} text={t.ctaText} cycle={cycle} />
       default:

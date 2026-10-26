@@ -83,7 +83,7 @@ export const SiteSettings: GlobalConfig = {
               description: 'Kosong = tombol Portal Sekolah disembunyikan.',
             }),
             safeUrlField('alumniUrl', 'URL Portal Alumni', {
-              description: 'Kosong = tombol portal alumni disembunyikan.',
+              description: 'Kosong = memakai https://alumniku.my.id/ (portal alumni KPS).',
             }),
             {
               name: 'socials',

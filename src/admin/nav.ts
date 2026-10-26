@@ -62,6 +62,7 @@ export const COLLECTION_NAV: Record<string, Entry> = {
 
 export const GLOBAL_NAV: Record<string, Entry> = {
   homepage: { group: G.home },
+  'alumni-page': { group: G.home },
   navigation: { group: G.home, plural: 'Menu & Footer' },
   'site-settings': { group: G.settings, plural: 'Identitas & Kontak Sekolah' },
   'feature-flags': { group: G.settings, plural: 'Fitur Aktif', adminOnly: true },

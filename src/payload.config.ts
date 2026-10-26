@@ -33,6 +33,7 @@ import {
 import { AdmissionsCycles, AuditLogs, ContactMessages, Redirects } from './collections/system'
 import { Homepage, Navigation, SiteSettings } from './globals'
 import { FeatureFlags } from './globals/flags'
+import { AlumniPage } from './globals/alumni'
 import { Faqs, StudentWorks } from './collections/extra'
 import { MediaItems, SocialAccounts } from './collections/media-hub'
 import { Leads, VisitBookings, VisitSessions } from './collections/admissions'
@@ -111,7 +112,7 @@ export default buildConfig({
     AuditLogs,
     AnalyticsDaily,
   ]),
-  globals: arrangeGlobals([Homepage, SiteSettings, Navigation, FeatureFlags]),
+  globals: arrangeGlobals([Homepage, AlumniPage, SiteSettings, Navigation, FeatureFlags]),
   editor: lexicalEditor({
     // Structured rich text only: no raw HTML/script blocks; H1 is reserved for the page title.
     features: ({ defaultFeatures }) => [
