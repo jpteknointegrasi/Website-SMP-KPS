@@ -10,6 +10,7 @@
     "dev": "npm run dev -w @sekolahku/web",
     "dev:portal": "npm run dev -w @sekolahku/portal",
     "build": "npm run build -w @sekolahku/web",
+    "vercel-build": "node -e \"console.error('Atur Root Directory proyek Vercel ke apps/web (Sekolahku Web) atau apps/portal (Sekolahku App). Lihat docs/PANDUAN_PREVIEW_APP.md');process.exit(1)\"",
     "build:portal": "npm run build -w @sekolahku/portal",
     "test": "npm test -w @sekolahku/core && npm test -w @sekolahku/web && npm test -w @sekolahku/portal --if-present",
     "typecheck": "npm run typecheck --workspaces --if-present",

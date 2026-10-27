@@ -71,3 +71,4 @@ backups/
 apps/*/.next/
 apps/*/next-env.d.ts
 .storage/
+RAHASIA-UJI-*.txt
