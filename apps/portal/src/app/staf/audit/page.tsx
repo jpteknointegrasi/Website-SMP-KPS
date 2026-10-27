@@ -104,9 +104,9 @@ export default async function Audit({ searchParams }: { searchParams: Promise<SP
               </ul>
             </Card>
           ) : null}
-          {hasPerm(ctx, 'staff.manage') ? (
+          {hasPerm(ctx, 'staff.manage') && !ctx.staff.platform ? (
             <Card title="Akses bantuan platform">
-              <p className="small muted">Pengelola platform tidak otomatis dapat membuka data portal sekolah. Beri akses baca sementara bila diminta untuk penanganan masalah.</p>
+              <p className="small muted">Super Admin platform hanya dapat mengelola pengaturan, modul, staf & peran, dan melihat angka agregat; ia tidak dapat membuka data siswa atau keluarga. Beri akses baca Buku Induk sementara bila diminta untuk penanganan masalah.</p>
               {grants.length ? (
                 <ul className="list">
                   {grants.map((g) => {

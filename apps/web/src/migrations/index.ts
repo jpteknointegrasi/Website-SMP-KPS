@@ -7,6 +7,7 @@ import * as migration_20261025_211956_platform_document_locks from './20261025_2
 import * as migration_20261026_032802_product_subscriptions from './20261026_032802_product_subscriptions';
 import * as migration_20261027_011036_app_karya from './20261027_011036_app_karya';
 import * as migration_20261027_085548_alumni_ika_agenda from './20261027_085548_alumni_ika_agenda';
+import * as migration_20261027_180348_platform_school_applications from './20261027_180348_platform_school_applications';
 
 export const migrations = [
   {
@@ -52,6 +53,11 @@ export const migrations = [
   {
     up: migration_20261027_085548_alumni_ika_agenda.up,
     down: migration_20261027_085548_alumni_ika_agenda.down,
-    name: '20261027_085548_alumni_ika_agenda'
+    name: '20261027_085548_alumni_ika_agenda',
+  },
+  {
+    up: migration_20261027_180348_platform_school_applications.up,
+    down: migration_20261027_180348_platform_school_applications.down,
+    name: '20261027_180348_platform_school_applications'
   },
 ];

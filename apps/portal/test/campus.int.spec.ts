@@ -11,10 +11,10 @@ import * as H from '@/modules/health/service'
 import * as O from '@/modules/organizations/service'
 import * as AL from '@/modules/alumni/service'
 import * as D from '@/modules/dashboard/service'
-import { grantSupport, revokeSupport } from '@/modules/admin/service'
+import { grantSupport, revokeSupport, setModuleState } from '@/modules/admin/service'
 import { signIn, signUp, verifyEmail } from '@/modules/identity/service'
 import { processOutbox } from '@/server/outbox'
-import { loadSupport, makeCtx } from '@/server/context'
+import { loadPlatformAdmin, loadSupport, makeCtx } from '@/server/context'
 import { academicEvents, auditEvents, consents, mailLog, notifications, students, supportGrants } from '@/db/schema'
 import { accountFromToken, ctxAccount, ctxAnon, ctxStaff, harness, staff, type School } from './helpers'
 import type { AccountActor, StaffActor } from '@/server/context'
@@ -166,5 +166,28 @@ describe('CMP-06 akses bantuan teknis', () => {
     const [g] = await A.db.select().from(supportGrants)
     await revokeSupport(ctxStaff(A, admin, now), g!.id)
     expect(await loadSupport(A.db, op, now)).toBeNull()
+  })
+})
+
+describe('PLT-01 Super Admin platform di App sekolah (tata kelola)', () => {
+  it('mengatur modul & melihat agregat, tanpa data pribadi/BK/UKS; tidak bisa memberi akses bantuan ke dirinya; tercatat', async () => {
+    const sa = { id: 98, email: 'super@platform.test', name: 'Super', role: 'superadmin', schoolId: null } as never
+    expect(await loadPlatformAdmin(A.db, { ...(sa as object), role: 'admin' } as never, now)).toBeNull()
+    const pa = await loadPlatformAdmin(A.db, sa, now)
+    expect(pa?.platform).toBe(true)
+    expect(pa?.support).toBeUndefined()
+    for (const p of ['settings.manage', 'staff.manage', 'audit.view', 'dashboard.view'] as const) expect(pa!.perms.has(p)).toBe(true)
+    for (const p of ['students.read', 'family.manage', 'finance.manage', 'counseling', 'health.manage', 'roles.restricted'] as const) expect(pa!.perms.has(p)).toBe(false)
+    const pctx = makeCtx({ school: A.school, db: A.db, staff: pa, now })
+    await expect(D.overview(pctx)).resolves.toBeTruthy()
+    await expect(setModuleState(pctx, 'perpustakaan', 'pilot')).resolves.toBeUndefined()
+    await expect(S.listStudents(pctx, {})).rejects.toMatchObject({ code: 'forbidden' })
+    await expect(grantSupport(pctx, { email: 'super@platform.test', reason: 'Membuka data siswa sendiri', hours: 2, scope: 'data_siswa' })).rejects.toMatchObject({ code: 'forbidden' })
+    expect((await A.db.select().from(auditEvents).where(eq(auditEvents.action, 'platform.access'))).length).toBe(1)
+    // the school's own "data siswa" grant adds the student register (read) — still nothing restricted
+    await grantSupport(ctxStaff(A, admin, now), { email: 'super@platform.test', reason: 'Membantu impor data siswa', hours: 2, scope: 'data_siswa' })
+    const withGrant = await loadPlatformAdmin(A.db, sa, now)
+    expect(withGrant!.perms.has('students.read')).toBe(true)
+    expect(withGrant!.perms.has('counseling')).toBe(false)
   })
 })

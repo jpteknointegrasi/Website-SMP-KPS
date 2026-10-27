@@ -199,6 +199,13 @@ export async function Shell({ ctx, branding, modules, children, who }: { ctx: Ct
           )}
         </div>
         <main id="main" className="content" tabIndex={-1}>
+          {ctx.staff?.platform ? (
+            <div className="notice notice--info" role="status" style={{ marginBottom: 16 }}>
+              <div>
+                <strong>Mode Super Admin platform — tata kelola.</strong> Anda dapat mengatur sekolah, modul, staf & peran, serta melihat audit dan angka agregat. Data siswa, keluarga, keuangan, BK dan UKS tidak tersedia. Setiap kunjungan tercatat di audit sekolah.
+              </div>
+            </div>
+          ) : null}
           {ctx.staff?.support ? (
             <div className="notice notice--warn" role="status" style={{ marginBottom: 16 }}>
               <div>

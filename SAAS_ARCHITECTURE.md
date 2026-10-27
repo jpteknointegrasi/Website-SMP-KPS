@@ -52,6 +52,8 @@ Siapa sekolah "permintaan" (`requestTenantId`):
 | Admin Teknis | Satu sekolah | Mengelola akun sekolahnya (selalu di sekolahnya sendiri). Tidak bisa membuat Super Admin. |
 | Editor / Humas, Kontributor, Petugas Pendaftaran | Satu sekolah | Sama seperti sebelumnya |
 
+Sekolah baru: sekolah mendaftar di `/daftar-sekolah` (alamat platform), Super Admin menyetujui di konsol `/platform`, lalu sekolah, Admin Teknis pertama, dan langganan uji coba dibuat sekaligus (lihat `PANDUAN_PLATFORM.md` §C). Admin Teknis membuat akun staf lain sekolahnya.
+
 Akun pertama di platform yang masih kosong otomatis menjadi Super Admin. Untuk platform yang sudah berisi (KPS), Super Admin dibuat dengan `npm run platform:superadmin -- --email …`.
 
 Email login bersifat unik di seluruh platform: satu akun hanya untuk satu sekolah. Staf hanya bisa masuk lewat alamat sekolahnya sendiri (bukan lewat alamat platform atau `*.vercel.app`). Tautan *lupa kata sandi* memakai domain utama sekolah.

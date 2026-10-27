@@ -86,18 +86,25 @@ const starter = (t: TenantDoc): Record<SingletonSlug, Record<string, unknown>> =
 export async function provisionTenant(payload: Payload, tenant: TenantDoc, req?: PayloadRequest) {
   const data = starter(tenant)
   const created: string[] = []
-  for (const slug of SINGLETON_COLLECTIONS) {
-    const existing = await findSingleton(payload, slug, tenant.id, { depth: 0, overrideAccess: true, draft: true, req })
-    if (existing) continue
-    await payload.create({
-      collection: slug,
-      data: { ...data[slug], tenant: tenant.id } as never,
-      draft: slug === 'homepage',
-      overrideAccess: true,
-      req,
-      context: { tenantId: tenant.id, skipAudit: true },
-    })
-    created.push(slug)
+  // Payload merges `context` into the shared request: restore it afterwards, otherwise everything later in the same
+  // request (the school's own audit entry, accounts created right after it) would silently skip the audit log.
+  const before = req ? { ...(req.context ?? {}) } : null
+  try {
+    for (const slug of SINGLETON_COLLECTIONS) {
+      const existing = await findSingleton(payload, slug, tenant.id, { depth: 0, overrideAccess: true, draft: true, req })
+      if (existing) continue
+      await payload.create({
+        collection: slug,
+        data: { ...data[slug], tenant: tenant.id } as never,
+        draft: slug === 'homepage',
+        overrideAccess: true,
+        req,
+        context: { tenantId: tenant.id, skipAudit: true },
+      })
+      created.push(slug)
+    }
+  } finally {
+    if (req && before) req.context = before
   }
   return created
 }

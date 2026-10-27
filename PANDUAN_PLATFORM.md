@@ -48,7 +48,33 @@ Yang **tidak** berubah untuk KPS: konten, foto, akun staf, kata sandi, URL halam
 
 ## C. Menambah sekolah baru
 
-**Lewat CMS** (Super Admin):
+**Cara utama — pendaftaran & persetujuan (model Alumniku, sejak 28 Oktober 2026):**
+
+Semua sekolah baru masuk lewat pendaftaran, dan hanya Super Admin platform yang menyetujuinya. Halaman platform hanya ada di **alamat platform**, yaitu alamat yang bukan milik sekolah mana pun. Contohnya alamat `….vercel.app` proyek website atau domain platform sendiri. Di domain sekolah, halaman ini menjawab 404.
+
+| Halaman | Untuk | Isi |
+|---|---|---|
+| `<alamat-platform>/daftar-sekolah` | calon sekolah (tanpa akun) | Formulir: data sekolah, NPSN, produk (Web/App), pengelola calon Admin Teknis |
+| `<alamat-platform>/platform/masuk` | Super Admin | Masuk konsol (akun CMS ber-peran Super Admin) |
+| `/platform` | Super Admin | Dasbor: antrean, jumlah sekolah, langganan Web/App, akun staf |
+| `/platform/pendaftaran` | Super Admin | **Setujui** atau **Tolak** (dengan alasan) |
+| `/platform/sekolah` | Super Admin | Status, domain, paket, database App, jumlah akun per sekolah |
+| `/platform/audit` | Super Admin | Riwayat perubahan sekolah, pendaftaran, dan akun |
+
+Langkah persetujuan:
+
+1. Buka pendaftaran → **Setujui pendaftaran…**. Periksa kode sekolah (permanen), domain, zona waktu, dan paket.
+2. Klik **Setujui & buat sekolah**. Dalam satu transaksi dibuat sekolah (status *Uji coba*, pengaturan/menu/fitur awal), akun **Admin Teknis** dari email pengelola, dan langganan uji coba. Kalau ada yang gagal (mis. email sudah dipakai), tidak ada yang dibuat.
+3. Tautan undangan (atur kata sandi, berlaku 72 jam) dikirim ke email Admin Teknis bila SMTP aktif. Tautan juga **tampil sekali** di layar untuk dikirim manual.
+4. Tambahkan domain sekolah di Vercel (proyek website → Domains) dan minta sekolah mengatur DNS. Tautan undangan baru bisa dibuka setelah domain aktif.
+5. Bila sekolah memakai App: atur database App sekolah (CMS → Sekolah → Database App), lalu `npm run portal:migrate -- --sekolah <kode>`.
+6. Setelah langganan berjalan, ubah status sekolah dari *Uji coba* ke *Aktif* (CMS → Sekolah).
+
+Pembagian peran: Super Admin menyetujui sekolah, membuat Admin Teknis pertama, dan mengatur langganan. **Admin Teknis** tiap sekolah membuat akun staf lain dan mengatur perannya (Editor, Petugas Pendaftaran, Kontributor di CMS; peran App di Staf & peran).
+
+Catatan alamat platform: selama `NEXT_PUBLIC_SERVER_URL` masih terisi (mode satu sekolah), alamat `*.vercel.app` dialihkan ke domain sekolah, **kecuali** `/platform`, `/daftar-sekolah`, `/admin`, dan `/api/`.
+
+**Cara lain — lewat CMS** (Super Admin):
 
 1. Buka `/admin` → Platform → **Sekolah** → *Buat*.
 2. Isi nama, kode, status, paket, zona waktu, dan domain.

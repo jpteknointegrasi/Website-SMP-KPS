@@ -99,6 +99,7 @@ export interface Config {
     'site-settings': SiteSetting;
     'feature-flags': FeatureFlag;
     tenants: Tenant;
+    'school-applications': SchoolApplication;
     users: User;
     'private-files': PrivateFile;
     'analytics-daily': AnalyticsDaily;
@@ -144,6 +145,7 @@ export interface Config {
     'site-settings': SiteSettingsSelect<false> | SiteSettingsSelect<true>;
     'feature-flags': FeatureFlagsSelect<false> | FeatureFlagsSelect<true>;
     tenants: TenantsSelect<false> | TenantsSelect<true>;
+    'school-applications': SchoolApplicationsSelect<false> | SchoolApplicationsSelect<true>;
     users: UsersSelect<false> | UsersSelect<true>;
     'private-files': PrivateFilesSelect<false> | PrivateFilesSelect<true>;
     'analytics-daily': AnalyticsDailySelect<false> | AnalyticsDailySelect<true>;
@@ -2422,6 +2424,42 @@ export interface FeatureFlag {
   createdAt: string;
 }
 /**
+ * Pengajuan sekolah baru. Tinjau dan putuskan di konsol platform (/platform/pendaftaran).
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "school-applications".
+ */
+export interface SchoolApplication {
+  id: number;
+  reference: string;
+  schoolName: string;
+  shortName?: string | null;
+  level?: ('tk' | 'sd' | 'smp' | 'sma' | 'smk' | 'lainnya') | null;
+  npsn?: string | null;
+  city: string;
+  province: string;
+  timezone?: string | null;
+  /**
+   * Mis. www.sman1contoh.sch.id. Boleh kosong.
+   */
+  domain?: string | null;
+  wantWeb?: boolean | null;
+  wantApp?: boolean | null;
+  adminName: string;
+  adminEmail: string;
+  adminPhone?: string | null;
+  adminPosition?: string | null;
+  note?: string | null;
+  status: 'pending' | 'approved' | 'rejected';
+  decidedAt?: string | null;
+  decidedBy?: (number | null) | User;
+  decisionNote?: string | null;
+  tenant?: (number | null) | Tenant;
+  adminUser?: (number | null) | User;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * Agregat harian tanpa data pribadi (tanpa IP, cookie, isi form). Aktif bila fitur Statistik pengunjung dinyalakan.
  *
  * This interface was referenced by `Config`'s JSON-Schema
@@ -3944,6 +3982,36 @@ export interface TenantsSelect<T extends boolean = true> {
   contactEmail?: T;
   contactPhone?: T;
   notes?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "school-applications_select".
+ */
+export interface SchoolApplicationsSelect<T extends boolean = true> {
+  reference?: T;
+  schoolName?: T;
+  shortName?: T;
+  level?: T;
+  npsn?: T;
+  city?: T;
+  province?: T;
+  timezone?: T;
+  domain?: T;
+  wantWeb?: T;
+  wantApp?: T;
+  adminName?: T;
+  adminEmail?: T;
+  adminPhone?: T;
+  adminPosition?: T;
+  note?: T;
+  status?: T;
+  decidedAt?: T;
+  decidedBy?: T;
+  decisionNote?: T;
+  tenant?: T;
+  adminUser?: T;
   updatedAt?: T;
   createdAt?: T;
 }

@@ -62,6 +62,7 @@ export const COLLECTION_NAV: Record<string, Entry> = {
   'feature-flags': { group: G.settings, plural: 'Fitur Aktif', adminOnly: true },
   // platform: visible to the platform Super Admin only (own access rules)
   tenants: { group: G.settings, plural: 'Sekolah (platform)' },
+  'school-applications': { group: G.settings, plural: 'Pendaftaran Sekolah (platform)' },
   users: { group: G.settings, plural: 'Pengguna' },
   'private-files': { group: G.settings, plural: 'Berkas Privat (bukti internal)' },
   'analytics-daily': { group: G.settings, plural: 'Statistik Pengunjung' },

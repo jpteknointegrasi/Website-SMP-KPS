@@ -98,7 +98,8 @@ sekolahku/
 **ADR-05 Login.**
 
 - **Staf** masuk sekali di CMS sekolah. Karena domainnya sama, browser mengirim cookie sesi yang sama ke App. App **tidak menyimpan** kunci penandatangan CMS: App menanyakan ke website (`/api/users/me`) siapa pemilik sesi. Payload sendiri yang memeriksa tanda tangan, sesi (logout langsung berlaku) dan akun. App lalu memeriksa akun aktif dan sekolah yang benar. Bila website tidak menjawab, App menolak.
-- **Super Admin platform tidak otomatis masuk** ke portal sekolah mana pun (§25). Akses bantuan akan berupa izin sementara yang diaudit, dibangun bersama modul data pertama.
+- **Super Admin platform** (keputusan pemilik 28 Oktober 2026, model Alumniku) masuk ke App sekolah mana pun dalam **mode tata kelola**: pengaturan, aktivasi modul, staf & peran (bukan BK/UKS), audit, dan dashboard agregat. Mode ini tidak membuka data siswa, keluarga, keuangan, BK, UKS, maupun berkas, dan setiap kunjungan diaudit. Membaca Buku Induk tetap memerlukan izin bantuan teknis dari sekolah, yang terbatas waktu dan tidak dapat diberikan Super Admin untuk dirinya sendiri.
+- **Sekolah baru** masuk lewat pendaftaran publik di alamat platform (`/daftar-sekolah`). Hanya Super Admin yang menyetujui di konsol `/platform`. Persetujuan membuat sekolah, Admin Teknis pertama, dan langganan uji coba dalam satu transaksi. Akun staf lain dibuat Admin Teknis sekolah.
 - Database platform dibaca App lewat **role hanya-baca** untuk tabel sekolah dan domain saja.
 - **Pendaftar, wali dan siswa** punya akun di database App sekolahnya. Fitur ini adalah modul berikutnya (P0 identitas).
 

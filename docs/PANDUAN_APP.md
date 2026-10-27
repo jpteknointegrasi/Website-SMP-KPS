@@ -11,7 +11,7 @@ diteruskan oleh Sekolahku Web. Setiap sekolah memiliki database App sendiri. Ran
 | Orang tua/wali | Akun portal (email + sandi), lalu **kode aktivasi** dari sekolah untuk menautkan anak | `/portal/keluarga` |
 | Siswa | Akun dibuat TU dari detail siswa (sandi sementara, wajib diganti) | `/portal/keluarga` |
 | Calon siswa (PPDB) | Daftar sendiri di `/portal/daftar` | `/portal/keluarga/penerimaan` |
-| Operator platform | Hanya dengan **izin bantuan teknis** dari sekolah (Audit & operasional), terbatas waktu, hanya melihat. Cakupan **Operasional** (audit & dashboard) atau **Data siswa** (+ baca Buku Induk); tidak pernah mengunduh berkas | — |
+| Super Admin platform | Masuk lewat `/portal/masuk-staf` di domain sekolah dengan akun Super Admin. **Mode tata kelola**: Pengaturan sekolah, Aktivasi modul, Staf & peran (tanpa BK/UKS), Audit, Dashboard agregat. Tanpa data siswa, keluarga, keuangan, BK, UKS, dan berkas. Setiap kunjungan tercatat (`platform.access`). Baca Buku Induk hanya bila sekolah memberi **izin bantuan teknis** cakupan *Data siswa* (terbatas waktu). Super Admin tidak dapat memberi izin itu ke dirinya sendiri | `/portal/staf` |
 
 Admin Teknis CMS otomatis menjadi **Admin App Sekolah**. Peran ini sengaja **tidak** dapat membaca catatan BK
 dan UKS; kedua data itu hanya untuk Guru BK/Koordinator BK dan Petugas UKS.

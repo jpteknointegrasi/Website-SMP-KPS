@@ -2,6 +2,8 @@ import { NextResponse, type NextRequest } from 'next/server'
 import { PORTAL_BASE_PATH, PORTAL_HOST_HEADER, PORTAL_SYNC_HEADER, PORTAL_PROXY_HEADER } from '@sekolahku/core'
 
 const SAFE = new Set(['GET', 'HEAD', 'OPTIONS'])
+/** Platform console, school sign-up and the CMS stay reachable on the platform (*.vercel.app) address. */
+const PLATFORM_PATHS = ['/platform', '/daftar-sekolah', '/admin']
 
 /**
  * Runs before every request.
@@ -12,7 +14,8 @@ const SAFE = new Set(['GET', 'HEAD', 'OPTIONS'])
  *    SameSite=Lax. Server-to-server calls without an Origin header (cron with CRON_SECRET) are unaffected.
  *
  * 2. Single-school deployments only (NEXT_PUBLIC_SERVER_URL set): visits to *.vercel.app get a permanent redirect
- *    to that domain. A multi-school deployment leaves NEXT_PUBLIC_SERVER_URL empty.
+ *    to that domain, except the API and the platform pages (/platform, /daftar-sekolah, /admin) that belong on the
+ *    platform address. A multi-school deployment leaves NEXT_PUBLIC_SERVER_URL empty.
  */
 export function proxy(request: NextRequest) {
   const host = request.headers.get('host') ?? ''
@@ -48,6 +51,8 @@ export function proxy(request: NextRequest) {
   const target = process.env.NEXT_PUBLIC_SERVER_URL
   if (!target || !host.endsWith('.vercel.app')) return NextResponse.next()
   if (path.startsWith('/api/')) return NextResponse.next()
+  // platform pages live on the platform address itself (never on a school domain)
+  if (PLATFORM_PATHS.some((p) => path === p || path.startsWith(`${p}/`))) return NextResponse.next()
   let dest: URL
   try {
     dest = new URL(request.nextUrl.pathname + request.nextUrl.search, target)

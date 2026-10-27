@@ -3,7 +3,7 @@ import { and, eq, isNull } from 'drizzle-orm'
 import { staffMembers, staffRoles, supportGrants } from '@/db/schema'
 import { requireStaff, type Ctx } from '@/server/context'
 import { command } from '@/server/command'
-import { fail, notFound } from '@/server/errors'
+import { fail, forbidden, notFound } from '@/server/errors'
 import { isGuardedRole, isRole, mayChangeRole, ROLES } from '@/server/roles'
 import { DEFAULT_BRANDING, getBranding, getModules, MODULE_STATES, MODULES, putSetting, type Branding, type ModuleState } from '@/server/settings'
 import { saveFile, IMAGES } from '@/server/files'
@@ -107,6 +107,8 @@ export async function setModuleState(ctx: Ctx, code: string, state: string) {
 /** Time-limited support access for the platform operator; reasoned and audited (§25). */
 export async function grantSupport(ctx: Ctx, input: { email: string; reason: string; hours: number; scope?: 'operasional' | 'data_siswa' }) {
   const s = requireStaff(ctx, 'staff.manage')
+  // support access is the SCHOOL's consent to the platform: the platform cannot grant it to itself
+  if (ctx.staff?.platform) forbidden('Akses bantuan teknis hanya dapat diberikan oleh Admin App sekolah.')
   if (!isEmail(input.email.trim().toLowerCase())) fail('Email operator tidak valid.')
   if (input.reason.trim().length < 10) fail('Tuliskan alasan akses bantuan (minimal 10 karakter).')
   if (!(input.hours >= 1 && input.hours <= 72)) fail('Durasi 1–72 jam.')

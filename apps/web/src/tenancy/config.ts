@@ -18,7 +18,7 @@ export const PLATFORM_NAME = platformEnv().name
  * Collections owned by the platform, not by a school. Every other collection carries a `tenant`
  * field and is isolated per school (see tenancy/collection.ts). `users` has its own tenant rules.
  */
-export const PLATFORM_COLLECTIONS = new Set(['tenants', 'users'])
+export const PLATFORM_COLLECTIONS = new Set(['tenants', 'school-applications', 'users'])
 
 /** Former Payload globals, now one document per school. Slugs are unchanged. */
 export const SINGLETON_COLLECTIONS = ['site-settings', 'homepage', 'navigation', 'feature-flags', 'alumni-page'] as const

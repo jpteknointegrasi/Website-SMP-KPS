@@ -84,6 +84,22 @@ export async function tenantById(payload: Payload, id?: number | null): Promise<
   return t
 }
 
+/**
+ * The school that owns this host by its own address only (a listed domain or <slug>.PLATFORM_ROOT_DOMAIN), without
+ * the DEFAULT_TENANT_SLUG fallback. Null means the host is a platform address (e.g. the deployment's *.vercel.app or
+ * a platform domain), where the platform console and the school sign-up form live.
+ */
+export async function schoolOwningHost(payload: Payload, rawHost?: string | null): Promise<TenantInfo | null> {
+  const host = normalizeHost(rawHost)
+  if (!host) return null
+  let t = await findOne(payload, { 'domains.domain': { equals: host } })
+  if (!t && PLATFORM_ROOT_DOMAIN && host.endsWith(`.${PLATFORM_ROOT_DOMAIN}`)) {
+    const sub = host.slice(0, -(PLATFORM_ROOT_DOMAIN.length + 1))
+    if (sub && !sub.includes('.')) t = await findOne(payload, { slug: { equals: sub } })
+  }
+  return t
+}
+
 /** Called after a school is created/changed/deleted. Other server instances refresh within the TTL. */
 export const clearTenantCache = () => {
   byHost.clear()

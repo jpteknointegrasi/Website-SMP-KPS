@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { asc, isNull } from 'drizzle-orm'
+import { asc, isNull, notLike } from 'drizzle-orm'
 import { staffMembers, staffRoles } from '@/db/schema'
 import { staffPage } from '@/server/request'
 import { ROLES, IMPLICIT_ROLES, isGuardedRole } from '@/server/roles'
@@ -13,7 +13,8 @@ export const metadata = { title: 'Staf & peran' }
 export default async function StaffList({ searchParams }: { searchParams: Promise<SP> }) {
   const ctx = await staffPage('/staf/pengaturan/staf', ['staff.manage', 'roles.restricted'])
   const sp = await searchParams
-  const rows = await ctx.db.select().from(staffMembers).orderBy(asc(staffMembers.name))
+  // platform access records (operator:<email>) are not school staff: their visits show in the audit log instead
+  const rows = await ctx.db.select().from(staffMembers).where(notLike(staffMembers.email, 'operator:%')).orderBy(asc(staffMembers.name))
   const roles = await ctx.db.select().from(staffRoles).where(isNull(staffRoles.revokedAt))
   const groups = [...new Set(roleOptions().map((r) => r.group))]
   return (

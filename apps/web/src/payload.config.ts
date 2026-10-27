@@ -44,6 +44,7 @@ import { Homepage, Navigation, SiteSettings } from './globals'
 import { FeatureFlags } from './globals/flags'
 import { AlumniPage } from './globals/alumni'
 import { arrangeCollections } from './admin/nav'
+import { SchoolApplications } from './collections/SchoolApplications'
 import { Faqs, StudentWorks } from './collections/extra'
 import { MediaItems, SocialAccounts } from './collections/media-hub'
 import { Leads, VisitBookings, VisitSessions } from './collections/admissions'
@@ -164,6 +165,7 @@ export default buildConfig({
     // platform-level events (e.g. Super Admin changes) have no school
     withTenancy(AuditLogs, { optional: true }),
     Tenants,
+    SchoolApplications,
     Users,
   ]),
   editor: lexicalEditor({

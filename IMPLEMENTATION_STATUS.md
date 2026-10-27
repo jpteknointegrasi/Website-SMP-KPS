@@ -79,3 +79,12 @@ diatur dan dihapus dari antrean setelah terkirim. Uji: core 8, web 127, portal 5
 - Neon & Vercel Blob lama tidak dipakai lagi (cadangan; hapus setelah stabil). Perubahan dari `main` (Alumni IKA KPS,
   banner & rundown agenda, mode siang/malam, menu admin) sudah digabung ke versi multi-sekolah.
 - Belum: SMTP resmi (verifikasi akun keluarga & reset sandi), aktivasi modul App, uji pengguna sekolah.
+
+## Konsol platform & Super Admin (28 Okt 2026, model Alumniku)
+- Sekolah baru mendaftar di `/daftar-sekolah` pada alamat platform; hanya Super Admin yang menyetujui di `/platform`
+  (dasbor, pendaftaran, sekolah, audit). Persetujuan = sekolah + Admin Teknis pertama + langganan uji coba dalam satu
+  transaksi; undangan atur kata sandi berlaku 72 jam. Koleksi baru `school-applications` (migrasi `20261027_180348`).
+- Super Admin di App sekolah: mode tata kelola (pengaturan, modul, staf & peran tanpa BK/UKS, audit, dashboard agregat);
+  tanpa data pribadi; tidak bisa memberi izin bantuan ke dirinya sendiri.
+- Perbaikan: pembuatan sekolah tidak lagi mematikan audit untuk sisa permintaan (`provisionTenant`).
+- Uji: core 8, web 138 (PLT-01/02 + unit), portal 54 (PLT-01 App); build web & portal lulus; alur diuji di browser.
