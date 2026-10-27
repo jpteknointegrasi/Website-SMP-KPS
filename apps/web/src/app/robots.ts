@@ -12,7 +12,12 @@ export default async function robots(): Promise<MetadataRoute.Robots> {
   // Staging/preview: set NOINDEX=true to block all crawling.
   if (process.env.NOINDEX === 'true') return { rules: [{ userAgent: '*', disallow: '/' }] }
   return {
-    rules: [{ userAgent: '*', allow: '/', disallow: ['/admin', '/api/', '/cari', '/pratinjau', '/pratinjau-bingkai', '/kunjungan/batal', '/setup'] }],
+    rules: [
+      // `/agenda?…` filter/month combinations are effectively infinite — a crawler trap. Only `/agenda` itself is crawlable.
+      { userAgent: '*', allow: '/', disallow: ['/admin', '/api/', '/cari', '/pratinjau', '/pratinjau-bingkai', '/kunjungan/batal', '/setup', '/agenda?'] },
+      // Meta's AI-training crawler hammered /agenda (~82K req/12h, Oct 2026); also denied in the Vercel firewall.
+      { userAgent: 'meta-externalagent', disallow: '/' },
+    ],
     sitemap: `${SITE}/sitemap.xml`,
   }
 }
