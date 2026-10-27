@@ -28,20 +28,40 @@ const idOf = (v: unknown): number | null =>
  * be reached (fails closed). A JWT-shaped string is required so arbitrary cookie values are never forwarded.
  */
 export async function fetchStaff(token: string | null | undefined, webOrigin = process.env.WEB_ORIGIN, timeoutMs = 4000): Promise<StaffMember | null> {
-  if (!token || !webOrigin || !/^[\w-]+\.[\w-]+\.[\w-]+$/.test(token)) return null
+  if (!token) return null
+  if (!webOrigin) {
+    console.warn('[staff-session] WEB_ORIGIN belum diisi: sesi staf tidak dapat diperiksa')
+    return null
+  }
+  if (!/^[\w-]+\.[\w-]+\.[\w-]+$/.test(token)) return null
+  let url: URL
   try {
-    const res = await fetch(new URL('/api/users/me', webOrigin), {
+    url = new URL('/api/users/me', webOrigin)
+  } catch {
+    console.warn('[staff-session] WEB_ORIGIN bukan URL yang valid')
+    return null
+  }
+  try {
+    const res = await fetch(url, {
       headers: { authorization: `JWT ${token}`, accept: 'application/json' },
       cache: 'no-store',
       redirect: 'error',
       signal: AbortSignal.timeout(timeoutMs),
     })
-    if (!res.ok) return null
+    if (!res.ok) {
+      // never log the token; status and target host are enough to diagnose
+      console.warn(`[staff-session] ${url.host} menjawab HTTP ${res.status} untuk /api/users/me`)
+      return null
+    }
     const body = (await res.json()) as { user?: Record<string, unknown> | null }
     const u = body.user
     if (!u || typeof u.id !== 'number' || u.active === false) return null
     return { id: u.id, name: String(u.name ?? ''), email: String(u.email ?? ''), role: String(u.role ?? ''), schoolId: idOf(u.tenant) }
-  } catch {
+  } catch (e) {
+    const err = e as { name?: string; message?: string; cause?: { code?: string; message?: string } }
+    const why = err?.name === 'TimeoutError' ? `tidak menjawab dalam ${timeoutMs} ms` : `${err?.message ?? err}${err?.cause ? ` (${err.cause.code ?? err.cause.message})` : ''}`
+    // a redirect here usually means WEB_ORIGIN points at an address that forwards elsewhere (e.g. without www)
+    console.warn(`[staff-session] gagal menghubungi ${url.host}: ${why}`)
     return null
   }
 }

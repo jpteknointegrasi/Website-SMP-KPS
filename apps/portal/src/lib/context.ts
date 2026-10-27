@@ -29,6 +29,9 @@ export const portalStaff = cache(async (): Promise<StaffMember | null> => {
   const school = await portalSchool()
   if (!school) return null
   const m = await fetchStaff((await cookies()).get(STAFF_COOKIE)?.value)
+  if (m && m.role !== 'superadmin' && m.schoolId !== school.id) {
+    console.warn(`[staff-session] akun CMS ${m.id} milik sekolah ${m.schoolId}, bukan sekolah ${school.id} di alamat ini`)
+  }
   return m && m.role !== 'superadmin' && m.schoolId === school.id ? m : null
 })
 
