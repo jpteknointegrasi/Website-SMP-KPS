@@ -71,8 +71,8 @@ backups/
 apps/*/.next/
 apps/*/next-env.d.ts
 .storage/
-RAHASIA-UJI-*.txt
-ENV-UJI-*.txt
+RAHASIA-*.txt
+ENV-*.txt
 
 # local upload folders (production uses object storage)
 apps/*/documents
