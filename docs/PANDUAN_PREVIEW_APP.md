@@ -23,15 +23,14 @@ website), bucket privat `sekolahku-web-files` (dokumen & berkas privat website),
 2. Vercel → proyek website produksi → **Settings → Git → Ignored Build Step** → *Custom* →
    `[ "$VERCEL_GIT_COMMIT_REF" != "main" ]` → Save. Produksi tetap dibangun dari `main`; cabang lain tidak lagi dicoba.
 
-## 1. Supabase: connection string dan kunci S3
+## 1. Supabase: kunci S3
 
-1. Supabase → proyek **Sekolahku** → tombol **Connect** → tab **Connection String** → pilih **Transaction pooler**
-   (port **6543**). Salin, ganti `[YOUR-PASSWORD]` dengan kata sandi database proyek (lupa? *Project Settings →
-   Database → Reset database password*). Tambahkan `?sslmode=no-verify` di akhir. Ini **DB_UJI_WEB**:
-   `postgresql://postgres.mihnkswdagjiavzbmmfu:<sandi>@aws-…-ap-northeast-1.pooler.supabase.com:6543/postgres?sslmode=no-verify`
-2. **DB_UJI_APP** = string yang sama, hanya `/postgres?` diganti `/app_kps_uji?`.
-3. **Storage → S3 Configuration** (Settings): klik **New access key** → salin Access key ID dan Secret access key
-   (secret hanya tampil sekali). Satu kunci dipakai website dan App.
+Connection string database sudah tertulis di berkas rahasia. Sudah dibuat akun database khusus uji `sekolahku_uji`
+(hanya untuk database uji; kata sandi utama proyek tidak dipakai). Cukup cocokkan host pooler: Supabase → **Connect** →
+**Transaction pooler**; bila host di sana `aws-0-ap-northeast-1…`, ganti `aws-1` menjadi `aws-0` di berkas rahasia.
+
+Lalu **Storage → S3 Configuration** (Settings) → **New access key** → salin Access key ID dan Secret access key
+(secret hanya tampil sekali) ke 4 baris bertanda `<…>` di berkas rahasia. Satu kunci dipakai website dan App.
 
 ## 2. Proyek Vercel `sekolahku-uji-web` (website)
 
@@ -39,7 +38,7 @@ website), bucket privat `sekolahku-web-files` (dokumen & berkas privat website),
    **Root Directory** `apps/web`. Bila langsung men-deploy dan gagal, tidak apa-apa — lanjutkan.
 2. **Settings → Git → Ignored Build Step** → `[ "$VERCEL_GIT_COMMIT_REF" != "platform-produk" ]`.
 3. **Settings → Environment Variables** — centang **Preview saja**, tempel bagian WEB dari `RAHASIA-UJI-SEKOLAHKU.txt`
-   (ganti `<DB_UJI_WEB>`, `<DB_UJI_APP>` dan kunci S3). Di halaman itu ada tombol untuk menempel isi .env sekaligus.
+   (kunci S3 sudah diisi). Di halaman itu ada tombol untuk menempel isi .env sekaligus.
 4. **Settings → Domains → Add** `sekolahku-uji-web.vercel.app` → environment **Preview**, branch `platform-produk`.
    (Bila nama sudah dipakai, pilih nama lain dan sesuaikan `NEXT_PUBLIC_SERVER_URL` dan `WEB_ORIGIN`.)
 
