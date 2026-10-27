@@ -69,3 +69,13 @@ memberi dirinya peran BK/UKS) dan 6 sedang — semua diperbaiki dan dites.
 Penutupan catatan terbuka (27 Okt): karya siswa App → website dengan izin wali + moderasi CMS (KRY-01, WEB-APP-01); akses
 bantuan dibagi cakupan Operasional / Data siswa dan tidak dapat mengunduh berkas (KRY-02); isi email tidak disimpan bila SMTP
 diatur dan dihapus dari antrean setelah terkirim. Uji: core 8, web 127, portal 53. Sisa: PDF memakai cetak browser.
+
+## Produksi di Supabase (27 Okt 2026)
+- `www.smpkps.sch.id` kini berjalan dari cabang `main` (monorepo, Root Directory `apps/web`) dengan database & penyimpanan
+  berkas Supabase (proyek "Sekolahku"): database `postgres` (website/platform), `app_kps` (Sekolahku App KPS), bucket
+  `sekolahku-web-media` (publik), `sekolahku-web-files` & `sekolahku-app-files` (privat). Konten awal dari `/setup/isi-data`.
+- Sekolahku App: proyek Vercel terpisah (Root Directory `apps/portal`, domain `smpkps-app.vercel.app`), dilayani di
+  `www.smpkps.sch.id/portal`. App membaca daftar sekolah dengan akun database hanya-baca. Modul diaktifkan bertahap.
+- Neon & Vercel Blob lama tidak dipakai lagi (cadangan; hapus setelah stabil). Perubahan dari `main` (Alumni IKA KPS,
+  banner & rundown agenda, mode siang/malam, menu admin) sudah digabung ke versi multi-sekolah.
+- Belum: SMTP resmi (verifikasi akun keluarga & reset sandi), aktivasi modul App, uji pengguna sekolah.
