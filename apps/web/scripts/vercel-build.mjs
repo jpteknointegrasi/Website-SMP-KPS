@@ -25,5 +25,5 @@ if (env === 'preview' && process.env.PREVIEW_DATABASE_IS_COPY !== 'true') {
 
 console.log(`▶ Migrasi database (${env})`)
 run('npx payload migrate')
-if (env === 'preview') run('npx tsx scripts/preview-setup.ts')
+if (env === 'preview' || (env === 'production' && process.env.PLATFORM_BOOTSTRAP === 'true')) run('npx tsx scripts/preview-setup.ts')
 run('npx next build')
