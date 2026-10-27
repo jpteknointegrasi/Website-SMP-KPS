@@ -9,6 +9,7 @@ import { fileURLToPath } from 'url'
 import sharp from 'sharp'
 import { vercelBlobStorage } from '@payloadcms/storage-vercel-blob'
 import { s3Storage } from '@payloadcms/storage-s3'
+import { nodemailerAdapter } from '@payloadcms/email-nodemailer'
 
 import { Users } from './collections/Users'
 import { Tenants } from './collections/Tenants'
@@ -80,7 +81,23 @@ const db = dbUri.startsWith('file:')
       push: false,
     })
 
+// Outgoing e-mail (password reset, contact/interest notifications). Without SMTP_HOST, Payload only logs mail
+// to the server console and nothing is sent — the "Email Terkirim" screen still shows.
+const email = process.env.SMTP_HOST
+  ? nodemailerAdapter({
+      defaultFromAddress: process.env.SMTP_FROM_ADDRESS || process.env.SMTP_USER || 'no-reply@localhost',
+      defaultFromName: process.env.SMTP_FROM_NAME || PLATFORM_NAME,
+      transportOptions: {
+        host: process.env.SMTP_HOST,
+        port: Number(process.env.SMTP_PORT || 587),
+        secure: process.env.SMTP_SECURE === 'true',
+        auth: process.env.SMTP_USER ? { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS } : undefined,
+      },
+    })
+  : undefined
+
 export default buildConfig({
+  ...(email ? { email } : {}),
   // Empty for a multi-school deployment: every school is served on its own domain (relative URLs).
   serverURL: process.env.NEXT_PUBLIC_SERVER_URL || '',
   admin: {

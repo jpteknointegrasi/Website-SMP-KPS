@@ -47,8 +47,15 @@ npm run migrate && npm run build && systemctl restart kps-web
 ## 6. Media di object storage (opsional, direkomendasikan untuk produksi)
 `npm i @payloadcms/storage-s3@3.92.0` lalu tambahkan plugin `s3Storage` di `src/payload.config.ts` untuk koleksi `media` (publik) dan `private-files`/`documents` (bucket terpisah, akses privat). Jalankan ulang `npm run import:media` tidak diperlukan bila file disalin dengan nama yang sama.
 
-## 7. Email notifikasi pesan kontak
-Belum ada adaptor email terpasang (pesan tetap tersimpan di admin). Untuk mengaktifkan: `npm i @payloadcms/email-nodemailer@3.92.0`, tambahkan `email: nodemailerAdapter({...})` di config dengan SMTP resmi sekolah, isi `CONTACT_NOTIFY_EMAIL` dan `SMTP_HOST`. Notifikasi sengaja tidak memuat isi pesan.
+## 7. Email keluar (lupa kata sandi CMS & notifikasi)
+Adaptor `@payloadcms/email-nodemailer` sudah terpasang dan aktif bila `SMTP_HOST` terisi. Tanpa SMTP, halaman
+lupa kata sandi tetap menampilkan "Email Terkirim" tetapi tidak ada email yang keluar.
+1. Isi di Vercel (proyek web, Production): `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_USER`, `SMTP_PASS`,
+   `SMTP_FROM_ADDRESS`, `SMTP_FROM_NAME` (lihat `apps/web/.env.example`). Proyek App (`apps/portal`) memakai
+   `SMTP_HOST/PORT/SECURE/USER/PASS` yang sama + `SMTP_FROM` (format `"Nama" <alamat>`).
+2. Redeploy, lalu uji: `/admin/forgot` dengan email akun sendiri → email masuk dalam 1 menit.
+3. Alamat penerima notifikasi pesan/minat diatur per sekolah di Pengaturan Sekolah → Notifikasi. Notifikasi sengaja
+   tidak memuat isi pesan.
 
 ## 8. Cutover dari website lama (hanya setelah persetujuan)
 1. Backup penuh situs WordPress lama (file + database) dan simpan.
