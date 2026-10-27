@@ -21,5 +21,5 @@ export const PLATFORM_NAME = platformEnv().name
 export const PLATFORM_COLLECTIONS = new Set(['tenants', 'users'])
 
 /** Former Payload globals, now one document per school. Slugs are unchanged. */
-export const SINGLETON_COLLECTIONS = ['site-settings', 'homepage', 'navigation', 'feature-flags'] as const
+export const SINGLETON_COLLECTIONS = ['site-settings', 'homepage', 'navigation', 'feature-flags', 'alumni-page'] as const
 export type SingletonSlug = (typeof SINGLETON_COLLECTIONS)[number]

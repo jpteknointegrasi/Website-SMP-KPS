@@ -2,6 +2,7 @@ import 'server-only'
 import type { Where } from 'payload'
 import { currentTenant, payloadClient } from './payload'
 import type {
+  AlumniPage,
   Homepage,
   Navigation,
   SiteSetting,
@@ -44,6 +45,12 @@ export const getSchoolNames = cache(async () => {
   return { name: s.schoolName || 'Sekolah', short: s.shortName || 'Sekolah', city: s.city || '' }
 })
 
+/** The school's /alumni page document (null while not created/published yet). */
+export async function getAlumniPage() {
+  const payload = await payloadClient()
+  return (await payload.findGlobal({ slug: 'alumni-page', depth: 1, ...pub })) as AlumniPage | null
+}
+
 /** Published homepage of the school, or null while it is still a draft (new school). */
 export async function getHomepage() {
   const payload = await payloadClient()
@@ -77,6 +84,47 @@ export async function listAnnouncements({ active = true, page = 1, limit = 10 } 
     ? activeAnnouncementWhere()
     : { displayEnd: { less_than_equal: nowIso() } }
   return payload.find({ collection: 'announcements', where, sort: active ? '-priority,-displayStart' : '-displayEnd', page, limit: Math.min(limit, 30), depth: 0, ...pub })
+}
+
+/** Events that are not over yet: ends in the future, or (no end time) starts within the last 12 hours or later. */
+const notOverWhere = (): Where => {
+  const now = nowIso()
+  const graceStart = new Date(Date.now() - 12 * 3600 * 1000).toISOString()
+  return {
+    or: [
+      { endAt: { greater_than: now } },
+      { and: [{ or: [{ endAt: { exists: false } }, { endAt: { equals: null } }] }, { startAt: { greater_than_equal: graceStart } }] },
+    ],
+  }
+}
+
+/** Homepage banner: the nearest event flagged "homeBanner" that is not over and not cancelled. */
+export const getBannerEvent = cache(async () => {
+  const payload = await payloadClient()
+  const res = await payload.find({
+    collection: 'events',
+    where: { and: [notArchived, { homeBanner: { equals: true } }, { eventStatus: { not_equals: 'cancelled' } }, notOverWhere()] },
+    sort: 'startAt',
+    limit: 1,
+    depth: 1,
+    ...pub,
+  })
+  return (res.docs[0] as Event | undefined) ?? null
+})
+
+/** Upcoming events for alumni (audience "Alumni"), nearest first. */
+export async function listAlumniEvents(limit = 3) {
+  const payload = await payloadClient()
+  return (
+    await payload.find({
+      collection: 'events',
+      where: { and: [notArchived, { audience: { in: ['alumni'] } }, { eventStatus: { not_equals: 'cancelled' } }, notOverWhere()] },
+      sort: 'startAt',
+      limit,
+      depth: 1,
+      ...pub,
+    })
+  ).docs as Event[]
 }
 
 export async function listUpcomingEvents(limit = 3) {

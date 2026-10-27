@@ -6,6 +6,7 @@ import * as migration_20261025_200110_platform_multi_tenant from './20261025_200
 import * as migration_20261025_211956_platform_document_locks from './20261025_211956_platform_document_locks';
 import * as migration_20261026_032802_product_subscriptions from './20261026_032802_product_subscriptions';
 import * as migration_20261027_011036_app_karya from './20261027_011036_app_karya';
+import * as migration_20261027_085548_alumni_ika_agenda from './20261027_085548_alumni_ika_agenda';
 
 export const migrations = [
   {
@@ -46,6 +47,11 @@ export const migrations = [
   {
     up: migration_20261027_011036_app_karya.up,
     down: migration_20261027_011036_app_karya.down,
-    name: '20261027_011036_app_karya'
+    name: '20261027_011036_app_karya',
+  },
+  {
+    up: migration_20261027_085548_alumni_ika_agenda.up,
+    down: migration_20261027_085548_alumni_ika_agenda.down,
+    name: '20261027_085548_alumni_ika_agenda'
   },
 ];

@@ -61,6 +61,8 @@ const starter = (t: TenantDoc): Record<SingletonSlug, Record<string, unknown>> =
   'site-settings': { schoolName: t.name, contactVerified: false },
   navigation: DEFAULT_NAVIGATION,
   'feature-flags': {},
+  // empty: every section of /alumni uses its fallback until the school fills it in
+  'alumni-page': {},
   // Saved as a draft: the hero needs a photo before it can be published. Until then the site shows a
   // neutral "being prepared" homepage.
   homepage: {

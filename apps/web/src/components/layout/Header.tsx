@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import React, { useEffect, useRef, useState } from 'react'
 import { Icon } from '../ui/Icon'
+import { ThemeToggle } from './ThemeToggle'
 
 type Item = {
   label: string
@@ -39,7 +40,22 @@ export const Header = ({
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
 
-  useEffect(() => setOpen(false), [pathname])
+  useEffect(() => {
+    setOpen(false)
+    // after clicking a menu link the link keeps focus; drop it so its dropdown doesn't stay open
+    const a = document.activeElement as HTMLElement | null
+    if (a && a.closest('.nav')) a.blur()
+  }, [pathname])
+
+  // Escape closes a desktop dropdown opened with the keyboard
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const a = document.activeElement as HTMLElement | null
+      if (e.key === 'Escape' && a?.closest('.nav')) a.blur()
+    }
+    document.addEventListener('keydown', onKey)
+    return () => document.removeEventListener('keydown', onKey)
+  }, [])
 
   // focus trap + Escape for the mobile drawer; focus returns to the toggle on close
   useEffect(() => {
@@ -137,6 +153,7 @@ export const Header = ({
             <Link href="/cari" className="icon-btn" aria-label="Cari">
               <Icon name="search" size={20} />
             </Link>
+            <ThemeToggle />
             {portalUrl ? (
               <a
                 href={portalUrl}

@@ -62,6 +62,19 @@ export default async function Page({ params }: P) {
               </figure>
             ) : null}
             <RichText data={e.content} />
+            {e.rundown?.length ? (
+              <div className="block">
+                <h2>Susunan acara</h2>
+                <ol className="rundown rundown--light">
+                  {e.rundown.map((r) => (
+                    <li key={r.id ?? r.time + r.activity} className={r.highlight ? 'is-highlight' : undefined}>
+                      <time>{r.time}</time>
+                      <span>{r.activity}</span>
+                    </li>
+                  ))}
+                </ol>
+              </div>
+            ) : null}
             {docs.length ? (
               <div className="block">
                 <h2>Lampiran</h2>
@@ -82,6 +95,7 @@ export default async function Page({ params }: P) {
                 <dd>{formatEventWhen(e)}</dd>
                 {e.location ? (<><dt>Lokasi</dt><dd>{e.location}</dd></>) : null}
                 {e.organizer ? (<><dt>Penyelenggara</dt><dd>{e.organizer}</dd></>) : null}
+                {e.dressCode ? (<><dt>Pakaian</dt><dd>{e.dressCode}</dd></>) : null}
                 {cat ? (<><dt>Kategori</dt><dd><a href={`/agenda?kategori=${cat.slug}`}>{cat.title}</a></dd></>) : null}
                 <dt>Sasaran</dt>
                 <dd>{audience.length ? audience.map((a) => AUDIENCE[a] ?? a).join(', ') : 'Semua'}</dd>

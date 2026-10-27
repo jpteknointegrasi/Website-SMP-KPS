@@ -6,7 +6,7 @@ Untuk Editor/Humas dan guru kontributor. Alur kerja tetap: **Draf → Ajukan Rev
 Di halaman edit Berita, Pengumuman, Agenda, Video & Media, Karya Siswa atau FAQ, klik **Pratinjau** (kanan atas) **setelah menyimpan draf**. Tampilan desktop dan HP muncul berdampingan dengan label "Pratinjau draf". Halaman pratinjau hanya bisa dibuka staf yang login.
 
 ## Kalender akademik (Agenda)
-- **Kategori** diatur di *Konten → Kategori Agenda* (nama + warna). Sudah ada: Akademik, Ujian, Libur, Penerimaan, Ekstrakurikuler, Orang tua, Kegiatan sekolah.
+- **Kategori** diatur di *Berita & Informasi → Kategori Agenda* (nama + warna). Sudah ada: Akademik, Ujian, Libur, Penerimaan, Ekstrakurikuler, Orang tua, Kegiatan sekolah.
 - **Sasaran**: Semua / Kelas 7–9 / Orang tua / Calon siswa / Guru. Sasaran adalah label relevansi, **bukan** pembatas akses: semua agenda publik bisa dibaca siapa pun.
 - **Sepanjang hari**: pilih tanggal saja; jam diabaikan dan tanggal tidak bergeser.
 - Bila kegiatan **ditunda/dibatalkan**, ubah *Status kegiatan*. **Jangan dihapus**: pengunjung tetap melihat labelnya, dan kalender yang sudah mereka simpan ikut diperbarui (revisi kalender naik otomatis).
@@ -21,11 +21,11 @@ Di halaman edit Berita, Pengumuman, Agenda, Video & Media, Karya Siswa atau FAQ,
 - Jangan memuat data pribadi siswa. Sasaran "Kelas 9" tetap bisa dibaca umum.
 
 ## FAQ
-*Konten → FAQ*. Tulis **jawaban resmi** saja. Bila jawaban belum pasti, jangan terbitkan; pengunjung akan diarahkan ke halaman kontak. Isi **Terakhir ditinjau**: dasbor mengingatkan FAQ yang belum ditinjau lebih dari setahun. Centang **FAQ pilihan** agar muncul di halaman kunjungan.
+*Berita & Informasi → FAQ*. Tulis **jawaban resmi** saja. Bila jawaban belum pasti, jangan terbitkan; pengunjung akan diarahkan ke halaman kontak. Isi **Terakhir ditinjau**: dasbor mengingatkan FAQ yang belum ditinjau lebih dari setahun. Centang **FAQ pilihan** agar muncul di halaman kunjungan.
 
 ## Video & media sosial (KPS TV)
-1. **Akun resmi**: *Video & Media Sosial → Akun Media Sosial Resmi*. Salin URL asli kanal/akun dari tautannya sendiri (bukan dari tangkapan layar), lalu centang **Sudah diverifikasi sekolah** setelah dikonfirmasi. Hanya akun aktif dan terverifikasi yang tampil di footer, Kontak dan `/media`.
-2. **Konten**: *Video & Media → Buat*. Tempel **tautan** (bukan kode iframe). Kotak hijau langsung menunjukkan platform dan jenisnya.
+1. **Akun resmi**: *Galeri, Video & Dokumen → Akun Media Sosial*. Salin URL asli kanal/akun dari tautannya sendiri (bukan dari tangkapan layar), lalu centang **Sudah diverifikasi sekolah** setelah dikonfirmasi. Hanya akun aktif dan terverifikasi yang tampil di footer, Kontak dan `/media`.
+2. **Konten**: *Galeri, Video & Dokumen → Video & KPS TV → Buat*. Tempel **tautan** (bukan kode iframe). Kotak hijau langsung menunjukkan platform dan jenisnya.
    - Video, Shorts, playlist YouTube → **pemutar klik-untuk-memuat** (pemutar baru dimuat saat pengunjung menekan Putar).
    - Tautan **kanal** tidak bisa jadi pemutar. Pilih video tertentu, atau pakai *Kartu tautan*.
    - Instagram, TikTok, Facebook, artikel → **kartu tautan** dengan tombol ke sumber.
@@ -37,7 +37,7 @@ Di halaman edit Berita, Pengumuman, Agenda, Video & Media, Karya Siswa atau FAQ,
 8. Jangan mengunggah file video ke website. Video tetap di YouTube/platform asal.
 
 ## Karya siswa
-*Akademik & Kehidupan Siswa → Karya Siswa*. Guru membuat draf, Editor meninjau. Tampil publik hanya bila **terbit DAN persetujuan publikasi = Ada (tertulis)**. Unggah bukti persetujuan di *Bukti persetujuan (privat)*. Pakai nama publik yang disetujui, misalnya "Siswa kelas 8". Video karya ditautkan dari YouTube, tidak diunggah.
+*Profil & Kesiswaan → Karya Siswa*. Guru membuat draf, Editor meninjau. Tampil publik hanya bila **terbit DAN persetujuan publikasi = Ada (tertulis)**. Unggah bukti persetujuan di *Bukti persetujuan (privat)*. Pakai nama publik yang disetujui, misalnya "Siswa kelas 8". Video karya ditautkan dari YouTube, tidak diunggah.
 
 ## Blok halaman baru (Halaman → Isi halaman)
 FAQ (per kategori atau pilihan), Agenda pilihan (kosong = 3 terdekat), Video/media, Karya siswa pilihan, Panduan, Ajakan pendaftaran. Konten yang belum terbit otomatis tidak ditampilkan di blok.
@@ -50,3 +50,10 @@ Setiap layanan punya **Status** (Aktif / Segera tersedia / Pemeliharaan) dan **U
 
 ## Guru & Pimpinan
 Isi **Mata pelajaran** (pisahkan dengan koma). Pengunjung bisa memfilter menurut kelompok dan mapel. Foto tampil hanya bila **Persetujuan publikasi foto** dicentang. Guru yang tidak aktif lagi: hapus centang **Masih aktif** (jangan dihapus) agar riwayat tetap ada. Jangan isi NIK, alamat rumah, nomor pribadi atau data kepegawaian.
+
+## Halaman Alumni (IKA KPS)
+*Beranda & Halaman → Halaman Alumni (IKA KPS)*. Tab: Pembuka · Tentang · Pengurus · Kegiatan · Galeri & Ajakan. Kolom atau daftar yang **dikosongkan memakai isi awal** dari materi IKA KPS. Mengisi satu daftar (mis. Kegiatan) menggantikan seluruh daftar awal tersebut.
+- **Portal Alumni** (https://alumniku.my.id/) diatur di *Pengaturan & Akses → Identitas & Kontak Sekolah → Tautan & Sosial → URL Portal Alumni*. Kosong = alamat tersebut.
+- **Instagram resmi** @ika_kps dan **formulir bergabung** ada di tab Pembuka.
+- **Pengurus**: isi hanya sesuai SK/konfirmasi pengurus. Jangan menambah nama atau jabatan perkiraan.
+- **Agenda alumni**: buat agenda biasa dengan *Sasaran = Alumni*; tiga agenda terdekat tampil otomatis di halaman ini.

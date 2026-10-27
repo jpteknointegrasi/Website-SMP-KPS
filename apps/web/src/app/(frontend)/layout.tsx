@@ -10,6 +10,7 @@ import { Analytics } from '@/components/ui/Analytics'
 import type { Media } from '@/payload-types'
 import { currentTenant, siteUrl } from '@/lib/payload'
 import { PORTAL_BASE_PATH, hasProduct } from '@sekolahku/core'
+import { themeInitScript } from '@/lib/theme'
 
 const NoWebsite = ({ name, portal }: { name: string; portal: boolean }) => (
   <html lang="id">
@@ -64,7 +65,14 @@ export async function generateMetadata(): Promise<Metadata> {
   }
 }
 
-export const viewport: Viewport = { themeColor: '#142A46', width: 'device-width', initialScale: 1 }
+export const viewport: Viewport = {
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#142A46' },
+    { media: '(prefers-color-scheme: dark)', color: '#0b1828' },
+  ],
+  width: 'device-width',
+  initialScale: 1,
+}
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   // Unknown or suspended address: no school content at all.
@@ -81,7 +89,11 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const navFiltered = { ...nav, footer: (nav.footer ?? []).filter((f) => hrefAllowed(f.href, linkFlags)) }
   const logo = settings.logo && typeof settings.logo === 'object' ? (settings.logo as Media) : null
   return (
-    <html lang="id">
+    // data-theme is set by the inline script before hydration
+    <html lang="id" suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
+      </head>
       <body>
         <a href="#main" className="skip-link">
           Lewati ke konten utama

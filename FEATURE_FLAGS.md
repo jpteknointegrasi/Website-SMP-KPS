@@ -1,6 +1,6 @@
 # Fitur Aktif (Feature Flags)
 
-Tempat mengatur: **Panel admin → Pengaturan → Fitur Aktif** (hanya Admin Teknis, tercatat di Log Audit).
+Tempat mengatur: **Panel admin → Pengaturan & Akses → Fitur Aktif** (hanya Admin Teknis, tercatat di Log Audit).
 Kode: `src/globals/flags.ts` (nilai bawaan), `src/lib/flags.ts` (pembacaan server).
 
 Mematikan fitur **menutup halaman, API dan job-nya**, bukan sekadar menyembunyikan tombol. Bila pengaturan tidak terbaca (misalnya database bermasalah), semua fitur yang menyimpan data pribadi dianggap **mati**.

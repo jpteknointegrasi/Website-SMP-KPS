@@ -494,22 +494,25 @@ export const CommunityAlumni = ({
       <div className="community__grid">
         {image ? (
           <Reveal className="community__photo">
-            <Img media={image} sizes="(min-width: 1024px) 760px, 100vw" />
+            <Link href="/alumni" tabIndex={-1} aria-hidden="true">
+              <Img media={image} sizes="(min-width: 1024px) 760px, 100vw" />
+            </Link>
           </Reveal>
         ) : null}
         <Reveal className="community__copy">
           <h3>{alumniTitle}</h3>
           {alumniText || text ? <p>{alumniText || text}</p> : null}
-          {alumniUrl ? (
-            <a href={alumniUrl} className="btn btn--outline" target="_blank" rel="noopener noreferrer">
-              Kunjungi Portal Alumni <Icon name="arrow" size={17} />
-              <span className="sr-only"> (membuka tab baru)</span>
-            </a>
-          ) : (
-            <Link href="/alumni" className="btn btn--outline">
-              Halaman Alumni <Icon name="arrow" size={17} />
+          <div className="community__actions">
+            <Link href="/alumni" className="btn btn--gold">
+              Halaman Alumni (IKA KPS) <Icon name="arrow" size={17} />
             </Link>
-          )}
+            {alumniUrl ? (
+              <a href={alumniUrl} className="btn btn--outline" target="_blank" rel="noopener noreferrer">
+                Portal Alumni <Icon name="external" size={16} />
+                <span className="sr-only"> (membuka tab baru)</span>
+              </a>
+            ) : null}
+          </div>
         </Reveal>
       </div>
     </div>

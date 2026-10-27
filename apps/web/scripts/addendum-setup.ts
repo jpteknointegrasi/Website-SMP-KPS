@@ -1,6 +1,8 @@
 import type { TenantPayload as Payload } from '../src/tenancy/scoped'
 import { lexical } from '../src/lib/lexical'
 import { importMedia } from './import-media'
+import { runIkaEventSetup } from './ika-event-setup'
+import { runAlumniPageSetup } from './alumni-page-setup'
 
 /**
  * Setup for the P0/P1 addendum. ADDITIVE and NON-OVERWRITING: it only creates what is missing, so it is safe on
@@ -331,5 +333,10 @@ export async function runAddendumSetup(payload: Payload, log: (m: string) => voi
     await payload.update({ collection: 'pages', id: about2.id, overrideAccess: true, context: ctx, data: { layout, _status: 'published' } as never })
     note('Halaman Tentang: foto guru & staf dipindahkan ke sini.')
   }
+  // 13. IKA KPS: Pelantikan Pengurus 30 Okt 2026 (agenda + undangan PDF + banner beranda)
+  for (const m of await runIkaEventSetup(payload, M('KPS-IKA01'))) note(m)
+  // 14. Halaman Alumni: salin isi awal ke CMS agar formnya terisi
+  if (media.remaining) note('Halaman Alumni (IKA KPS): menunggu semua foto selesai diunggah — klik tombol sekali lagi.')
+  else for (const m of await runAlumniPageSetup(payload, M)) note(m)
   return out
 }

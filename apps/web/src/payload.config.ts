@@ -41,6 +41,8 @@ import {
 import { AdmissionsCycles, AuditLogs, ContactMessages, Redirects } from './collections/system'
 import { Homepage, Navigation, SiteSettings } from './globals'
 import { FeatureFlags } from './globals/flags'
+import { AlumniPage } from './globals/alumni'
+import { arrangeCollections } from './admin/nav'
 import { Faqs, StudentWorks } from './collections/extra'
 import { MediaItems, SocialAccounts } from './collections/media-hub'
 import { Leads, VisitBookings, VisitSessions } from './collections/admissions'
@@ -103,7 +105,8 @@ export default buildConfig({
   },
   // Every school-owned collection goes through withTenancy (tenant field, isolated access, per-school unique
   // indexes). Tenants and Users are platform collections with their own rules.
-  collections: [
+  // sidebar groups, order and labels: src/admin/nav.ts
+  collections: arrangeCollections([
     ...[
       Pages,
       Posts,
@@ -139,12 +142,13 @@ export default buildConfig({
       asSingleton(SiteSettings, { useAsTitle: 'schoolName' }),
       asSingleton(Navigation),
       asSingleton(FeatureFlags),
+      asSingleton(AlumniPage),
     ].map((c) => withTenancy(c)),
     // platform-level events (e.g. Super Admin changes) have no school
     withTenancy(AuditLogs, { optional: true }),
     Tenants,
     Users,
-  ],
+  ]),
   editor: lexicalEditor({
     // Structured rich text only: no raw HTML/script blocks; H1 is reserved for the page title.
     features: ({ defaultFeatures }) => [

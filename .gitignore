@@ -72,3 +72,8 @@ apps/*/.next/
 apps/*/next-env.d.ts
 .storage/
 RAHASIA-UJI-*.txt
+ENV-UJI-*.txt
+
+# local upload folders (production uses object storage)
+apps/*/documents
+apps/*/private-media
