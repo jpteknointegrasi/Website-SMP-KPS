@@ -8,6 +8,7 @@ import { buildConfig } from 'payload'
 import { fileURLToPath } from 'url'
 import sharp from 'sharp'
 import { vercelBlobStorage } from '@payloadcms/storage-vercel-blob'
+import { s3Storage } from '@payloadcms/storage-s3'
 
 import { Users } from './collections/Users'
 import { Tenants } from './collections/Tenants'
@@ -50,6 +51,19 @@ import { releaseExpiredHolds } from './lib/capacity'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
+
+// S3-compatible object storage for uploads (e.g. Supabase Storage: endpoint https://<ref>.storage.supabase.co/storage/v1/s3,
+// public URL https://<ref>.supabase.co/storage/v1/object/public). See the plugins below.
+export const s3Ready = Boolean(
+  process.env.STORAGE_S3_ENDPOINT && process.env.STORAGE_S3_ACCESS_KEY_ID && process.env.STORAGE_S3_SECRET_ACCESS_KEY && process.env.STORAGE_S3_PUBLIC_BUCKET && process.env.STORAGE_S3_PRIVATE_BUCKET && process.env.STORAGE_PUBLIC_URL,
+)
+const publicBase = (process.env.STORAGE_PUBLIC_URL ?? '').replace(/\/$/, '')
+const s3Config = {
+  endpoint: process.env.STORAGE_S3_ENDPOINT,
+  region: process.env.STORAGE_S3_REGION || 'auto',
+  forcePathStyle: true,
+  credentials: { accessKeyId: process.env.STORAGE_S3_ACCESS_KEY_ID ?? '', secretAccessKey: process.env.STORAGE_S3_SECRET_ACCESS_KEY ?? '' },
+}
 
 // DATABASE_URL / POSTGRES_URL are what the Vercel ↔ Neon integration injects
 const dbUri = process.env.DATABASE_URI || process.env.DATABASE_URL || process.env.POSTGRES_URL || ''
@@ -144,23 +158,50 @@ export default buildConfig({
   db,
   sharp,
   plugins: [
-    // Production on Vercel: files live in Vercel Blob (the serverless disk is not persistent).
-    // Locally (no BLOB_READ_WRITE_TOKEN) files stay in ./media, ./documents, ./private-media.
-    vercelBlobStorage({
-      enabled: Boolean(process.env.BLOB_READ_WRITE_TOKEN),
-      token: process.env.BLOB_READ_WRITE_TOKEN,
-      alwaysInsertFields: true, // identical schema/migrations with or without the token
-      // No random suffix: with it, resized image variants get URLs that don't match the stored blobs.
-      // File names are already random UUIDs (hooks/uploadSecurity.ts).
-      addRandomSuffix: false,
-      collections: {
-        // public images are served straight from the Blob CDN
-        media: { disablePayloadAccessControl: true, prefix: 'media' },
-        // documents & private files are always served through Payload so access rules apply
-        documents: { prefix: 'documents' },
-        'private-files': { prefix: 'private' },
-      },
-    }),
+    // Production on Vercel the serverless disk is not persistent, so files live in object storage:
+    //  - S3-compatible storage (Supabase Storage, R2, S3) when STORAGE_S3_* is set: public images in a PUBLIC bucket,
+    //    served straight from its public URL; documents & private files in a PRIVATE bucket, always through Payload;
+    //  - otherwise Vercel Blob when BLOB_READ_WRITE_TOKEN is set (the original KPS setup);
+    //  - locally neither: files stay in ./media, ./documents, ./private-media.
+    // Both adapters insert the same fields (alwaysInsertFields), so the schema/migrations do not depend on the choice.
+    ...(s3Ready
+      ? [
+          s3Storage({
+            alwaysInsertFields: true,
+            bucket: process.env.STORAGE_S3_PUBLIC_BUCKET!,
+            config: s3Config,
+            collections: {
+              media: {
+                prefix: 'media',
+                disablePayloadAccessControl: true,
+                generateFileURL: ({ filename, prefix }) => `${publicBase}/${process.env.STORAGE_S3_PUBLIC_BUCKET}/${prefix || 'media'}/${encodeURIComponent(filename)}`,
+              },
+            },
+          }),
+          s3Storage({
+            alwaysInsertFields: true,
+            bucket: process.env.STORAGE_S3_PRIVATE_BUCKET!,
+            config: s3Config,
+            collections: { documents: { prefix: 'documents' }, 'private-files': { prefix: 'private' } },
+          }),
+        ]
+      : [
+          vercelBlobStorage({
+            enabled: Boolean(process.env.BLOB_READ_WRITE_TOKEN),
+            token: process.env.BLOB_READ_WRITE_TOKEN,
+            alwaysInsertFields: true, // identical schema/migrations with or without the token
+            // No random suffix: with it, resized image variants get URLs that don't match the stored blobs.
+            // File names are already random UUIDs (hooks/uploadSecurity.ts).
+            addRandomSuffix: false,
+            collections: {
+              // public images are served straight from the Blob CDN
+              media: { disablePayloadAccessControl: true, prefix: 'media' },
+              // documents & private files are always served through Payload so access rules apply
+              documents: { prefix: 'documents' },
+              'private-files': { prefix: 'private' },
+            },
+          }),
+        ]),
   ],
   graphQL: { disable: true },
   jobs: {

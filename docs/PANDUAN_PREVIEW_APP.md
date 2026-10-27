@@ -1,14 +1,16 @@
 # Uji Sekolahku Web + App di Vercel (Preview, database uji Supabase)
 
 Tujuan: mencoba cabang `platform-produk` (website multi-sekolah + Sekolahku App) di internet **tanpa menyentuh
-website dan database produksi KPS** (produksi tetap di Neon, dari cabang `main`). Hasilnya:
+website dan database produksi KPS** (produksi saat ini masih Neon + Vercel Blob dari cabang `main`; pemindahannya ke
+Supabase dilakukan terpisah nanti). Uji ini sepenuhnya memakai Supabase — tanpa Neon dan tanpa Vercel Blob. Hasilnya:
 
 - Website uji: `https://sekolahku-uji-web.vercel.app` (portal di `/portal`)
 - App (hanya diakses lewat website uji): `https://sekolahku-uji-app.vercel.app`
 
 Database uji: proyek Supabase **Sekolahku** (`mihnkswdagjiavzbmmfu`, Tokyo). Sudah disiapkan:
-database `postgres` (website), database `app_kps_uji` (App KPS), bucket privat `sekolahku-uji` (berkas App),
-akses Data API ke tabel ditutup (aplikasi tidak memakai API Supabase).
+database `postgres` (website), database `app_kps_uji` (App KPS), bucket **publik** `sekolahku-web-media` (foto
+website), bucket privat `sekolahku-web-files` (dokumen & berkas privat website), bucket privat `sekolahku-uji`
+(berkas App). Akses Data API ke tabel ditutup (aplikasi tidak memakai API Supabase).
 
 > **Pengaman di kode.** Build Preview berhenti sebelum menyentuh database kecuali proyek menyatakan
 > `PREVIEW_DATABASE_IS_COPY=true`. Variabel itu **hanya** diisi pada Preview proyek uji. Jangan pernah di proyek produksi.
@@ -28,19 +30,17 @@ akses Data API ke tabel ditutup (aplikasi tidak memakai API Supabase).
    Database → Reset database password*). Tambahkan `?sslmode=no-verify` di akhir. Ini **DB_UJI_WEB**:
    `postgresql://postgres.mihnkswdagjiavzbmmfu:<sandi>@aws-…-ap-northeast-1.pooler.supabase.com:6543/postgres?sslmode=no-verify`
 2. **DB_UJI_APP** = string yang sama, hanya `/postgres?` diganti `/app_kps_uji?`.
-3. **Storage → S3 Configuration** (Settings): salin *Endpoint*; klik **New access key** → salin Access key ID dan
-   Secret access key (secret hanya tampil sekali).
+3. **Storage → S3 Configuration** (Settings): klik **New access key** → salin Access key ID dan Secret access key
+   (secret hanya tampil sekali). Satu kunci dipakai website dan App.
 
 ## 2. Proyek Vercel `sekolahku-uji-web` (website)
 
 1. Vercel → **Add New → Project** → impor repo `jpteknointegrasi/Website-SMP-KPS` → nama `sekolahku-uji-web`,
    **Root Directory** `apps/web`. Bila langsung men-deploy dan gagal, tidak apa-apa — lanjutkan.
 2. **Settings → Git → Ignored Build Step** → `[ "$VERCEL_GIT_COMMIT_REF" != "platform-produk" ]`.
-3. **Storage → Create → Blob** → nama `sekolahku-uji-files` (Public) → Connect ke proyek ini (Preview).
-   Jangan memakai Blob produksi.
-4. **Settings → Environment Variables** — centang **Preview saja**, tempel bagian WEB dari `RAHASIA-UJI-SEKOLAHKU.txt`
-   (ganti `<DB_UJI_WEB>`, `<DB_UJI_APP>`). Di halaman itu ada tombol untuk menempel isi .env sekaligus.
-5. **Settings → Domains → Add** `sekolahku-uji-web.vercel.app` → environment **Preview**, branch `platform-produk`.
+3. **Settings → Environment Variables** — centang **Preview saja**, tempel bagian WEB dari `RAHASIA-UJI-SEKOLAHKU.txt`
+   (ganti `<DB_UJI_WEB>`, `<DB_UJI_APP>` dan kunci S3). Di halaman itu ada tombol untuk menempel isi .env sekaligus.
+4. **Settings → Domains → Add** `sekolahku-uji-web.vercel.app` → environment **Preview**, branch `platform-produk`.
    (Bila nama sudah dipakai, pilih nama lain dan sesuaikan `NEXT_PUBLIC_SERVER_URL` dan `WEB_ORIGIN`.)
 
 ## 3. Proyek Vercel `sekolahku-uji-app` (Sekolahku App)

@@ -1,5 +1,6 @@
 import { getPayload, type Payload } from 'payload'
 import config from '@payload-config'
+import { s3Ready } from '@payload-config'
 import { del, list } from '@vercel/blob'
 import { runSeed } from '../../../../scripts/seed-core'
 import { runAddendumSetup } from '../../../../scripts/addendum-setup'
@@ -43,7 +44,7 @@ const notAdmin = () =>
 const noBlobToken = () =>
   page(
     'Token Blob belum ada',
-    `<h1>Belum bisa mengisi foto</h1><div class="box warn"><p>Variabel <b>BLOB_READ_WRITE_TOKEN</b> belum terpasang di Vercel, jadi foto tidak bisa disimpan.</p><ol><li>Vercel → Storage → <b>kps-files</b> → <i>Show secret</i> → salin nilai <code>vercel_blob_rw_…</code></li><li>Settings → Environment Variables → <b>Add</b>: key <code>BLOB_READ_WRITE_TOKEN</code>, centang Production &amp; Preview → Save</li><li>Deployments → ⋯ → <b>Redeploy</b>, tunggu Ready, lalu buka halaman ini lagi.</li></ol></div>`,
+    `<h1>Belum bisa mengisi foto</h1><div class="box warn"><p>Penyimpanan berkas belum diatur di Vercel, jadi foto tidak bisa disimpan. Isi variabel <b>STORAGE_S3_…</b> (Supabase Storage, lihat docs/PANDUAN_PREVIEW_APP.md) lalu Redeploy, atau pakai Vercel Blob:</p><ol><li>Vercel → Storage → <b>kps-files</b> → <i>Show secret</i> → salin nilai <code>vercel_blob_rw_…</code></li><li>Settings → Environment Variables → <b>Add</b>: key <code>BLOB_READ_WRITE_TOKEN</code>, centang Production &amp; Preview → Save</li><li>Deployments → ⋯ → <b>Redeploy</b>, tunggu Ready, lalu buka halaman ini lagi.</li></ol></div>`,
   )
 
 const otherSchool = () =>
@@ -59,8 +60,8 @@ async function authorize(req: Request): Promise<{ payload: TenantPayload; raw: P
   const school = await adminSchool(raw, user)
   if (!school || school.slug !== CONTENT_PACK_SLUG) return otherSchool()
   const payload = scopePayload(raw, school.id)
-  // On Vercel the server disk is read-only/ephemeral: photos must go to Vercel Blob.
-  if (process.env.VERCEL && !process.env.BLOB_READ_WRITE_TOKEN) return noBlobToken()
+  // On Vercel the server disk is read-only/ephemeral: photos must go to object storage (S3/Supabase or Vercel Blob).
+  if (process.env.VERCEL && !s3Ready && !process.env.BLOB_READ_WRITE_TOKEN) return noBlobToken()
   return { payload, raw }
 }
 
@@ -153,7 +154,7 @@ export async function POST(req: Request) {
   }
 
   // 2) remove leftover blobs under media/ (e.g. variants stored with a random suffix)
-  const token = process.env.BLOB_READ_WRITE_TOKEN
+  const token = s3Ready ? undefined : process.env.BLOB_READ_WRITE_TOKEN
   if (token) {
     const keep = new Set<string>()
     // keep every school's files: the blob store is shared by all schools
