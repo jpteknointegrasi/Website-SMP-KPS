@@ -40,7 +40,13 @@ if (schools.length) {
       run(`npx tsx scripts/demo.ts --sekolah ${slug} --admin ${JSON.stringify(demoAdmin)} --saya-paham-ini-data-contoh`, { allowFail: true })
     }
   }
+} else if (!platformUrl) {
+  if (env === 'preview' || env === 'production') {
+    console.error('\n✗ PLATFORM_DATABASE_URL belum diatur untuk lingkungan ini — App tidak dapat menemukan sekolah.\n')
+    process.exit(1)
+  }
+  console.log('▶ PLATFORM_DATABASE_URL kosong — migrasi dilewati (pengembangan lokal).')
 } else {
-  console.log('▶ Belum ada sekolah dengan database App — migrasi dilewati.')
+  console.log('▶ Belum ada sekolah dengan langganan App dan database App — migrasi dilewati.')
 }
 run('npx next build')
