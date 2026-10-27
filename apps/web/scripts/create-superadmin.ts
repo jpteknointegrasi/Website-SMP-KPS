@@ -25,8 +25,10 @@ if (found) {
   await payload.update({ collection: 'users', id: found.id, overrideAccess: true, data: { role: 'superadmin', tenant: null } as never })
   console.log(`✓ ${email} sekarang Super Admin platform (tidak lagi terikat ke satu sekolah).`)
 } else {
-  const password = randomBytes(12).toString('base64url')
+  // SCHOOL_ADMIN_PASSWORD (Preview setup) is used as given and never printed
+  const given = process.env.SCHOOL_ADMIN_PASSWORD
+  const password = given || randomBytes(12).toString('base64url')
   await payload.create({ collection: 'users', overrideAccess: true, data: { email, password, name: name!, role: 'superadmin' } as never })
-  console.log(`✓ Super Admin dibuat: ${email}\n  Kata sandi sementara (hanya ditampilkan sekali): ${password}`)
+  console.log(`✓ Super Admin dibuat: ${email}${given ? '' : `\n  Kata sandi sementara (hanya ditampilkan sekali): ${password}`}`)
 }
 process.exit(0)

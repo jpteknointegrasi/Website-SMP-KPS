@@ -60,14 +60,16 @@ const school = await payload.create({
 console.log(`✓ Sekolah "${school.name}" dibuat (id ${school.id}, kode ${school.slug}). Pengaturan, menu dan fitur awal sudah disiapkan.`)
 
 if (adminEmail) {
-  const password = randomBytes(12).toString('base64url')
+  // SCHOOL_ADMIN_PASSWORD (e.g. Preview setup) is used as given and never printed
+  const given = process.env.SCHOOL_ADMIN_PASSWORD
+  const password = given || randomBytes(12).toString('base64url')
   await payload.create({
     collection: 'users',
     overrideAccess: true,
     data: { email: adminEmail, password, name: 'Admin Teknis', role: 'admin', tenant: school.id } as never,
   })
   console.log(`✓ Akun Admin Teknis: ${adminEmail}`)
-  console.log(`  Kata sandi sementara (hanya ditampilkan sekali): ${password}`)
+  if (!given) console.log(`  Kata sandi sementara (hanya ditampilkan sekali): ${password}`)
   console.log('  Minta admin sekolah segera menggantinya setelah masuk.')
 }
 

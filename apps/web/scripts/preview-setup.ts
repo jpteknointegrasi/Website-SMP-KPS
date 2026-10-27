@@ -11,6 +11,7 @@
 import 'dotenv/config'
 import pg from 'pg'
 import { randomBytes } from 'crypto'
+import { spawnSync } from 'child_process'
 import { sealSecret } from '@sekolahku/core'
 
 if (process.env.VERCEL_ENV !== 'preview' || process.env.PREVIEW_DATABASE_IS_COPY !== 'true') {
@@ -28,7 +29,26 @@ const host = (() => {
 const appDb = process.env.PREVIEW_APP_DATABASE_URL?.trim()
 
 const pool = new pg.Pool({ connectionString: process.env.DATABASE_URI || process.env.DATABASE_URL || process.env.POSTGRES_URL })
-const t = (await pool.query<{ id: number }>('SELECT id FROM tenants WHERE slug = $1', [slug])).rows[0]
+let t = (await pool.query<{ id: number }>('SELECT id FROM tenants WHERE slug = $1', [slug])).rows[0]
+if (!t && slug === 'kps') {
+  // fresh test database: create the test school (+ its first admin when PREVIEW_ADMIN_EMAIL/PASSWORD are given).
+  // Content and photos are then filled from /setup/isi-data while signed in as that admin.
+  const email = process.env.PREVIEW_ADMIN_EMAIL?.trim()
+  const pass = process.env.PREVIEW_ADMIN_PASSWORD
+  if (email && (!pass || pass.length < 12)) throw new Error('PREVIEW_ADMIN_PASSWORD minimal 12 karakter.')
+  const env = { ...process.env, SCHOOL_ADMIN_PASSWORD: pass ?? '', NODE_OPTIONS: '--no-deprecation' }
+  // the first account of an empty database always becomes platform Super Admin (who cannot use the school's App),
+  // so the platform operator account is created first and the school admin second
+  const users = Number((await pool.query<{ n: string }>('SELECT count(*) AS n FROM users')).rows[0]!.n)
+  if (email && users === 0) {
+    const r0 = spawnSync('npx', ['tsx', 'scripts/create-superadmin.ts', '--email', 'superadmin@sekolahku-uji.invalid'], { stdio: 'inherit', env })
+    if (r0.status !== 0) process.exit(r0.status ?? 1)
+  }
+  const args = ['--kode', 'kps', '--nama', 'SMP Nasional KPS', '--zona', 'Asia/Makassar', '--paket', 'pro', '--app', 'pilot', '--status', 'active', ...(host ? ['--domain', host] : []), ...(email ? ['--admin', email] : [])]
+  const r = spawnSync('npx', ['tsx', 'scripts/create-school.ts', ...args], { stdio: 'inherit', env })
+  if (r.status !== 0) process.exit(r.status ?? 1)
+  t = (await pool.query<{ id: number }>('SELECT id FROM tenants WHERE slug = $1', [slug])).rows[0]
+}
 if (!t) {
   console.error(`Sekolah "${slug}" tidak ada di database uji.`)
   process.exit(1)
