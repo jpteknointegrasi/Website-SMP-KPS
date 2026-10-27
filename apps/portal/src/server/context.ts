@@ -107,8 +107,8 @@ export async function loadStaff(db: SchoolDb, m: StaffMember, now = new Date()):
   return { kind: 'staff', id: row.id, webUserId: webId, name: row.displayName || m.name, email, webRole: m.role, roles, perms: permissionsOf(roles) }
 }
 
-/** Read-only permissions of a support grant: no restricted (BK/UKS) data, no finance, no writes. */
-const SUPPORT_PERMS: Permission[] = ['students.read', 'audit.view', 'dashboard.view']
+/** Read-only permissions of a support grant by scope chosen by the school: never BK/UKS, finance, files or writes. */
+const SUPPORT_PERMS: Record<string, Permission[]> = { operasional: ['audit.view', 'dashboard.view'], data_siswa: ['audit.view', 'dashboard.view', 'students.read'] }
 
 /**
  * The platform operator (CMS Super Admin) inside this school's App, only while the school's App admin has issued a
@@ -135,7 +135,7 @@ export async function loadSupport(db: SchoolDb, m: StaffMember, now = new Date()
     .orderBy(desc(auditEvents.occurredAt))
     .limit(1)
   if (!last || now.getTime() - last.at.getTime() > 900_000) await db.insert(auditEvents).values({ actorType: 'staff', actorId: row!.id, action: 'support.access', objectType: 'support_grant', objectId: g.id, meta: { operator: email } })
-  return { kind: 'staff', id: row!.id, webUserId: String(m.id), name: `Bantuan teknis (${m.name})`, email, webRole: 'superadmin', roles: new Set(['support']), perms: new Set(SUPPORT_PERMS), support: { grantId: g.id, expiresAt: g.expiresAt } }
+  return { kind: 'staff', id: row!.id, webUserId: String(m.id), name: `Bantuan teknis (${m.name})`, email, webRole: 'superadmin', roles: new Set(['support']), perms: new Set(SUPPORT_PERMS[g.scope] ?? SUPPORT_PERMS.operasional!), support: { grantId: g.id, expiresAt: g.expiresAt } }
 }
 
 /** The family/student account of a session cookie value (unexpired session, active account). */

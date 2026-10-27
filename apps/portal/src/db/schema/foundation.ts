@@ -178,6 +178,7 @@ export const supportGrants = pgTable('support_grants', {
   id: uuid('id').primaryKey().defaultRandom(),
   operatorEmail: text('operator_email').notNull(),
   reason: text('reason').notNull(),
+  scope: text('scope').notNull().default('operasional'), // operasional | data_siswa
   grantedBy: text('granted_by').notNull(),
   createdAt: ts('created_at').notNull().defaultNow(),
   expiresAt: ts('expires_at').notNull(),

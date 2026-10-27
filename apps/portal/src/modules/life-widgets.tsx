@@ -1,7 +1,7 @@
 /** Family home sections: latest report card, extracurricular consent requests. */
 import Link from 'next/link'
 import { and, eq } from 'drizzle-orm'
-import { activities, activityMembers } from '@/db/schema'
+import { activities, activityMembers, workProposals } from '@/db/schema'
 import { familyWidget } from './widgets'
 import { releasedReports } from './reports/service'
 import { linkedChildren } from './scope'
@@ -18,6 +18,21 @@ familyWidget({
     return (
       <Notice tone="warn" title="Persetujuan ekstrakurikuler">
         {s.name} mendaftar {rows.map((r) => r.name).join(', ')}. <Link href={`/keluarga/ekskul?anak=${s.studentId}`}>Tinjau</Link>
+      </Notice>
+    )
+  },
+})
+
+familyWidget({
+  order: 6,
+  mod: 'kesiswaan',
+  render: async (ctx, s) => {
+    if (s.self || !(await linkedChildren(ctx)).some((c) => c.studentId === s.studentId)) return null
+    const rows = await ctx.db.select({ title: workProposals.title }).from(workProposals).where(and(eq(workProposals.studentId, s.studentId), eq(workProposals.status, 'awaiting_consent')))
+    if (!rows.length) return null
+    return (
+      <Notice tone="info" title="Izin publikasi karya">
+        Guru mengusulkan karya {s.name} ({rows.map((r) => r.title).join(', ')}) untuk website sekolah. <Link href={`/keluarga/karya?anak=${s.studentId}`}>Tinjau</Link>
       </Notice>
     )
   },

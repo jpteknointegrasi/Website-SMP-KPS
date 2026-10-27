@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { staffPage } from '@/server/request'
 import { taskBoard } from '@/modules/learning/service'
 import { fmtDateTime } from '@/server/time'
@@ -71,6 +72,9 @@ export default async function TaskBoard({ params, searchParams }: { params: Prom
                           </span>
                           <span className="muted">{fmtDateTime(r.submission.submittedAt, ctx.tz)}</span>
                           {r.submission.text ? <div className="prose" style={{ maxWidth: 360 }}>{r.submission.text.slice(0, 600)}</div> : null}
+                          <Link className="small" href={`/staf/karya?kiriman=${r.submission.id}`}>
+                            Usulkan ke website
+                          </Link>
                           {r.submission.fileIds.map((f) => (
                             <a key={f} href={fileUrl(f)!} target="_blank" rel="noopener">
                               {name(f)}

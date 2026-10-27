@@ -5,6 +5,7 @@ import * as migration_20261025_150726_addendum_p0p1 from './20261025_150726_adde
 import * as migration_20261025_200110_platform_multi_tenant from './20261025_200110_platform_multi_tenant';
 import * as migration_20261025_211956_platform_document_locks from './20261025_211956_platform_document_locks';
 import * as migration_20261026_032802_product_subscriptions from './20261026_032802_product_subscriptions';
+import * as migration_20261027_011036_app_karya from './20261027_011036_app_karya';
 
 export const migrations = [
   {
@@ -40,6 +41,11 @@ export const migrations = [
   {
     up: migration_20261026_032802_product_subscriptions.up,
     down: migration_20261026_032802_product_subscriptions.down,
-    name: '20261026_032802_product_subscriptions'
+    name: '20261026_032802_product_subscriptions',
+  },
+  {
+    up: migration_20261027_011036_app_karya.up,
+    down: migration_20261027_011036_app_karya.down,
+    name: '20261027_011036_app_karya'
   },
 ];

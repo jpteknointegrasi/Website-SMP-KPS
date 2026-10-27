@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from 'next/server'
-import { PORTAL_BASE_PATH, PORTAL_HOST_HEADER, PORTAL_PROXY_HEADER } from '@sekolahku/core'
+import { PORTAL_BASE_PATH, PORTAL_HOST_HEADER, PORTAL_SYNC_HEADER, PORTAL_PROXY_HEADER } from '@sekolahku/core'
 
 const SAFE = new Set(['GET', 'HEAD', 'OPTIONS'])
 
@@ -23,6 +23,7 @@ export function proxy(request: NextRequest) {
   //    trust that host. The browser keeps talking to the school domain, so the staff sign-in cookie is shared.
   if ((path === PORTAL_BASE_PATH || path.startsWith(`${PORTAL_BASE_PATH}/`)) && process.env.PORTAL_ORIGIN) {
     const headers = new Headers(request.headers)
+    headers.delete(PORTAL_SYNC_HEADER) // server-to-server only; never from a browser
     headers.set(PORTAL_HOST_HEADER, host)
     headers.set(PORTAL_PROXY_HEADER, process.env.PORTAL_PROXY_SECRET ?? '')
     return NextResponse.rewrite(new URL(path + request.nextUrl.search, process.env.PORTAL_ORIGIN), { request: { headers } })

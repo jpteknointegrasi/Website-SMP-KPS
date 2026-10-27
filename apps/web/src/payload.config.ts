@@ -15,6 +15,8 @@ import { withTenancy } from './tenancy/collection'
 import { asSingleton } from './tenancy/singleton'
 import { PLATFORM_NAME } from './tenancy/config'
 import { scopePayload } from './tenancy/scoped'
+import { toInfo } from './tenancy/resolve'
+import { syncAppWorks } from './lib/app-works'
 import { Media } from './collections/Media'
 import { PrivateFiles } from './collections/PrivateFiles'
 import { Documents } from './collections/Documents'
@@ -186,6 +188,30 @@ export default buildConfig({
         outputSchema: [
           { name: 'released', type: 'number' },
           { name: 'skipped', type: 'text' },
+        ],
+      },
+      {
+        // Karya siswa consented in Sekolahku App → drafts for moderation; withdrawn consent → hidden.
+        slug: 'syncAppWorks',
+        schedule: [{ cron: '15 * * * *', queue: 'default' }],
+        handler: async ({ req }) => {
+          let created = 0
+          let hidden = 0
+          const schools = await req.payload.find({ collection: 'tenants', where: { status: { not_equals: 'suspended' } }, limit: 1000, depth: 0, overrideAccess: true, pagination: false })
+          for (const t of schools.docs) {
+            try {
+              const r = await syncAppWorks(req.payload, toInfo(t as never))
+              created += 'created' in r ? (r.created ?? 0) : 0
+              hidden += 'hidden' in r ? (r.hidden ?? 0) : 0
+            } catch (e) {
+              req.payload.logger.error({ err: e, school: t.id }, 'sinkron karya App gagal')
+            }
+          }
+          return { output: { created, hidden } }
+        },
+        outputSchema: [
+          { name: 'created', type: 'number' },
+          { name: 'hidden', type: 'number' },
         ],
       },
     ],

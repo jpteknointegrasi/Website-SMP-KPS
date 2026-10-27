@@ -154,7 +154,7 @@ describe('CMP-06 akses bantuan teknis', () => {
   it('hanya dengan izin sekolah, terbatas waktu, hanya melihat, tercatat; dapat dicabut', async () => {
     const op = { id: 99, email: 'operator@platform.test', name: 'Operator', role: 'superadmin', schoolId: null } as never
     expect(await loadSupport(A.db, op, now)).toBeNull()
-    await grantSupport(ctxStaff(A, admin, now), { email: 'operator@platform.test', reason: 'Membantu impor data siswa', hours: 2 })
+    await grantSupport(ctxStaff(A, admin, now), { email: 'operator@platform.test', reason: 'Membantu impor data siswa', hours: 2, scope: 'data_siswa' })
     const sup = await loadSupport(A.db, op, now)
     expect(sup?.support).toBeTruthy()
     expect(sup!.perms.has('counseling')).toBe(false)

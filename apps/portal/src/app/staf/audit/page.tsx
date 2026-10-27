@@ -4,7 +4,7 @@ import { staffPage } from '@/server/request'
 import { hasPerm } from '@/server/context'
 import { fmtDateTime, parseLocalDateTime, today, addDays } from '@/server/time'
 import { mailConfigured } from '@/server/mail'
-import { ActionButton, ActionForm, Badge, Card, Empty, Field, Flash, Notice, PageHead, sp1, Stat, Submit, TextArea, type SP } from '@/ui/kit'
+import { ActionButton, ActionForm, Badge, Card, Empty, Field, Flash, Notice, PageHead, sp1, Stat, Submit, TextArea, type SP, Select } from '@/ui/kit'
 
 export const metadata = { title: 'Audit & operasional' }
 
@@ -114,7 +114,7 @@ export default async function Audit({ searchParams }: { searchParams: Promise<SP
                     return (
                       <li key={g.id}>
                         <span className="grow small">
-                          {g.operatorEmail} · s.d. {fmtDateTime(g.expiresAt, ctx.tz)}
+                          {g.operatorEmail} · {g.scope === 'data_siswa' ? 'operasional + Buku Induk' : 'operasional'} · s.d. {fmtDateTime(g.expiresAt, ctx.tz)}
                           <div className="muted">{g.reason}</div>
                         </span>
                         {active ? <ActionButton action="bantuan.cabut" back="/staf/audit" hidden={{ id: g.id }} label="Cabut" tone="danger-ghost" small /> : <Badge>Berakhir</Badge>}
@@ -127,6 +127,14 @@ export default async function Audit({ searchParams }: { searchParams: Promise<SP
                 <Field name="email" type="email" label="Email pengelola platform" required />
                 <TextArea name="alasan" label="Alasan" required rows={2} />
                 <Field name="jam" type="number" label="Durasi (jam)" value={4} min={1} max={72} />
+                <Select
+                  name="cakupan"
+                  label="Cakupan"
+                  options={[
+                    ['operasional', 'Operasional saja (audit, antrean, dashboard agregat)'],
+                    ['data_siswa', 'Termasuk melihat data Buku Induk (tanpa unduh berkas)'],
+                  ]}
+                />
                 <Submit tone="ghost">Beri akses sementara</Submit>
               </ActionForm>
             </Card>

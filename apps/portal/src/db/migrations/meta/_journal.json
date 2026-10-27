@@ -43,6 +43,13 @@
       "when": 1793046841259,
       "tag": "0005_layanan_sekolah",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1793063234482,
+      "tag": "0006_karya_dan_bantuan",
+      "breakpoints": true
     }
   ]
 }

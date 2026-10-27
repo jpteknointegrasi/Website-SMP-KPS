@@ -171,6 +171,7 @@ export interface Config {
   jobs: {
     tasks: {
       releaseVisitHolds: TaskReleaseVisitHolds;
+      syncAppWorks: TaskSyncAppWorks;
       schedulePublish: TaskSchedulePublish;
       inline: {
         input: unknown;
@@ -1031,6 +1032,10 @@ export interface StudentWork {
    * Tidak pernah tampil publik.
    */
   consentRecord?: (number | null) | PrivateFile;
+  /**
+   * Diisi otomatis untuk karya dari App (izin orang tua tercatat di App). Bila izin ditarik di App, status persetujuan menjadi "Ditarik".
+   */
+  appRef?: string | null;
   seo?: {
     title?: string | null;
     description?: string | null;
@@ -2400,7 +2405,7 @@ export interface PayloadJob {
     | {
         executedAt: string;
         completedAt: string;
-        taskSlug: 'inline' | 'releaseVisitHolds' | 'schedulePublish';
+        taskSlug: 'inline' | 'releaseVisitHolds' | 'syncAppWorks' | 'schedulePublish';
         taskID: string;
         input?:
           | {
@@ -2433,7 +2438,7 @@ export interface PayloadJob {
         id?: string | null;
       }[]
     | null;
-  taskSlug?: ('inline' | 'releaseVisitHolds' | 'schedulePublish') | null;
+  taskSlug?: ('inline' | 'releaseVisitHolds' | 'syncAppWorks' | 'schedulePublish') | null;
   queue?: string | null;
   waitUntil?: string | null;
   processing?: boolean | null;
@@ -3151,6 +3156,7 @@ export interface StudentWorksSelect<T extends boolean = true> {
   relatedMedia?: T;
   consentStatus?: T;
   consentRecord?: T;
+  appRef?: T;
   seo?:
     | T
     | {
@@ -3932,6 +3938,17 @@ export interface TaskReleaseVisitHolds {
   output: {
     released?: number | null;
     skipped?: string | null;
+  };
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "TaskSyncAppWorks".
+ */
+export interface TaskSyncAppWorks {
+  input?: unknown;
+  output: {
+    created?: number | null;
+    hidden?: number | null;
   };
 }
 /**

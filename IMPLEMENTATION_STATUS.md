@@ -66,5 +66,6 @@ panduan: `docs/PANDUAN_APP.md`. Uji: core 8, web 125, portal 50 (APP, PPDB, DAY,
 alur utama diuji di browser (mode produksi) termasuk tampilan ponsel. Audit keamanan independen: 1 temuan tinggi (admin dapat
 memberi dirinya peran BK/UKS) dan 6 sedang — semua diperbaiki dan dites.
 
-Catatan terbuka: isi email tersimpan di `mail_log` bila SMTP belum diatur (produksi wajib SMTP); peran bantuan teknis masih
-memakai izin baca Buku Induk (tanpa unduh berkas); karya siswa dari App ke website belum dibuat; PDF memakai cetak browser.
+Penutupan catatan terbuka (27 Okt): karya siswa App → website dengan izin wali + moderasi CMS (KRY-01, WEB-APP-01); akses
+bantuan dibagi cakupan Operasional / Data siswa dan tidak dapat mengunduh berkas (KRY-02); isi email tidak disimpan bila SMTP
+diatur dan dihapus dari antrean setelah terkirim. Uji: core 8, web 127, portal 53. Sisa: PDF memakai cetak browser.

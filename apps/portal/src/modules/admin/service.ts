@@ -105,7 +105,7 @@ export async function setModuleState(ctx: Ctx, code: string, state: string) {
 }
 
 /** Time-limited support access for the platform operator; reasoned and audited (§25). */
-export async function grantSupport(ctx: Ctx, input: { email: string; reason: string; hours: number }) {
+export async function grantSupport(ctx: Ctx, input: { email: string; reason: string; hours: number; scope?: 'operasional' | 'data_siswa' }) {
   const s = requireStaff(ctx, 'staff.manage')
   if (!isEmail(input.email.trim().toLowerCase())) fail('Email operator tidak valid.')
   if (input.reason.trim().length < 10) fail('Tuliskan alasan akses bantuan (minimal 10 karakter).')
@@ -113,9 +113,9 @@ export async function grantSupport(ctx: Ctx, input: { email: string; reason: str
   await command(ctx, 'support.grant', {}, async (tx, fx) => {
     const [g] = await tx
       .insert(supportGrants)
-      .values({ operatorEmail: input.email.trim().toLowerCase(), reason: input.reason.trim(), grantedBy: s.id, expiresAt: new Date(ctx.now.getTime() + input.hours * 3_600_000) })
+      .values({ operatorEmail: input.email.trim().toLowerCase(), reason: input.reason.trim(), scope: input.scope ?? 'operasional', grantedBy: s.id, expiresAt: new Date(ctx.now.getTime() + input.hours * 3_600_000) })
       .returning({ id: supportGrants.id })
-    fx.audit('support.grant', 'support_grant', g!.id, { hours: input.hours })
+    fx.audit('support.grant', 'support_grant', g!.id, { hours: input.hours, scope: input.scope ?? 'operasional' })
   })
 }
 export async function revokeSupport(ctx: Ctx, id: string) {

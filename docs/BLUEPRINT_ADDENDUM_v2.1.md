@@ -136,6 +136,8 @@ sekolahku/
 | Event Web ↔ App (bagian D): agenda publik, prestasi & cerita alumni berizin, jalur pendaftaran | completed | Endpoint `/portal/api/publik/*`, dibaca website sisi server |
 | Job worker (outbox, jadwal) dan object storage privat (S3/R2) | completed | `/portal/api/jobs` + `CRON_SECRET`; `STORAGE_DRIVER=s3` wajib di produksi |
 | Audit keamanan independen tahap App | completed | 1 tinggi + 6 sedang + beberapa rendah, diperbaiki dan dites (SEC-01..02) |
+| Karya siswa App → website (izin wali, moderasi CMS, penarikan izin) | completed | KRY-01, WEB-APP-01; sinkron server-ke-server `x-sekolahku-sync` |
+| Cakupan akses bantuan (operasional / data siswa) | completed | KRY-02, CMP-06 |
 
-Panduan operasional: `docs/PANDUAN_APP.md`. Semua uji: core 8, web 125, portal 50. **Belum di produksi**: jangan aktifkan
+Panduan operasional: `docs/PANDUAN_APP.md`. Semua uji: core 8, web 127, portal 53. **Belum di produksi**: jangan aktifkan
 langganan App untuk sekolah nyata sebelum diuji di Preview pada branch database terpisah (PANDUAN_APP §4).

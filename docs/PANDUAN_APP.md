@@ -11,7 +11,7 @@ diteruskan oleh Sekolahku Web. Setiap sekolah memiliki database App sendiri. Ran
 | Orang tua/wali | Akun portal (email + sandi), lalu **kode aktivasi** dari sekolah untuk menautkan anak | `/portal/keluarga` |
 | Siswa | Akun dibuat TU dari detail siswa (sandi sementara, wajib diganti) | `/portal/keluarga` |
 | Calon siswa (PPDB) | Daftar sendiri di `/portal/daftar` | `/portal/keluarga/penerimaan` |
-| Operator platform | Hanya dengan **izin bantuan teknis** dari sekolah (Audit & operasional), terbatas waktu, hanya melihat | — |
+| Operator platform | Hanya dengan **izin bantuan teknis** dari sekolah (Audit & operasional), terbatas waktu, hanya melihat. Cakupan **Operasional** (audit & dashboard) atau **Data siswa** (+ baca Buku Induk); tidak pernah mengunduh berkas | — |
 
 Admin Teknis CMS otomatis menjadi **Admin App Sekolah**. Peran ini sengaja **tidak** dapat membaca catatan BK
 dan UKS; kedua data itu hanya untuk Guru BK/Koordinator BK dan Petugas UKS.
@@ -55,6 +55,13 @@ npm test -w @sekolahku/portal                    # uji integrasi (butuh PostgreS
 Variabel lingkungan: `apps/portal/.env.example`. Wajib di produksi: `PLATFORM_DATABASE_URL` (role hanya-baca),
 `PLATFORM_SECRET`, `WEB_ORIGIN`, `PORTAL_PROXY_SECRET` (sama dengan Web), penyimpanan S3/R2 privat, `CRON_SECRET`
 dan cron ke `GET /portal/api/jobs` (header `Authorization: Bearer …`) tiap 5–15 menit, SMTP resmi.
+
+### Karya siswa ke website
+Guru (pengajar/wali kelas siswa) mengusulkan karya di **Karya untuk website** (atau dari pengumpulan tugas: "Usulkan ke website";
+hanya gambar). Orang tua/wali memberi atau menolak izin di App; izin tertulis dicatat Kesiswaan dengan bukti. Tiap jam website
+menarik karya berizin sebagai **draf "Ajukan Review"** (media menunggu tinjauan) — tidak pernah terbit otomatis. Bila izin ditarik,
+karya disembunyikan dari website pada sinkron berikutnya. Syarat: sekolah berlangganan App, fitur "Karya siswa" aktif di CMS,
+`PORTAL_ORIGIN` dan `PORTAL_PROXY_SECRET` sama di Web dan App.
 
 ## 4. Sebelum dipakai sekolah nyata
 

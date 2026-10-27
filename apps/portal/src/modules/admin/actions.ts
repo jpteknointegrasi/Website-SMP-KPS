@@ -42,7 +42,7 @@ defineAction('pengaturan.modul', async (ctx, f) => {
   return { message: 'Status modul diperbarui.' }
 })
 defineAction('bantuan.beri', async (ctx, f) => {
-  await grantSupport(ctx, { email: f.str('email'), reason: f.str('alasan'), hours: f.int('jam', { required: 'Isi durasi.' })! })
+  await grantSupport(ctx, { email: f.str('email'), reason: f.str('alasan'), hours: f.int('jam', { required: 'Isi durasi.' })!, scope: f.str('cakupan') === 'data_siswa' ? 'data_siswa' : 'operasional' })
   return { message: 'Akses bantuan diberikan dan tercatat di audit.' }
 })
 defineAction('bantuan.cabut', async (ctx, f) => {

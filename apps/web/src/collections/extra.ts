@@ -88,6 +88,14 @@ export const StudentWorks = defineContent({
       access: { read: ({ req: { user } }) => isStaff(user) },
       admin: { position: 'sidebar', description: 'Tidak pernah tampil publik.' },
     },
+    {
+      name: 'appRef',
+      type: 'text',
+      label: 'Asal: Sekolahku App',
+      index: true,
+      access: { read: ({ req: { user } }) => isStaff(user), update: () => false },
+      admin: { position: 'sidebar', readOnly: true, description: 'Diisi otomatis untuk karya dari App (izin orang tua tercatat di App). Bila izin ditarik di App, status persetujuan menjadi "Ditarik".' },
+    },
     seoFields,
   ],
 })

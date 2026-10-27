@@ -53,10 +53,22 @@ export const PORTAL_BASE_PATH = '/portal'
 export const PORTAL_HOST_HEADER = 'x-sekolahku-host'
 export const PORTAL_PROXY_HEADER = 'x-sekolahku-proxy'
 
+/**
+ * Server-to-server calls from the website to the portal (sync of student works) carry this header with the shared
+ * secret. The website's /portal proxy strips it from browser requests, so it can only come from the website server.
+ */
+export const PORTAL_SYNC_HEADER = 'x-sekolahku-sync'
+
 const sameSecret = (a: string, b: string) => {
   const x = Buffer.from(a)
   const y = Buffer.from(b)
   return x.length === y.length && timingSafeEqual(x, y)
+}
+
+/** The request is a server-to-server sync call from the website (constant-time secret check). */
+export function isPortalSync(h: { get(name: string): string | null }, secret = process.env.PORTAL_PROXY_SECRET) {
+  const given = h.get(PORTAL_SYNC_HEADER)
+  return Boolean(given && secret && secret.length >= 16 && sameSecret(given, secret))
 }
 
 /**
