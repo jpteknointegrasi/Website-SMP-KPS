@@ -18,7 +18,12 @@ export const mailConfigured = () => Boolean(process.env.SMTP_HOST)
 export async function sendMail(m: { to: string; subject: string; text: string }, meta: { schoolName: string }) {
   if (!mailConfigured()) return { sent: false }
   await smtp().sendMail({
-    from: process.env.SMTP_FROM || `"${meta.schoolName}" <no-reply@${process.env.PLATFORM_ROOT_DOMAIN || 'localhost'}>`,
+    // SMTP_FROM ("Nama <alamat>") or, like the website, SMTP_FROM_NAME + SMTP_FROM_ADDRESS
+    from:
+      process.env.SMTP_FROM ||
+      (process.env.SMTP_FROM_ADDRESS
+        ? `"${process.env.SMTP_FROM_NAME || meta.schoolName}" <${process.env.SMTP_FROM_ADDRESS}>`
+        : `"${meta.schoolName}" <no-reply@${process.env.PLATFORM_ROOT_DOMAIN || 'localhost'}>`),
     to: m.to,
     subject: m.subject,
     text: `${m.text}\n\n—\nPesan otomatis dari portal ${meta.schoolName}. Jangan balas email ini.`,
