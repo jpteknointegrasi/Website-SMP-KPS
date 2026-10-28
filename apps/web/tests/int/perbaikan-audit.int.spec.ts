@@ -396,3 +396,38 @@ describe('AUD-14 reviewer mengembalikan ke Draf wajib memberi alasan', () => {
     expect(pub.workflowStatus).toBe('published')
   })
 })
+
+describe('AUD-15 duplikat konten tidak menyalin slug/tanggal terbit/sequence/status', () => {
+  it('berita terbit diduplikat → draf, slug "-salinan" unik, publishedAt kosong, tidak tampil publik', async () => {
+    const src = await payload.create({ collection: 'posts', overrideAccess: true, data: { title: `Asli ${RUN}`, slug: `asli-${RUN}`, publishedAt: '2026-01-02T03:00:00.000Z', _status: 'published', workflowStatus: 'published' } as never })
+    const dup = (await payload.duplicate({ collection: 'posts', id: src.id, user: users.editor, overrideAccess: false } as never)) as any
+    expect(dup.id).not.toBe(src.id)
+    expect(dup.slug).toBe(`asli-${RUN}-salinan`)
+    expect(dup.publishedAt ?? null).toBeNull()
+    expect(dup._status).toBe('draft')
+    expect(dup.workflowStatus).toBe('draft')
+    expect(dup.archivedAt ?? null).toBeNull()
+    // a second copy gets its own slug; neither copy is public
+    const dup2 = (await payload.duplicate({ collection: 'posts', id: src.id, user: users.editor, overrideAccess: false } as never)) as any
+    expect(dup2.slug).toBe(`asli-${RUN}-salinan-2`)
+    const pubList = await payload.find({ collection: 'posts', where: { slug: { like: `asli-${RUN}-salinan` } }, overrideAccess: false, draft: false })
+    expect(pubList.docs).toHaveLength(0)
+    // the original is untouched
+    const orig = (await payload.findByID({ collection: 'posts', id: src.id, overrideAccess: true })) as any
+    expect(orig).toMatchObject({ slug: `asli-${RUN}`, _status: 'published' })
+  })
+  it('agenda diduplikat → sequence 0; arsip tidak terbawa', async () => {
+    const ev = await payload.create({ collection: 'events', overrideAccess: true, data: { title: `Acara ${RUN}`, slug: `acara-${RUN}`, startAt: new Date(Date.now() + 86400_000).toISOString(), _status: 'published', workflowStatus: 'published' } as never })
+    await payload.update({ collection: 'events', id: ev.id, overrideAccess: true, data: { title: `Acara diubah ${RUN}`, _status: 'published' } as never })
+    await payload.update({ collection: 'events', id: ev.id, overrideAccess: true, data: { workflowStatus: 'archived', _status: 'published' } as never })
+    const cur = (await payload.findByID({ collection: 'events', id: ev.id, overrideAccess: true })) as any
+    expect(cur.sequence).toBeGreaterThan(0)
+    expect(cur.archivedAt).toBeTruthy()
+    const dup = (await payload.duplicate({ collection: 'events', id: ev.id, overrideAccess: true } as never)) as any
+    expect(dup.sequence).toBe(0)
+    expect(dup.archivedAt ?? null).toBeNull()
+    expect(dup.workflowStatus).toBe('draft')
+    expect(dup._status).toBe('draft')
+    expect(dup.slug).toBe(`acara-${RUN}-salinan`)
+  })
+})
