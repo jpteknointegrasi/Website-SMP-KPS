@@ -42,12 +42,14 @@ export async function fetchStaff(token: string | null | undefined, webOrigin = p
     return null
   }
   try {
-    const res = await fetch(url, {
+    // `cache` is part of the Fetch standard (and honoured by Next.js's fetch), but Node's RequestInit type omits it
+    const init: RequestInit & { cache?: 'no-store' } = {
       headers: { authorization: `JWT ${token}`, accept: 'application/json' },
       cache: 'no-store',
       redirect: 'error',
       signal: AbortSignal.timeout(timeoutMs),
-    })
+    }
+    const res = await fetch(url, init)
     if (!res.ok) {
       // never log the token; status and target host are enough to diagnose
       console.warn(`[staff-session] ${url.host} menjawab HTTP ${res.status} untuk /api/users/me`)
