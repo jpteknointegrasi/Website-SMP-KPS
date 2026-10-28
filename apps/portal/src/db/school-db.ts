@@ -57,6 +57,12 @@ export async function schoolDb(school: SchoolInfo, urlOverride?: string): Promis
   return e.db
 }
 
+/** The raw connection pool of the school's App database, after the same ownership check (backup & restore scripts). */
+export async function schoolPool(school: SchoolInfo, urlOverride?: string): Promise<pg.Pool> {
+  await schoolDb(school, urlOverride)
+  return pools.get(school.id)!.pool
+}
+
 const MIGRATIONS = path.resolve(path.dirname(fileURLToPath(import.meta.url)), 'migrations')
 
 /**
