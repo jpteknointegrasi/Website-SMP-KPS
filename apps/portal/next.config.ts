@@ -5,12 +5,12 @@ import { fileURLToPath } from 'url'
 const dirname = path.dirname(fileURLToPath(import.meta.url))
 
 /**
- * Sekolahku App. Served on every school domain under /portal: the website (apps/web) passes /portal requests
+ * Satu Sekolah App. Served on every school domain under /portal: the website (apps/web) passes /portal requests
  * to this deployment (PORTAL_ORIGIN), so it shares the school's domain and staff sign-in cookie.
  */
 const nextConfig: NextConfig = {
   basePath: '/portal',
-  transpilePackages: ['@sekolahku/core'],
+  transpilePackages: ['@satusekolah/core'],
   outputFileTracingRoot: path.resolve(dirname, '../..'),
   turbopack: { root: path.resolve(dirname, '../..') },
   poweredByHeader: false,

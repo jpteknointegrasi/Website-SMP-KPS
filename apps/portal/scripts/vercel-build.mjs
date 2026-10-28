@@ -1,7 +1,7 @@
 /**
- * Vercel build for Sekolahku App (portal): migrate every school's own App database, then `next build`.
+ * Vercel build for Satu Sekolah App (portal): migrate every school's own App database, then `next build`.
  *
- * Guard (same as Sekolahku Web): a Preview build touches databases only when the Preview environment states that its
+ * Guard (same as Satu Sekolah Web): a Preview build touches databases only when the Preview environment states that its
  * platform database is a COPY (PREVIEW_DATABASE_IS_COPY=true). Synthetic demo data is loaded only on Preview, only
  * with PREVIEW_DEMO_ADMIN=<CMS e-mail> set, into schools whose App database is configured (idempotent).
  */

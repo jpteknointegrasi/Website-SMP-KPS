@@ -11,7 +11,7 @@ export default async function DaftarSekolah() {
     <div className="pub">
       <aside className="pub__aside">
         <div>
-          <h2>Bergabung dengan Sekolahku</h2>
+          <h2>Bergabung dengan Satu Sekolah</h2>
           <p>Website sekolah dan aplikasi layanan sekolah dalam satu platform. Setiap sekolah punya domain, data, akun dan pengaturannya sendiri.</p>
           <ol>
             <li>Isi formulir ini atas nama sekolah.</li>

@@ -1,4 +1,4 @@
-import { PORTAL_BASE_PATH, admissionsMode } from '@sekolahku/core'
+import { PORTAL_BASE_PATH, admissionsMode } from '@satusekolah/core'
 import { currentTenant } from '@/lib/payload'
 import { getSchoolNames } from '@/lib/queries'
 import { schoolMeta } from '@/lib/meta'
@@ -30,7 +30,7 @@ export default async function Page() {
   const { name, city } = await getSchoolNames()
   const [cycle, { settings }, flags, linkFlags, faqs] = await Promise.all([getCurrentAdmissions(), getGlobals(), getFlags(), getLinkFlags(), listFaqs({ category: 'pendaftaran', limit: 12 })])
   const visitsOn = linkFlags.schoolVisits // only when an open visit slot exists
-  // one official process only (lib/admissions.ts admissionsCta): with Sekolahku App the portal, its open/closed state
+  // one official process only (lib/admissions.ts admissionsCta): with Satu Sekolah App the portal, its open/closed state
   // read from the App itself; otherwise the external system, when open AND a valid https URL exists
   const viaPortal = admissionsMode(await currentTenant()) === 'app'
   const appCycles = viaPortal ? ((await portalAdmissions())?.cycles ?? []) : []
@@ -59,7 +59,7 @@ export default async function Page() {
           <div>
             {!cycle ? (
               <>
-                {/* with Sekolahku App the portal is reachable even before the website publishes a cycle */}
+                {/* with Satu Sekolah App the portal is reachable even before the website publishes a cycle */}
                 {portalButton ? (
                   <div className={`status-panel ${openPortal ? 'status-panel--open' : ''}`} role="status">
                     <strong>{openPortal ? 'Penerimaan sedang dibuka di Portal Penerimaan.' : 'Informasi penerimaan ada di Portal Penerimaan.'}</strong>

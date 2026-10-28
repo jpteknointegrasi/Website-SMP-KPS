@@ -1,8 +1,8 @@
 {
-  "name": "@sekolahku/core",
+  "name": "@satusekolah/core",
   "version": "0.1.0",
   "private": true,
-  "description": "Inti bersama Sekolahku Web & App: sekolah/tenant, domain, zona waktu, hak produk, sesi staf, enkripsi rahasia, registri sekolah.",
+  "description": "Inti bersama Satu Sekolah Web & App: sekolah/tenant, domain, zona waktu, hak produk, sesi staf, enkripsi rahasia, registri sekolah.",
   "type": "module",
   "exports": {
     ".": "./src/index.ts",

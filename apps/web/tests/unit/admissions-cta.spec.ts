@@ -4,7 +4,7 @@ import { admissionsCta, displayedAdmissionStatus } from '@/lib/admissions'
 const P = '/portal'
 
 describe('AUD-17 / PUB-05 tombol pendaftaran resmi', () => {
-  describe('Sekolahku Web saja (sistem eksternal)', () => {
+  describe('Satu Sekolah Web saja (sistem eksternal)', () => {
     it('hanya muncul bila Dibuka DAN URL https valid', () => {
       expect(admissionsCta({ mode: 'web', portalPath: P, cycle: { admissionStatus: 'open', registrationUrl: 'https://ppdb.contoh.id' } })).toEqual({ kind: 'external', href: 'https://ppdb.contoh.id', label: 'Daftar melalui sistem resmi' })
       expect(admissionsCta({ mode: 'web', portalPath: P, cycle: { admissionStatus: 'open', registrationUrl: 'http://ppdb.contoh.id' } })).toBeNull()
@@ -14,7 +14,7 @@ describe('AUD-17 / PUB-05 tombol pendaftaran resmi', () => {
       expect(admissionsCta({ mode: 'web', portalPath: P, cycle: null })).toBeNull()
     })
   })
-  describe('Sekolahku App aktif (portal)', () => {
+  describe('Satu Sekolah App aktif (portal)', () => {
     it('status dari App, bukan dari siklus website', () => {
       // website cycle says closed, App says open → register in the portal
       expect(admissionsCta({ mode: 'app', portalPath: P, cycle: { admissionStatus: 'closed' }, appCycles: [{ status: 'closed' }, { status: 'open' }] })).toEqual({ kind: 'portal', href: '/portal/penerimaan', label: 'Daftar di Portal Penerimaan', open: true })

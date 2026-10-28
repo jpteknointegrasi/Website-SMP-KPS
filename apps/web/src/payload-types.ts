@@ -2230,7 +2230,7 @@ export interface Lead {
   duplicateReviewed?: boolean | null;
   appLinkRef?: string | null;
   /**
-   * Diisi otomatis saat keluarga menautkan pendaftarannya di Sekolahku App (dengan persetujuan).
+   * Diisi otomatis saat keluarga menautkan pendaftarannya di Satu Sekolah App (dengan persetujuan).
    */
   appApplicationNo?: string | null;
   appLinkedAt?: string | null;
@@ -2438,7 +2438,7 @@ export interface SiteSetting {
    */
   retensiKunjunganBulan?: number | null;
   /**
-   * Kosong = tombol Portal Sekolah disembunyikan. Bila sekolah berlangganan Sekolahku App, tombol selalu "Masuk Portal" ke /portal dan isian ini tidak dipakai.
+   * Kosong = tombol Portal Sekolah disembunyikan. Bila sekolah berlangganan Satu Sekolah App, tombol selalu "Masuk Portal" ke /portal dan isian ini tidak dipakai.
    */
   portalUrl?: string | null;
   /**

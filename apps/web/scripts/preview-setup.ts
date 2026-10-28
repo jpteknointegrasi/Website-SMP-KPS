@@ -1,7 +1,7 @@
 /**
  * School setup at build time, in two strictly limited modes:
  *
- * PREVIEW (VERCEL_ENV=preview + PREVIEW_DATABASE_IS_COPY=true): prepares the test copy so Sekolahku App can be tried.
+ * PREVIEW (VERCEL_ENV=preview + PREVIEW_DATABASE_IS_COPY=true): prepares the test copy so Satu Sekolah App can be tried.
  * PRODUCTION FIRST START (VERCEL_ENV=production + PLATFORM_BOOTSTRAP=true): only on an EMPTY platform database (no
  *   school yet) creates the platform operator, school "kps" with its domain and its Admin Teknis (BOOTSTRAP_* env), and
  *   later fills in the App database of a school that has none (BOOTSTRAP_APP_DATABASE_URL). Never demo data, never
@@ -20,7 +20,7 @@ import 'dotenv/config'
 import pg from 'pg'
 import { randomBytes } from 'crypto'
 import { spawnSync } from 'child_process'
-import { sealSecret } from '@sekolahku/core'
+import { sealSecret } from '@satusekolah/core'
 
 const PREVIEW = process.env.VERCEL_ENV === 'preview' && process.env.PREVIEW_DATABASE_IS_COPY === 'true'
 const BOOTSTRAP = process.env.VERCEL_ENV === 'production' && process.env.PLATFORM_BOOTSTRAP === 'true'

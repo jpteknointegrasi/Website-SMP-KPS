@@ -2,50 +2,56 @@
 
 > Target RPO 24 jam / RTO 4 jam adalah **usulan** yang harus disepakati sekolah dan diuji, bukan jaminan.
 
-## 1. Kebutuhan hosting
-- Server Node.js ≥ 22.12 (VPS atau platform Node). **Tidak berjalan di shared hosting PHP.**
-- PostgreSQL terkelola atau di server yang sama, dengan backup harian.
-- Penyimpanan media persisten: folder `media/` (VPS) atau object storage S3 (pasang `@payloadcms/storage-s3`, lihat §6).
-- TLS (HTTPS) di depan aplikasi (Nginx/Caddy/platform).
+## 1. Susunan produksi
+| Komponen | Layanan | Catatan |
+|---|---|---|
+| Satu Sekolah Web (website, CMS, konsol platform) | Proyek Vercel, Root Directory `apps/web` | Semua domain sekolah mengarah ke sini; `/portal/*` diteruskan ke App |
+| Satu Sekolah App (portal `/portal`) | Proyek Vercel terpisah, Root Directory `apps/portal` | Hanya diakses lewat domain sekolah |
+| Database | Supabase (proyek "Sekolahku", Tokyo): `postgres` = platform & website; satu database App per sekolah (mis. `app_kps`) | Data API Supabase tidak dipakai — periksa dengan `node scripts/cek-data-api.mjs "<URL>"` |
+| Berkas | Supabase Storage (S3): bucket publik untuk foto website, bucket privat untuk berkas website & App | App wajib `STORAGE_DRIVER=s3` di produksi |
+| Tugas terjadwal | GitHub Actions `.github/workflows/cron.yml` (tiap 10 menit) atau cron-job.org | Cron bawaan Vercel Hobby hanya sekali sehari |
+| Email | SMTP (Gmail + App Password) | Wajib sebelum menyetujui sekolah baru dan membuka App untuk orang tua |
+| Pemantauan | `GET /api/kesehatan` (200 = sehat, 503 = database bermasalah) | Daftarkan di UptimeRobot/BetterStack, interval 5 menit |
 
-## 2. Deploy pertama (staging dulu)
-```bash
-git clone … && cd smp-kps
-cp .env.example .env    # isi DATABASE_URI, PAYLOAD_SECRET, NEXT_PUBLIC_SERVER_URL; NOINDEX=true di staging
-npm ci
-npm run migrate
-npm run seed            # opsional untuk staging; produksi: SHOW_DEMO_CONTENT=false
-npm run build
-npm start               # port 3000; jalankan via systemd/pm2
-```
-Smoke test: `/`, `/berita`, `/agenda`, `/pendaftaran`, `/kontak`, `/admin`, `/sitemap.xml`, `/robots.txt`.
+Paket Vercel Hobby hanya untuk penggunaan non-komersial. Begitu platform menerima pembayaran dari sekolah, pindah ke Vercel Pro dan Supabase berbayar (backup harian + pemulihan titik waktu). Kode tidak berubah.
 
-## 3. Update rilis
-```bash
-git pull && npm ci
-pg_dump … > backup-sebelum-rilis.sql     # selalu backup dulu
-npm run migrate && npm run build && systemctl restart kps-web
-```
-**Rollback**: kembalikan commit sebelumnya → `npm ci && npm run build` → restart. Bila migrasi baru merusak data, pulihkan dump `backup-sebelum-rilis.sql` (atau `npx payload migrate:down` untuk migrasi terakhir).
+## 2. Deploy
+1. Pekerjaan dilakukan di cabang; **push ke `main` = deploy produksi** dan Vercel menjalankan migrasi database Web (`apps/web/scripts/vercel-build.mjs`) serta migrasi semua database App (`apps/portal/scripts/vercel-build.mjs`).
+2. Build Preview berhenti sebelum menyentuh database kecuali `PREVIEW_DATABASE_IS_COPY=true` dan database Preview adalah salinan.
+3. Sebelum menggabungkan cabang yang membawa migrasi: **backup dulu** (§4), lalu gabungkan, tunggu kedua proyek *Ready*.
+4. Smoke test: `/`, `/berita`, `/agenda`, `/pendaftaran`, `/kontak`, `/admin`, `/sitemap.xml`, `/api/kesehatan`, masuk staf di `/portal/masuk-staf`.
 
-## 4. Tugas berkala
+**Rollback**: Vercel → Deployments → deployment sebelumnya → *Promote to Production* (untuk Web dan App). Migrasi bersifat aditif, jadi kode lama tetap berjalan di atas skema baru. Pulihkan database dari backup hanya bila data rusak.
+
+## 3. Tugas berkala
 | Tugas | Jadwal | Cara |
 |---|---|---|
-| Penerbitan terjadwal | tiap menit | Bawaan server (autoRun). Bila server serverless/multi-instance: set `DISABLE_JOB_AUTORUN=true` dan cron `npm run jobs:run`, atau panggil `GET /api/payload-jobs/run` dengan header `Authorization: Bearer $CRON_SECRET` |
-| Kedaluwarsa pengumuman | — | Tidak butuh job: kueri publik selalu memfilter tanggal |
-| Backup database | harian 01.00 WITA | `pg_dump -Fc $DATABASE_URI > kps-$(date +%F).dump` |
-| Backup media | harian | `rsync -a media/ backup:/kps/media/` atau versioning bucket S3 |
-| Retensi backup | — | Usulan: 14 harian + 6 bulanan; disimpan terenkripsi di lokasi terpisah |
-| Pembaruan dependensi | bulanan | `npm outdated`, uji di staging |
+| Job Web (terbit terjadwal, pelepasan kuota kunjungan, sinkron karya & minat dari App, retensi data) | tiap 10 menit–1 jam | `GET /api/payload-jobs/run` + `Authorization: Bearer <CRON_SECRET Web>` |
+| Job App (outbox email/notifikasi, kedaluwarsa penawaran & daftar ulang) | tiap 5–15 menit | `GET /portal/api/jobs` + `Authorization: Bearer <CRON_SECRET App>` |
+| Kedaluwarsa pengumuman & berita terjadwal | — | Tidak butuh job: kueri publik memfilter tanggal |
+| Backup | mingguan (paket gratis) | §4 |
+| Cek Data API Supabase | setelah membuat database baru | `node scripts/cek-data-api.mjs "<URL>" --perbaiki` |
+| Pembaruan dependensi | bulanan | `npm outdated`, uji di Preview |
 
-## 5. Uji restore (wajib sebelum go-live, lalu tiap semester)
-1. Buat database kosong di staging: `createdb kps_restore`.
-2. `pg_restore -d kps_restore kps-YYYY-MM-DD.dump`; salin folder media backup.
-3. Jalankan aplikasi dengan `DATABASE_URI` ke `kps_restore`; cek beranda, satu berita bergambar, panel admin.
-4. Catat durasi di `QA_REPORT.md` (OPS-01).
+Untuk GitHub Actions isi secret repo: `WEB_JOBS_URL`, `WEB_CRON_SECRET`, `APP_JOBS_URL`, `APP_CRON_SECRET` (lihat komentar di `cron.yml`). Jadwal GitHub bisa terlambat beberapa menit dan berhenti bila repo tidak aktif 60 hari.
 
-## 6. Media di object storage (opsional, direkomendasikan untuk produksi)
-`npm i @payloadcms/storage-s3@3.92.0` lalu tambahkan plugin `s3Storage` di `src/payload.config.ts` untuk koleksi `media` (publik) dan `private-files`/`documents` (bucket terpisah, akses privat). Jalankan ulang `npm run import:media` tidak diperlukan bila file disalin dengan nama yang sama.
+## 4. Backup & pemulihan
+| Data | Alat | Pemulihan |
+|---|---|---|
+| Database Web/platform | `BACKUP-DATA-PRODUKSI.bat` (`npm run backup:prod`, JSON) atau `pg_dump -Fc "<URL session pooler>"` | `pg_restore` ke database kosong; JSON untuk arsip/ekspor per sekolah |
+| Database App + berkas App per sekolah | `EKSPOR-DATA-APP.bat` (`npm run ekspor -w @satusekolah/portal -- --sekolah kps`) | `npm run pulihkan -w @satusekolah/portal -- --sekolah kps --dari <folder> --ya` ke database App kosong yang sudah dimigrasi |
+| Foto & dokumen website | Supabase Storage → unduh bucket, atau `rclone sync` dengan kunci S3 | Unggah kembali ke bucket dengan nama yang sama |
+
+Simpan hasil backup terenkripsi di lokasi terpisah, minimal 4 mingguan + 3 bulanan. Target RPO 24 jam / RTO 4 jam adalah usulan: dengan paket gratis dan backup mingguan, RPO sebenarnya 7 hari.
+
+## 5. Uji pemulihan (wajib sebelum peluncuran, lalu tiap semester)
+1. Buat proyek/database uji terpisah (jangan produksi).
+2. Pulihkan database Web (`pg_restore`) dan satu database App (`npm run pulihkan … --ya`).
+3. Jalankan aplikasi lokal dengan URL uji; cek beranda, satu berita bergambar, panel admin, satu siswa di Buku Induk.
+4. Catat durasi dan hasil di `QA_REPORT.md` (OPS-01).
+
+## 6. Data pribadi & retensi
+Retensi data calon orang tua diatur per sekolah di CMS → Pengaturan Sekolah → **Privasi & Retensi** (bulan; kosong = mati). Job harian mengosongkan nama, kontak, pesan, dan catatan pada minat/pesan/pemesanan yang sudah selesai, tanpa menghapus catatannya. Nilai bulan adalah keputusan sekolah (Kebijakan Privasi).
 
 ## 7. Email keluar (lupa kata sandi CMS & notifikasi)
 Adaptor `@payloadcms/email-nodemailer` sudah terpasang dan aktif bila `SMTP_HOST` terisi. Tanpa SMTP, halaman
@@ -66,8 +72,9 @@ lupa kata sandi tetap menampilkan "Email Terkirim" tetapi tidak ada email yang k
 
 ## 9. Keamanan operasional
 - Akun individual; nonaktifkan akun staf yang keluar (centang *Akun aktif* = off).
-- Login terkunci 15 menit setelah 5 kali gagal. Formulir kontak dibatasi 5 kiriman/10 menit per IP.
-- Header keamanan (CSP, HSTS) dipasang di reverse proxy; jangan tampilkan stack trace (mode produksi sudah menyembunyikannya).
+- Login terkunci 15 menit setelah 5 kali gagal. Formulir publik dibatasi 5 kiriman/10 menit per IP (tersimpan di database, berlaku lintas instance); pendaftaran sekolah 3/jam per IP dan 60/jam se-platform.
+- Header keamanan dikirim aplikasi: HSTS, nosniff, Referrer-Policy, Permissions-Policy, CSP (frame, object-src, base-uri, form-action). Stack trace tidak tampil di produksi.
+- Belum ada MFA: pakai sandi panjang unik untuk Super Admin dan Admin Teknis.
 - `PAYLOAD_SECRET` dan kredensial database hanya di env/secret manager, tidak di repository.
 
 ## Addendum P0/P1 — deploy & rollback

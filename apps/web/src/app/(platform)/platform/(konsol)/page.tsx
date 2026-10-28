@@ -35,12 +35,12 @@ export default async function PlatformHome() {
           </small>
         </div>
         <div className="stat">
-          <span>Sekolahku Web</span>
+          <span>Satu Sekolah Web</span>
           <strong>{s.web}</strong>
           <small>sekolah berlangganan</small>
         </div>
         <div className="stat">
-          <span>Sekolahku App</span>
+          <span>Satu Sekolah App</span>
           <strong>{s.app}</strong>
           <small>sekolah berlangganan</small>
         </div>

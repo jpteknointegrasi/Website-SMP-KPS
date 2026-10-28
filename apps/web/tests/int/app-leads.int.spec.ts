@@ -1,5 +1,5 @@
 /**
- * WEB-APP-02: minat ↔ Portal Penerimaan. A link request the family consented to in Sekolahku App marks this school's
+ * WEB-APP-02: minat ↔ Portal Penerimaan. A link request the family consented to in Satu Sekolah App marks this school's
  * interest form with the same e-mail "Masuk proses resmi" with the application number and a timeline entry; only the
  * interest reference and date go back; interests of another school, test data or forms closed as duplicate/spam are
  * never matched; re-runs are idempotent; calls carry the shared secret.
@@ -9,7 +9,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import config from '@/payload.config'
 import { syncAppLeads } from '@/lib/app-leads'
 import { toInfo } from '@/tenancy/resolve'
-import { PORTAL_SYNC_HEADER } from '@sekolahku/core'
+import { PORTAL_SYNC_HEADER } from '@satusekolah/core'
 import { createTestSchool, dropTestSchool, type TestSchool } from './school'
 
 const RUN = `l${Date.now().toString(36)}`

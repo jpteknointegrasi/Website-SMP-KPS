@@ -299,7 +299,7 @@ describe('TEN-11 temuan audit: kuota, buka kunci akun, alamat login', () => {
 })
 
 describe('TEN-12 langganan per produk (Web / App dijual terpisah)', () => {
-  it('sekolah tanpa Sekolahku Web: semua fitur website mati dan endpoint website tertutup', async () => {
+  it('sekolah tanpa Satu Sekolah Web: semua fitur website mati dan endpoint website tertutup', async () => {
     await raw.update({ collection: 'tenants', id: B.id, overrideAccess: true, data: { web: { plan: 'none', status: 'active' } } as never })
     clearTenantCache()
     expect(Object.values(await readFlags(B.payload)).some(Boolean)).toBe(false)

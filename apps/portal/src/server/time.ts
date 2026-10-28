@@ -2,7 +2,7 @@
  * Time in the school's zone. Indonesian zones have fixed offsets (no daylight saving), so conversion is exact without
  * a time-zone library. Stored values are UTC instants; dates (YYYY-MM-DD) are school-local calendar dates.
  */
-import { tzAbbr } from '@sekolahku/core'
+import { tzAbbr } from '@satusekolah/core'
 
 const OFFSET: Record<string, number> = { 'Asia/Jakarta': 7, 'Asia/Makassar': 8, 'Asia/Jayapura': 9 }
 export const offsetHours = (tz: string) => OFFSET[tz] ?? 7

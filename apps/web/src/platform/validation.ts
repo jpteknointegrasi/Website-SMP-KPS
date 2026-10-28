@@ -1,7 +1,7 @@
 /**
  * Pure checks for the school sign-up form and the approval form (no database; unit-tested).
  */
-import { RESERVED_SLUGS, isSchoolTimezone, normalizeHost } from '@sekolahku/core'
+import { RESERVED_SLUGS, isSchoolTimezone, normalizeHost } from '@satusekolah/core'
 
 export const SLUG_RE = /^[a-z0-9](?:[a-z0-9-]{0,40}[a-z0-9])?$/
 export const DOMAIN_RE = /^(?=.{4,253}$)([a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,}$/
@@ -111,8 +111,8 @@ export function readApproval(fd: FormData): { value: ApprovalInput; errors: stri
   if (value.name.length < 4) errors.push('Isi nama sekolah.')
   if (!value.timezone) errors.push('Pilih zona waktu.')
   if (value.domain && !DOMAIN_RE.test(value.domain)) errors.push('Domain tidak valid.')
-  if (!PLAN_WEB.has(value.webPlan)) errors.push('Paket Sekolahku Web tidak dikenal.')
-  if (!PLAN_APP.has(value.appPlan)) errors.push('Paket Sekolahku App tidak dikenal.')
+  if (!PLAN_WEB.has(value.webPlan)) errors.push('Paket Satu Sekolah Web tidak dikenal.')
+  if (!PLAN_APP.has(value.appPlan)) errors.push('Paket Satu Sekolah App tidak dikenal.')
   if (value.webPlan === 'none' && value.appPlan === 'none') errors.push('Pilih minimal satu produk (Web atau App).')
   return { value, errors }
 }

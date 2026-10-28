@@ -43,7 +43,7 @@ async function freshDb(key: string) {
 beforeAll(async () => {
   A = await h.school('ekspor')
   B = await h.school('lain')
-  tmp = await fs.mkdtemp(path.join(os.tmpdir(), 'sekolahku-ekspor-'))
+  tmp = await fs.mkdtemp(path.join(os.tmpdir(), 'satusekolah-ekspor-'))
   const adm = await staff(A, ['school_admin'])
   const k = ctxStaff(A, adm, now)
   const y = await academic.saveYear(k, { name: '2026/2027', startDate: '2026-07-13', endDate: '2027-06-26' })

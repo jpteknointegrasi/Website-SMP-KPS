@@ -260,7 +260,7 @@ export default buildConfig({
         ],
       },
       {
-        // Karya siswa consented in Sekolahku App → drafts for moderation; withdrawn consent → hidden.
+        // Karya siswa consented in Satu Sekolah App → drafts for moderation; withdrawn consent → hidden.
         slug: 'syncAppWorks',
         schedule: [{ cron: '15 * * * *', queue: 'default' }],
         handler: async ({ req }) => {

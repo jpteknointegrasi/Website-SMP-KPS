@@ -1,16 +1,16 @@
 /**
- * Migrates schools' own App databases (Sekolahku App: one database per school).
+ * Migrates schools' own App databases (Satu Sekolah App: one database per school).
  *
  *   npm run portal:migrate -- --sekolah kps      # one school
- *   npm run portal:migrate -- --semua            # every school with Sekolahku App and a database
+ *   npm run portal:migrate -- --semua            # every school with Satu Sekolah App and a database
  *
  * Reads the school registry from the platform database (PLATFORM_DATABASE_URL / DATABASE_URI in .env) and each
  * school's sealed database URL (PLATFORM_SECRET). Never prints connection strings or passwords.
  */
 import 'dotenv/config'
 import pg from 'pg'
-import { schoolById } from '@sekolahku/core/registry'
-import { hasProduct } from '@sekolahku/core'
+import { schoolById } from '@satusekolah/core/registry'
+import { hasProduct } from '@satusekolah/core'
 import { closeSchoolDbs, migrateSchoolDb } from '../src/db/school-db'
 
 const args = process.argv.slice(2)

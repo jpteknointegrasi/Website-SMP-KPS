@@ -1,5 +1,5 @@
 /** Scheduled duties per school (called by the cron route). Modules add their periodic work here. */
-import type { SchoolInfo } from '@sekolahku/core'
+import type { SchoolInfo } from '@satusekolah/core'
 import type { SchoolDb } from '@/db/school-db'
 
 type Job = (db: SchoolDb, school: SchoolInfo, now: Date) => Promise<number>

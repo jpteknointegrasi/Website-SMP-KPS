@@ -1,6 +1,6 @@
 import { APIError, type CollectionConfig } from 'payload'
 import { fieldSuperAdminOnly, isStaff, isSuperAdmin, superAdminOnly } from '../access/roles'
-import { PLANS, PLAN_LABELS, PRODUCT_STATUS, sealSecret } from '@sekolahku/core'
+import { PLANS, PLAN_LABELS, PRODUCT_STATUS, sealSecret } from '@satusekolah/core'
 import { auditAfterChange, auditAfterDelete } from '../hooks/audit'
 import { RESERVED_SLUGS, SCHOOL_TIMEZONES, DEFAULT_TIMEZONE } from '../tenancy/config'
 import { clearTenantCache, normalizeHost } from '../tenancy/resolve'
@@ -133,12 +133,12 @@ export const Tenants: CollectionConfig = {
     {
       type: 'collapsible',
       label: 'Langganan produk',
-      admin: { description: 'Sekolahku Web dan Sekolahku App dijual terpisah. Setiap produk memeriksa langganannya sendiri di server.' },
+      admin: { description: 'Satu Sekolah Web dan Satu Sekolah App dijual terpisah. Setiap produk memeriksa langganannya sendiri di server.' },
       fields: [
         {
           name: 'web',
           type: 'group',
-          label: 'Sekolahku Web (website & CMS, minat, kunjungan/open house)',
+          label: 'Satu Sekolah Web (website & CMS, minat, kunjungan/open house)',
           fields: [
             {
               type: 'row',
@@ -152,7 +152,7 @@ export const Tenants: CollectionConfig = {
         {
           name: 'app',
           type: 'group',
-          label: 'Sekolahku App (portal /portal: penerimaan siswa baru, akademik, layanan)',
+          label: 'Satu Sekolah App (portal /portal: penerimaan siswa baru, akademik, layanan)',
           fields: [
             {
               type: 'row',

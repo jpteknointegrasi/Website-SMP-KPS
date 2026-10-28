@@ -1,4 +1,4 @@
-/* Sekolahku App — design tokens follow the school's UI package (navy sidebar, brand blue actions). Branding colours
+/* Satu Sekolah App — design tokens follow the school's UI package (navy sidebar, brand blue actions). Branding colours
    are overridden per school through --brand / --navy set on <body>. Status colours always come with text. */
 :root {
   --navy: #0b2356;

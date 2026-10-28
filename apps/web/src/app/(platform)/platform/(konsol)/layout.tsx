@@ -12,7 +12,7 @@ export default async function ConsoleLayout({ children }: { children: React.Reac
     <div className="pf">
       <aside className="pf__side">
         <div className="pf__brand">
-          <span>Sekolahku</span>
+          <span>Satu Sekolah</span>
           <strong>Konsol platform</strong>
         </div>
         <ConsoleNav pending={pending.totalDocs} />

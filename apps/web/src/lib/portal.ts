@@ -1,7 +1,7 @@
 import 'server-only'
 import { cache } from 'react'
 import { headers } from 'next/headers'
-import { PORTAL_BASE_PATH, PORTAL_HOST_HEADER, PORTAL_PROXY_HEADER, hasProduct } from '@sekolahku/core'
+import { PORTAL_BASE_PATH, PORTAL_HOST_HEADER, PORTAL_PROXY_HEADER, hasProduct } from '@satusekolah/core'
 import { currentTenant } from './payload'
 
 export type PortalPublic = {
@@ -12,7 +12,7 @@ export type PortalPublic = {
 export type PortalAdmissions = { cycles: { name: string; targetYear: string; targetGrade: string; status: string; openAt: string | null; closeAt: string | null; paths: { name: string; registrationFee: number | null }[] }[] }
 
 /**
- * Server-side read of the school's Sekolahku App public endpoints (same trust path as the /portal proxy: the
+ * Server-side read of the school's Satu Sekolah App public endpoints (same trust path as the /portal proxy: the
  * school's host plus the shared secret). Returns null when the school has no App, the portal is not configured,
  * or the App does not answer — the website then simply shows its own content.
  */

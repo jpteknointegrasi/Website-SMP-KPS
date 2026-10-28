@@ -9,7 +9,7 @@
 import 'dotenv/config'
 import { readFileSync } from 'fs'
 import { and, eq, gt, isNull } from 'drizzle-orm'
-import { schoolById } from '@sekolahku/core/registry'
+import { schoolById } from '@satusekolah/core/registry'
 import pg from 'pg'
 import { closeSchoolDbs, schoolDb } from '../src/db/school-db'
 import { staffMembers, students } from '../src/db/schema'

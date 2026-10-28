@@ -1,7 +1,7 @@
 import React from 'react'
 import { requestBranding, requestCtx } from '@/server/request'
 import { portalSchool } from '@/lib/context'
-import { hasProduct } from '@sekolahku/core'
+import { hasProduct } from '@satusekolah/core'
 import { P, publicFileUrl } from '@/ui/kit'
 import { FormEnhancer } from '@/ui/client'
 
@@ -41,7 +41,7 @@ export default async function PublicLayout({ children }: { children: React.React
             </div>
           </div>
           {children}
-          <p className="footnote">Didukung Sekolahku</p>
+          <p className="footnote">Didukung Satu Sekolah</p>
         </main>
       </div>
       <FormEnhancer />

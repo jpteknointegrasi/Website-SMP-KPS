@@ -1,6 +1,6 @@
 /** Shared bits of the export/restore scripts: arguments and finding a school (by code) through the registry. */
 import pg from 'pg'
-import { platformDatabaseUrl, schoolById } from '@sekolahku/core/registry'
+import { platformDatabaseUrl, schoolById } from '@satusekolah/core/registry'
 
 export const arg = (n: string) => (process.argv.includes(n) ? process.argv[process.argv.indexOf(n) + 1] : undefined)
 

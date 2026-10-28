@@ -8,8 +8,8 @@
  *   --nama    nama sekolah — wajib
  *   --zona    Asia/Jakarta (WIB, bawaan) | Asia/Makassar (WITA) | Asia/Jayapura (WIT)
  *   --domain  domain sekolah (boleh diulang); tanpa domain sekolah tetap bisa dibuka di <kode>.PLATFORM_ROOT_DOMAIN
- *   --paket   paket Sekolahku Web: basic (bawaan) | pro | none
- *   --app     paket Sekolahku App: none (bawaan) | pilot | standard
+ *   --paket   paket Satu Sekolah Web: basic (bawaan) | pro | none
+ *   --app     paket Satu Sekolah App: none (bawaan) | pilot | standard
  *   --status  trial (bawaan) | active
  *   --admin   email Admin Teknis sekolah; kata sandi sementara dicetak SEKALI di layar
  *
@@ -41,8 +41,8 @@ const fail = (m: string) => {
 }
 if (!slug || !name) fail('Wajib: --kode dan --nama. Lihat contoh di bagian atas scripts/create-school.ts.')
 if (!isSchoolTimezone(zone)) fail('--zona harus Asia/Jakarta, Asia/Makassar atau Asia/Jayapura.')
-if (!['none', 'basic', 'pro'].includes(plan)) fail('--paket (Sekolahku Web) harus none, basic atau pro.')
-if (!['none', 'pilot', 'standard'].includes(appPlan)) fail('--app (Sekolahku App) harus none, pilot atau standard.')
+if (!['none', 'basic', 'pro'].includes(plan)) fail('--paket (Satu Sekolah Web) harus none, basic atau pro.')
+if (!['none', 'pilot', 'standard'].includes(appPlan)) fail('--app (Satu Sekolah App) harus none, pilot atau standard.')
 if (!['trial', 'active'].includes(status)) fail('--status harus trial atau active.')
 
 const payload = await getPayload({ config })

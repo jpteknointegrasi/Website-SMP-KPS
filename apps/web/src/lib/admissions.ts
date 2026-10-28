@@ -18,16 +18,16 @@ export const interestOpenFor = (c: CycleLike | null | undefined): boolean =>
   Boolean(c) && Boolean(c!.interestFormEnabled || c!.mode === 'interest_form') && (c!.admissionStatus !== 'closed' || c!.closedOffer === 'interest_next')
 
 export type AdmissionsCta =
-  /** official registration in the school's external system (Sekolahku Web only) */
+  /** official registration in the school's external system (Satu Sekolah Web only) */
   | { kind: 'external'; href: string; label: string }
-  /** Sekolahku App: registration in the portal (open) or sign-in to check an application (otherwise) */
+  /** Satu Sekolah App: registration in the portal (open) or sign-in to check an application (otherwise) */
   | { kind: 'portal'; href: string; label: string; open: boolean }
   | null
 
 /**
  * The "official registration" button on /pendaftaran (PUB-05: it only appears when registration is really open and
  * leads somewhere valid). Pure: unit-tested.
- *  - School with Sekolahku App (admissionsMode 'app'): the portal is the one official process. Its open/closed state
+ *  - School with Satu Sekolah App (admissionsMode 'app'): the portal is the one official process. Its open/closed state
  *    comes from the App's public summary (`appCycles`), not from the website's cycle; the button shows even when no
  *    website cycle is published. Open → "Daftar di Portal Penerimaan"; otherwise → "Masuk Portal Penerimaan".
  *  - Website only: a published cycle with status "open" AND an https registration URL.
@@ -51,7 +51,7 @@ export function admissionsCta(opts: {
 }
 
 /**
- * Status shown on /pendaftaran. With Sekolahku App it follows the App (open / closed / upcoming → website labels);
+ * Status shown on /pendaftaran. With Satu Sekolah App it follows the App (open / closed / upcoming → website labels);
  * the website cycle's own status is then only a fallback while the App has no public cycle.
  */
 export function displayedAdmissionStatus(mode: 'app' | 'web', webStatus: string | null | undefined, appCycles?: { status?: string | null }[] | null): string {

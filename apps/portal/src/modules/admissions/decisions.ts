@@ -9,7 +9,7 @@ import { accounts, admissionPaths, applications, decisionBatches, decisionVersio
 import { auditDenied, requireAccount, requireStaff, type Ctx } from '@/server/context'
 import { command, expectVersion, type Db } from '@/server/command'
 import { fail, forbidden, notFound } from '@/server/errors'
-import type { SchoolInfo } from '@sekolahku/core'
+import type { SchoolInfo } from '@satusekolah/core'
 import type { SchoolDb } from '@/db/school-db'
 import { makeCtx } from '@/server/context'
 import { loadCycle } from './config'

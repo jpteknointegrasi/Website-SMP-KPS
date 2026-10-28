@@ -1,4 +1,4 @@
-import { hasProduct } from '@sekolahku/core'
+import { hasProduct } from '@satusekolah/core'
 import { currentTenant, siteUrl } from '@/lib/payload'
 import { findBySlug } from '@/lib/queries'
 import { buildIcs } from '@/lib/ics'

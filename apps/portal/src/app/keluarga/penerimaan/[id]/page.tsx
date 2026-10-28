@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { accountPage } from '@/server/request'
 import { applicationView, progressOf } from '@/modules/admissions/apply'
-import { hasProduct } from '@sekolahku/core'
+import { hasProduct } from '@satusekolah/core'
 import { BillsPanel, DocsPanel, LeadLinkPanel, ReenrollPanel, ResultPanel, RevisionNotice, SelectionPanel, StatusSummary, StepForm, SubmitPanel } from '@/ui/application'
 import { ActionForm, Card, Field, Flash, LinkBtn, PageHead, sp1, Steps, Submit, Tabs, type SP } from '@/ui/kit'
 

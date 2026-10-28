@@ -2,7 +2,7 @@ import type { PayloadRequest } from 'payload'
 import { isSuperAdmin } from '../access/roles'
 import { requestTenantId } from './access'
 import { isLive, tenantById, tenantByHost } from './resolve'
-import { hasProduct } from '@sekolahku/core'
+import { hasProduct } from '@satusekolah/core'
 import { scopePayload, type TenantPayload } from './scoped'
 
 /**
@@ -17,7 +17,7 @@ export async function endpointPayload(req: PayloadRequest): Promise<TenantPayloa
     t = isLive(here) ? here.id : null
   }
   if (!t) return null
-  // website endpoints (contact, interest, visits, analytics, leads export) belong to Sekolahku Web
+  // website endpoints (contact, interest, visits, analytics, leads export) belong to Satu Sekolah Web
   if (!hasProduct(await tenantById(req.payload, t), 'web')) return null
   return scopePayload(req.payload, t)
 }

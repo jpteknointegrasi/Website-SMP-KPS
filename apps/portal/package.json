@@ -1,8 +1,8 @@
 {
-  "name": "@sekolahku/portal",
+  "name": "@satusekolah/portal",
   "version": "0.1.0",
   "private": true,
-  "description": "Sekolahku App: portal PWA di /portal (penerimaan siswa baru, akademik, layanan). Satu database per sekolah.",
+  "description": "Satu Sekolah App: portal PWA di /portal (penerimaan siswa baru, akademik, layanan). Satu database per sekolah.",
   "type": "module",
   "scripts": {
     "dev": "next dev -p 3001",
@@ -18,7 +18,7 @@
     "pulihkan": "tsx scripts/restore.ts"
   },
   "dependencies": {
-    "@sekolahku/core": "*",
+    "@satusekolah/core": "*",
     "aws4fetch": "^1.0.20",
     "drizzle-orm": "0.45.2",
     "exceljs": "^4.4.0",

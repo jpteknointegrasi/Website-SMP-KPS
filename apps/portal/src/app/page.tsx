@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation'
-import { hasProduct } from '@sekolahku/core'
+import { hasProduct } from '@satusekolah/core'
 import { portalSchool } from '@/lib/context'
 import { requestCtx } from '@/server/request'
 

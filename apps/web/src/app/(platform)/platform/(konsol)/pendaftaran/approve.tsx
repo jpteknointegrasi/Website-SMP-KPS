@@ -47,7 +47,7 @@ export function ApproveForm({ d, rootDomain }: { d: Defaults; rootDomain: string
           </li>
           {state.app ? (
             <li>
-              Sekolahku App: buat database App sekolah, tempel URL-nya di CMS → Sekolah ({state.slug}) → Database App, lalu jalankan <span className="mono">npm run portal:migrate -- --sekolah {state.slug}</span>.
+              Satu Sekolah App: buat database App sekolah, tempel URL-nya di CMS → Sekolah ({state.slug}) → Database App, lalu jalankan <span className="mono">npm run portal:migrate -- --sekolah {state.slug}</span>.
             </li>
           ) : null}
           <li>Ubah status sekolah dari Uji coba ke Aktif setelah langganan berjalan (CMS → Sekolah).</li>
@@ -99,7 +99,7 @@ export function ApproveForm({ d, rootDomain }: { d: Defaults; rootDomain: string
       </div>
       <div className="row">
         <label className="fld">
-          <span>Paket Sekolahku Web</span>
+          <span>Paket Satu Sekolah Web</span>
           <select name="webPlan" defaultValue={d.webPlan}>
             <option value="none">Tidak berlangganan</option>
             <option value="basic">Basic</option>
@@ -107,7 +107,7 @@ export function ApproveForm({ d, rootDomain }: { d: Defaults; rootDomain: string
           </select>
         </label>
         <label className="fld">
-          <span>Paket Sekolahku App</span>
+          <span>Paket Satu Sekolah App</span>
           <select name="appPlan" defaultValue={d.appPlan}>
             <option value="none">Tidak berlangganan</option>
             <option value="pilot">Pilot</option>

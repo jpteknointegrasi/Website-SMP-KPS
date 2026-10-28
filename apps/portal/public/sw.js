@@ -1,4 +1,4 @@
-/* Sekolahku App service worker. Caches ONLY static, non-personal files (build assets, icons).
+/* Satu Sekolah App service worker. Caches ONLY static, non-personal files (build assets, icons).
    Pages, API responses and files are always fetched from the network and never stored. */
 const CACHE = 'sekolahku-static-v1'
 const STATIC = /^\/portal\/(_next\/static\/|icon\.svg$|manifest\.webmanifest$)/

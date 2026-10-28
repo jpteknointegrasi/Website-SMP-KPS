@@ -1,4 +1,4 @@
-# Scheduled background jobs for Sekolahku Web and Sekolahku App.
+# Scheduled background jobs for Satu Sekolah Web and Satu Sekolah App.
 #
 # Vercel Hobby runs its built-in cron only once a day, but the platform needs:
 #   - Web  GET /api/payload-jobs/run  at least hourly (scheduled publishing, visit holds, App sync: works & interest linking)
@@ -32,7 +32,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - name: Sekolahku App — outbox & tugas terjadwal
+      - name: Satu Sekolah App — outbox & tugas terjadwal
         env:
           URL: ${{ secrets.APP_JOBS_URL }}
           SECRET: ${{ secrets.APP_CRON_SECRET }}
@@ -48,7 +48,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - name: Sekolahku Web — tugas Payload
+      - name: Satu Sekolah Web — tugas Payload
         env:
           URL: ${{ secrets.WEB_JOBS_URL }}
           SECRET: ${{ secrets.WEB_CRON_SECRET }}

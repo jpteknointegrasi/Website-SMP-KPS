@@ -18,7 +18,7 @@ const TABS = [
 ] as const
 
 function Facts({ a }: { a: SchoolApplication }) {
-  const products = [a.wantWeb ? 'Sekolahku Web' : null, a.wantApp ? 'Sekolahku App' : null].filter(Boolean).join(' + ') || '—'
+  const products = [a.wantWeb ? 'Satu Sekolah Web' : null, a.wantApp ? 'Satu Sekolah App' : null].filter(Boolean).join(' + ') || '—'
   return (
     <dl className="facts">
       <dt>Jenjang</dt>

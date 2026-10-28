@@ -1,5 +1,5 @@
 {
-  "name": "@sekolahku/web",
+  "name": "@satusekolah/web",
   "version": "0.1.0",
   "private": true,
   "description": "Platform website & CMS sekolah (multi-sekolah) — Next.js + Payload CMS + PostgreSQL. Sekolah pertama: SMP Nasional KPS.",
@@ -37,7 +37,7 @@
     "@payloadcms/storage-s3": "3.92.0",
     "@payloadcms/storage-vercel-blob": "3.92.0",
     "@payloadcms/ui": "3.92.0",
-    "@sekolahku/core": "*",
+    "@satusekolah/core": "*",
     "@vercel/blob": "2.3.1",
     "cross-env": "7.0.3",
     "dotenv": "16.4.7",

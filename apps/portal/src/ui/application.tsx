@@ -369,7 +369,7 @@ export function StatusSummary({ v, tz }: { v: View; tz: string }) {
 }
 
 /**
- * The family links this application to the interest form they filled on the school website (Sekolahku Web), with
+ * The family links this application to the interest form they filled on the school website (Satu Sekolah Web), with
  * explicit consent. Shown only when the school also runs the website product.
  */
 export function LeadLinkPanel({ v, back, tz }: { v: View; back: string; tz: string }) {

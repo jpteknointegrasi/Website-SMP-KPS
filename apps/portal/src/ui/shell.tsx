@@ -161,7 +161,7 @@ export async function Shell({ ctx, branding, modules, children, who }: { ctx: Ct
           <strong>{me.name}</strong>
           <span>{roleLabel}</span>
         </div>
-        <div className="side__foot">Didukung Sekolahku</div>
+        <div className="side__foot">Didukung Satu Sekolah</div>
       </aside>
       <div className="main">
         <details className="mobilebar">

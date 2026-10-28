@@ -2,7 +2,7 @@ import type { Payload } from 'payload'
 import { FLAG_DEFAULTS, type FlagName } from '../globals/flags'
 import { isScoped, type TenantPayload } from '../tenancy/scoped'
 import { tenantById } from '../tenancy/resolve'
-import { WEB_PLAN_FEATURES, hasProduct } from '@sekolahku/core'
+import { WEB_PLAN_FEATURES, hasProduct } from '@satusekolah/core'
 
 export type Flags = Record<FlagName, boolean>
 

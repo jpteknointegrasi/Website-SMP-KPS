@@ -3,7 +3,7 @@
  * scripts. Every module receives a Ctx; nothing reads the request elsewhere.
  */
 import { and, desc, eq, gt, inArray, isNull } from 'drizzle-orm'
-import type { SchoolInfo, StaffMember } from '@sekolahku/core'
+import type { SchoolInfo, StaffMember } from '@satusekolah/core'
 import type { SchoolDb } from '@/db/school-db'
 import { accountSessions, accounts, auditEvents, persons, staffMembers, staffRoles, supportGrants } from '@/db/schema'
 import { GUARDED_ROLES, IMPLICIT_ROLES, permissionsOf, type Permission } from './roles'

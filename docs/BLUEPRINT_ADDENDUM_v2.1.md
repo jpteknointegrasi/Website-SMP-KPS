@@ -1,18 +1,18 @@
-# Blueprint Aplikasi Sekolahku — Addendum v2.1
+# Blueprint Aplikasi Satu Sekolah — Addendum v2.1
 
 ## Paket produk, batas produk dan mesin
 
 Revisi 26 Oktober 2026. Addendum ini **melengkapi** Blueprint v2.0 (25 Oktober 2026). Bagian v2.0 yang tidak disebut di sini tetap berlaku. Bila ada perbedaan, gunakan addendum ini.
 
-**Alasan revisi:** Blueprint v2.0 ditulis sebagai satu produk terintegrasi. Pemilik produk memutuskan bahwa **Sekolahku Web** dan **Sekolahku App** dijual terpisah. Karena itu batas produk, kepemilikan data dan mesin perlu ditetapkan sebelum modul App dibangun.
+**Alasan revisi:** Blueprint v2.0 ditulis sebagai satu produk terintegrasi. Pemilik produk memutuskan bahwa **Satu Sekolah Web** dan **Satu Sekolah App** dijual terpisah. Karena itu batas produk, kepemilikan data dan mesin perlu ditetapkan sebelum modul App dibangun.
 
 ## A. Dua produk di atas satu inti
 
 | Lapis | Isi (kode modul v2.0) | Dijual |
 |---|---|---|
 | **Inti platform** (`packages/core`) | Sekolah/tenant, domain, zona waktu, langganan produk, login staf bersama, penyegelan rahasia, registri sekolah; selanjutnya audit, berkas privat, notifikasi | Tidak; fondasi kedua produk |
-| **Sekolahku Web** (`apps/web`) | M01 Website & CMS, M15 media, informasi penerimaan, **minat calon orang tua, kunjungan/open house** | Ya; paket Basic / Pro |
-| **Sekolahku App** (`apps/portal`) | M02–M12 portal & akademik, **M14 penerimaan siswa baru penuh**, M13, M16–M20 | Ya; paket Pilot / Standar |
+| **Satu Sekolah Web** (`apps/web`) | M01 Website & CMS, M15 media, informasi penerimaan, **minat calon orang tua, kunjungan/open house** | Ya; paket Basic / Pro |
+| **Satu Sekolah App** (`apps/portal`) | M02–M12 portal & akademik, **M14 penerimaan siswa baru penuh**, M13, M16–M20 | Ya; paket Pilot / Standar |
 
 Aturan batas:
 
@@ -65,9 +65,9 @@ Sekolah yang berhenti dari salah satu produk:
 **ADR-01 Monorepo dengan inti bersama.**
 
 ```
-sekolahku/
-├─ apps/web       Sekolahku Web — Next.js 16 + Payload CMS 3 (platform database bersama, multi-sekolah)
-├─ apps/portal    Sekolahku App — Next.js 16 + Drizzle ORM, basePath /portal, PWA
+satusekolah/
+├─ apps/web       Satu Sekolah Web — Next.js 16 + Payload CMS 3 (platform database bersama, multi-sekolah)
+├─ apps/portal    Satu Sekolah App — Next.js 16 + Drizzle ORM, basePath /portal, PWA
 └─ packages/core  aturan sekolah/domain/zona waktu, langganan, sesi staf, penyegelan rahasia, registri sekolah
 ```
 
@@ -118,7 +118,7 @@ sekolahku/
 | §25 | Admin platform tidak otomatis membaca data App. Akses bantuan dibatasi waktu dan diaudit (tetap) |
 | §26 | `schools`/`domains`/`settings`/`module_flags` berada di inti + langganan per produk. `school_id` App = tanda database (ADR-03) |
 | §28 | Disempurnakan oleh ADR-01 sampai ADR-06 |
-| §31, §49 | MVP App yang dapat dijual = **P0 + P1 (M14)**, dapat dipasarkan sebagai "Sekolahku PPDB" sebelum modul akademik siap |
+| §31, §49 | MVP App yang dapat dijual = **P0 + P1 (M14)**, dapat dipasarkan sebagai "Satu Sekolah PPDB" sebelum modul akademik siap |
 
 ## G. Status implementasi (cabang `platform-produk`)
 
@@ -142,5 +142,5 @@ sekolahku/
 | Pendaftaran sekolah publik + konsol Super Admin; mode tata kelola Super Admin di App | completed | PLT-01/02 |
 | Penautan minat ↔ pendaftaran atas persetujuan keluarga (bagian D) | completed | LEAD-01..03, WEB-APP-02 |
 
-Panduan operasional: `docs/PANDUAN_APP.md`. Semua uji: core 8, web 141, portal 60. Semua bagian addendum ini sudah dibangun.
+Panduan operasional: `docs/PANDUAN_APP.md`. Semua uji (setelah perbaikan audit 28 Okt 2026): core 10, web 190, portal 78. Semua bagian addendum ini sudah dibangun; penautan minat dan perbaikan audit ada di cabang `perbaikan-audit` dan baru berlaku di produksi setelah digabung ke `main` dan migrasinya dijalankan (GO_LIVE_CHECKLIST §F).
 Produksi sejak 27 Oktober 2026 (Supabase); untuk KPS modul App diaktifkan bertahap (PANDUAN_APP §4).

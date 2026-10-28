@@ -1,25 +1,25 @@
 {
-  "name": "sekolahku",
+  "name": "satusekolah",
   "private": true,
-  "description": "Sekolahku: Sekolahku Web (website & CMS, apps/web) dan Sekolahku App (portal PWA, apps/portal), dijual terpisah, di atas inti bersama (packages/core).",
+  "description": "Satu Sekolah: Satu Sekolah Web (website & CMS, apps/web) dan Satu Sekolah App (portal PWA, apps/portal), dijual terpisah, di atas inti bersama (packages/core).",
   "workspaces": [
     "packages/*",
     "apps/*"
   ],
   "scripts": {
-    "dev": "npm run dev -w @sekolahku/web",
-    "dev:portal": "npm run dev -w @sekolahku/portal",
-    "build": "npm run build -w @sekolahku/web",
-    "vercel-build": "node -e \"console.error('Atur Root Directory proyek Vercel ke apps/web (Sekolahku Web) atau apps/portal (Sekolahku App). Lihat docs/PANDUAN_PREVIEW_APP.md');process.exit(1)\"",
-    "build:portal": "npm run build -w @sekolahku/portal",
-    "test": "npm test -w @sekolahku/core && npm test -w @sekolahku/web && npm test -w @sekolahku/portal --if-present",
+    "dev": "npm run dev -w @satusekolah/web",
+    "dev:portal": "npm run dev -w @satusekolah/portal",
+    "build": "npm run build -w @satusekolah/web",
+    "vercel-build": "node -e \"console.error('Atur Root Directory proyek Vercel ke apps/web (Satu Sekolah Web) atau apps/portal (Satu Sekolah App). Lihat docs/PANDUAN_PREVIEW_APP.md');process.exit(1)\"",
+    "build:portal": "npm run build -w @satusekolah/portal",
+    "test": "npm test -w @satusekolah/core && npm test -w @satusekolah/web && npm test -w @satusekolah/portal --if-present",
     "typecheck": "npm run typecheck --workspaces --if-present",
-    "migrate": "npm run migrate -w @sekolahku/web",
-    "seed": "npm run seed -w @sekolahku/web",
-    "sekolah:baru": "npm run sekolah:baru -w @sekolahku/web --",
-    "platform:superadmin": "npm run platform:superadmin -w @sekolahku/web --",
-    "portal:migrate": "npm run migrate -w @sekolahku/portal --",
-    "portal:demo": "npm run demo -w @sekolahku/portal --"
+    "migrate": "npm run migrate -w @satusekolah/web",
+    "seed": "npm run seed -w @satusekolah/web",
+    "sekolah:baru": "npm run sekolah:baru -w @satusekolah/web --",
+    "platform:superadmin": "npm run platform:superadmin -w @satusekolah/web --",
+    "portal:migrate": "npm run migrate -w @satusekolah/portal --",
+    "portal:demo": "npm run demo -w @satusekolah/portal --"
   },
   "engines": {
     "node": ">=22.12"

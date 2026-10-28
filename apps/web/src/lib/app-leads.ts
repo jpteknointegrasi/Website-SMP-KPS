@@ -1,5 +1,5 @@
 /**
- * Minat → Portal Penerimaan (Web↔App, addendum D). In Sekolahku App a family can ask, with explicit consent, that
+ * Minat → Portal Penerimaan (Web↔App, addendum D). In Satu Sekolah App a family can ask, with explicit consent, that
  * their application be linked to the interest form (minat) they filled on this website. The scheduler pulls those
  * requests (application id, its number, the account's verified e-mail), finds this school's interest form with that
  * e-mail, marks it "Masuk proses resmi" with the application number, and reports back only the interest reference
@@ -7,7 +7,7 @@
  * Calls are server-to-server with the shared secret (PORTAL_SYNC_HEADER); browsers cannot make them.
  */
 import type { Payload, Where } from 'payload'
-import { PORTAL_BASE_PATH, PORTAL_HOST_HEADER, PORTAL_PROXY_HEADER, PORTAL_SYNC_HEADER, hasProduct, type SchoolInfo } from '@sekolahku/core'
+import { PORTAL_BASE_PATH, PORTAL_HOST_HEADER, PORTAL_PROXY_HEADER, PORTAL_SYNC_HEADER, hasProduct, type SchoolInfo } from '@satusekolah/core'
 import { scopePayload } from '../tenancy/scoped'
 
 type Feed = { requests: { ref: string; email: string; registrationNo: string | null }[] }

@@ -1,5 +1,5 @@
 /**
- * Registry of schools for the portal (Sekolahku App). Read-only SQL against the platform database — the tables the
+ * Registry of schools for the portal (Satu Sekolah App). Read-only SQL against the platform database — the tables the
  * Web product's CMS maintains for schools, their domains, staff accounts and sessions. This file is the contract:
  * if those tables change, change it here and in its tests.
  *

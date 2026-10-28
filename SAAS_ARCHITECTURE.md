@@ -18,7 +18,7 @@ Satu deployment dan satu database PostgreSQL melayani banyak sekolah. Setiap sek
 Urutan pencocokan (hasil di-cache 60 detik per server):
 
 1. Domain yang tercatat di sekolah (Platform → Sekolah → Domain), mis. `www.smpkps.sch.id`.
-2. `<kode>.PLATFORM_ROOT_DOMAIN`, mis. `sman1.sekolahku.id`.
+2. `<kode>.PLATFORM_ROOT_DOMAIN`, mis. `sman1.satusekolah.my.id`.
 3. `DEFAULT_TENANT_SLUG`, untuk `localhost`, URL preview, atau deployment satu sekolah.
 
 Bila tidak ada yang cocok, atau sekolah berstatus *Ditangguhkan*, halaman menampilkan "Website sekolah tidak ditemukan", API publik tidak membaca data apa pun, dan staf sekolah itu tidak bisa masuk.
@@ -69,7 +69,7 @@ Email login bersifat unik di seluruh platform: satu akun hanya untuk satu sekola
 
 ## 6. Langganan produk & fitur
 
-Sekolahku Web dan Sekolahku App dijual terpisah: setiap sekolah punya langganan **Web** dan **App** masing-masing (paket + status Aktif/Uji coba/Dijeda), lihat `docs/BLUEPRINT_ADDENDUM_v2.1.md`. Tanpa langganan Web yang aktif, website sekolah tidak tayang dan endpoint website tertutup; portal tetap dapat dipakai bila App aktif.
+Satu Sekolah Web dan Satu Sekolah App dijual terpisah: setiap sekolah punya langganan **Web** dan **App** masing-masing (paket + status Aktif/Uji coba/Dijeda), lihat `docs/BLUEPRINT_ADDENDUM_v2.1.md`. Tanpa langganan Web yang aktif, website sekolah tidak tayang dan endpoint website tertutup; portal tetap dapat dipakai bila App aktif.
 
 `readFlags()` = pilihan sekolah ∩ fitur yang diizinkan paket Web-nya (`packages/core` → `WEB_PLAN_FEATURES`):
 
@@ -119,11 +119,11 @@ Pengujian: up → down → up pada salinan berisi data seperti produksi, migrasi
 | Hal | Keterangan |
 |---|---|
 | Tagihan & langganan | Kolom *Paket* sudah ada; integrasi pembayaran belum ada |
-| Pendaftaran sekolah mandiri | Sekolah dibuat Super Admin (CMS atau `npm run sekolah:baru`) |
+| Pendaftaran sekolah mandiri | Sudah ada: `/daftar-sekolah` di alamat platform, disetujui Super Admin di `/platform` (lihat §4 dan PANDUAN_PLATFORM §C) |
 | Domain otomatis di Vercel | Domain sekolah masih ditambahkan manual di Vercel → Domains (atau pakai wildcard subdomain) |
 | SMTP per sekolah | Satu SMTP platform; alamat penerima per sekolah |
-| Backup per sekolah | `BACKUP_TENANT=<kode> npm run backup:prod` mengekspor satu sekolah; restore per sekolah belum ada |
-| Cache & rate limit | Per instance server (perubahan domain/status sekolah berlaku ≤ 60 detik) |
+| Backup per sekolah | Web: `BACKUP_TENANT=<kode> npm run backup:prod` (JSON, tanpa restore otomatis). App: `npm run ekspor -w @satusekolah/portal -- --sekolah <kode>` (tabel + berkas) dan `npm run pulihkan … --ya` ke database App kosong; atau `EKSPOR-DATA-APP.bat` |
+| Cache | Per instance server (perubahan domain/status sekolah berlaku ≤ 60 detik). Rate limit formulir kini di database (`rate_limit_hits`, kunci di-hash), berlaku lintas instance |
 | Tautan internal di rich text | Hanya bisa menunjuk dokumen sekolah sendiri saat ditampilkan; tautan ke dokumen sekolah lain tidak dirender |
 | Alamat tak dikenal | Menampilkan halaman "tidak ditemukan" dengan status 200 + `noindex` |
 | Peringatan "sedang diedit orang lain" | Hilang karena kunci dokumen dimatikan; dua editor yang menyimpan dokumen sama → simpanan terakhir yang berlaku (riwayat versi tetap ada) |
@@ -131,7 +131,7 @@ Pengujian: up → down → up pada salinan berisi data seperti produksi, migrasi
 
 ## 11. Pengujian
 
-`npm test`: **119 tes lulus**, terdiri dari 85 tes lama (kini berjalan di sekolah uji sementara) dan 34 tes isolasi baru `tests/int/tenancy.int.spec.ts` (TEN-01..11).
+`npm test` (per 28 Okt 2026, setelah perbaikan audit): **core 10 · web 190 · portal 78**, semua lulus pada database baru. Rincian isolasi di bawah berasal dari `tests/int/tenancy.int.spec.ts` (TEN-01..13).
 
 Tes isolasi memakai dua sekolah (WITA/Pro dan WIB/Basic) dan memeriksa:
 

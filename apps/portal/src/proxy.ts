@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from 'next/server'
-import { portalRequestHost } from '@sekolahku/core'
+import { portalRequestHost } from '@satusekolah/core'
 
 const SAFE = new Set(['GET', 'HEAD', 'OPTIONS'])
 

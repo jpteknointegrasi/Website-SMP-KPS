@@ -1,6 +1,6 @@
-# Uji Sekolahku Web + App di Vercel (Preview, database uji Supabase)
+# Uji Satu Sekolah Web + App di Vercel (Preview, database uji Supabase)
 
-Tujuan: mencoba cabang `platform-produk` (website multi-sekolah + Sekolahku App) di internet **tanpa menyentuh
+Tujuan: mencoba cabang `platform-produk` (website multi-sekolah + Satu Sekolah App) di internet **tanpa menyentuh
 website dan database produksi KPS** (produksi saat ini masih Neon + Vercel Blob dari cabang `main`; pemindahannya ke
 Supabase dilakukan terpisah nanti). Uji ini sepenuhnya memakai Supabase — tanpa Neon dan tanpa Vercel Blob. Hasilnya:
 
@@ -37,16 +37,16 @@ Lalu **Storage → S3 Configuration** (Settings) → **New access key** → sali
 1. Vercel → **Add New → Project** → impor repo `jpteknointegrasi/Website-SMP-KPS` → nama `sekolahku-uji-web`,
    **Root Directory** `apps/web`. Bila langsung men-deploy dan gagal, tidak apa-apa — lanjutkan.
 2. **Settings → Git → Ignored Build Step** → `[ "$VERCEL_GIT_COMMIT_REF" != "platform-produk" ]`.
-3. **Settings → Environment Variables** — centang **Preview saja**, tempel bagian WEB dari `RAHASIA-UJI-SEKOLAHKU.txt`
+3. **Settings → Environment Variables** — centang **Preview saja**, tempel bagian WEB dari `RAHASIA-UJI-SATU SEKOLAH.txt`
    (kunci S3 sudah diisi). Di halaman itu ada tombol untuk menempel isi .env sekaligus.
 4. **Settings → Domains → Add** `sekolahku-uji-web.vercel.app` → environment **Preview**, branch `platform-produk`.
    (Bila nama sudah dipakai, pilih nama lain dan sesuaikan `NEXT_PUBLIC_SERVER_URL` dan `WEB_ORIGIN`.)
 
-## 3. Proyek Vercel `sekolahku-uji-app` (Sekolahku App)
+## 3. Proyek Vercel `sekolahku-uji-app` (Satu Sekolah App)
 
 1. **Add New → Project** → repo yang sama → nama `sekolahku-uji-app`, **Root Directory** `apps/portal`.
 2. Ignored Build Step sama: `[ "$VERCEL_GIT_COMMIT_REF" != "platform-produk" ]`.
-3. Environment Variables (Preview saja): bagian APP dari `RAHASIA-UJI-SEKOLAHKU.txt` (isi DB dan kunci S3).
+3. Environment Variables (Preview saja): bagian APP dari `RAHASIA-UJI-SATU SEKOLAH.txt` (isi DB dan kunci S3).
 4. Domains → `sekolahku-uji-app.vercel.app` → Preview, branch `platform-produk`.
 
 ## 4. Deploy (urutan penting)

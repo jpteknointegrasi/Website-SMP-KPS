@@ -1,5 +1,5 @@
 import { headers } from 'next/headers'
-import { isPortalSync } from '@sekolahku/core'
+import { isPortalSync } from '@satusekolah/core'
 import { requestCtx, requestModules } from '@/server/request'
 import { moduleOpen } from '@/server/settings'
 import { markImported, syncFeed } from '@/modules/works/service'

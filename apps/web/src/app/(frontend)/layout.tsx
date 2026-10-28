@@ -10,7 +10,7 @@ import { getFlags, getGlobals, getLinkFlags, hrefAllowed, listSocialAccounts } f
 import { Analytics } from '@/components/ui/Analytics'
 import type { Media } from '@/payload-types'
 import { currentTenant, siteUrl } from '@/lib/payload'
-import { PORTAL_BASE_PATH, hasProduct } from '@sekolahku/core'
+import { PORTAL_BASE_PATH, hasProduct } from '@satusekolah/core'
 import { themeInitScript } from '@/lib/theme'
 
 const NoWebsite = ({ name, portal }: { name: string; portal: boolean }) => (
@@ -79,7 +79,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   // Unknown or suspended address: no school content at all.
   const school = await currentTenant()
   if (!school) return <NoSchool />
-  // School without (an active) Sekolahku Web: no website; the portal stays reachable if it has Sekolahku App.
+  // School without (an active) Satu Sekolah Web: no website; the portal stays reachable if it has Satu Sekolah App.
   if (!hasProduct(school, 'web')) return <NoWebsite name={school.name} portal={hasProduct(school, 'app')} />
   const [{ settings, nav }, flags, linkFlags] = await Promise.all([getGlobals(), getFlags(), getLinkFlags()])
   const accounts = await listSocialAccounts('showInFooter').catch(() => [])

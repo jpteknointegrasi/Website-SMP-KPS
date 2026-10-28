@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from 'next/server'
-import { PORTAL_BASE_PATH, PORTAL_HOST_HEADER, PORTAL_SYNC_HEADER, PORTAL_PROXY_HEADER } from '@sekolahku/core'
+import { PORTAL_BASE_PATH, PORTAL_HOST_HEADER, PORTAL_SYNC_HEADER, PORTAL_PROXY_HEADER } from '@satusekolah/core'
 
 const SAFE = new Set(['GET', 'HEAD', 'OPTIONS'])
 /** Platform console, school sign-up and the CMS stay reachable on the platform (*.vercel.app) address. */
@@ -21,7 +21,7 @@ export function proxy(request: NextRequest) {
   const host = request.headers.get('host') ?? ''
   const path = request.nextUrl.pathname
 
-  // 0. Sekolahku App lives on every school domain under /portal ("one portal"). The portal is its own deployment
+  // 0. Satu Sekolah App lives on every school domain under /portal ("one portal"). The portal is its own deployment
   //    (PORTAL_ORIGIN); requests are passed through with the school's host and a shared secret so the portal can
   //    trust that host. The browser keeps talking to the school domain, so the staff sign-in cookie is shared.
   if ((path === PORTAL_BASE_PATH || path.startsWith(`${PORTAL_BASE_PATH}/`)) && process.env.PORTAL_ORIGIN) {

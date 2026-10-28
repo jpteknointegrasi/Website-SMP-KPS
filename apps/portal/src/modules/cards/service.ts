@@ -5,7 +5,7 @@
  */
 import { and, asc, desc, eq, inArray, isNotNull, sql } from 'drizzle-orm'
 import QRCode from 'qrcode'
-import { openSecret, sealSecret } from '@sekolahku/core'
+import { openSecret, sealSecret } from '@satusekolah/core'
 import { cardReplacements, cardTemplates, persons, studentCards, students, type CardTemplateSettings } from '@/db/schema'
 import { hasPerm, requireStaff, type Ctx } from '@/server/context'
 import { command, nextNumber, type Db } from '@/server/command'

@@ -1,6 +1,6 @@
 import type { MetadataRoute } from 'next'
 import { currentTenant, siteUrl } from '@/lib/payload'
-import { hasProduct } from '@sekolahku/core'
+import { hasProduct } from '@satusekolah/core'
 
 export const dynamic = 'force-dynamic'
 

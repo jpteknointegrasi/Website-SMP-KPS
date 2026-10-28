@@ -1,12 +1,12 @@
 # Status Implementasi
 
-Terakhir diperbarui: 28 Oktober 2026 — penautan minat ↔ Portal Penerimaan dan peta pengalihan WordPress lengkap (cabang `tautan-minat-portal`).
+Terakhir diperbarui: 28 Oktober 2026 — perbaikan temuan audit kesesuaian kebutuhan dan penggantian nama produk menjadi **Satu Sekolah** (cabang `perbaikan-audit`, di atas `tautan-minat-portal`).
 
 ## Produksi sekarang (27 Okt 2026)
 - **Website** `www.smpkps.sch.id`: proyek Vercel `website-smp-kps`, cabang `main` (monorepo, Root Directory `apps/web`), versi multi-sekolah.
-- **Database & berkas: Supabase** proyek "Sekolahku" (Tokyo): database `postgres` (website/platform), `app_kps` (Sekolahku App KPS); bucket `sekolahku-web-media` (publik, foto), `sekolahku-web-files` & `sekolahku-app-files` (privat). Akun database terpisah: `sekolahku_prod` (aplikasi) dan `sekolahku_portal_ro` (App, hanya-baca daftar sekolah & domain). Data API Supabase tidak dipakai (akses ditutup).
+- **Database & berkas: Supabase** proyek "Sekolahku" (Tokyo): database `postgres` (website/platform), `app_kps` (Satu Sekolah App KPS); bucket `sekolahku-web-media` (publik, foto), `sekolahku-web-files` & `sekolahku-app-files` (privat). Akun database terpisah: `sekolahku_prod` (aplikasi) dan `sekolahku_portal_ro` (App, hanya-baca daftar sekolah & domain). Data API Supabase tidak dipakai (akses ditutup).
 - Isi website dimulai ulang dari paket awal resmi KPS (`/setup/isi-data`): 7 berita, 4 agenda, 51 foto, halaman Alumni IKA KPS. Isi lama di Neon tidak dipindahkan (keputusan pemilik; website belum resmi diluncurkan).
-- **Sekolahku App**: proyek Vercel terpisah (Root Directory `apps/portal`, domain `smpkps-app.vercel.app`), dilayani di `www.smpkps.sch.id/portal`. Database App KPS sudah dimigrasi, tanpa data contoh; modul diaktifkan bertahap oleh admin.
+- **Satu Sekolah App**: proyek Vercel terpisah (Root Directory `apps/portal`, domain `smpkps-app.vercel.app`), dilayani di `www.smpkps.sch.id/portal`. Database App KPS sudah dimigrasi, tanpa data contoh; modul diaktifkan bertahap oleh admin.
 - Akun CMS: Admin Teknis KPS + operator platform (email pemilik). Kata sandi awal di berkas rahasia lokal pemilik — wajib diganti.
 - Neon & Vercel Blob lama: tidak dipakai lagi, disimpan sebagai cadangan (hapus setelah stabil). Instant Rollback Vercel tetap ke versi lama.
 - Deploy: push ke `main` men-deploy otomatis (commit atas nama akun GitHub pemilik). Proyek uji `sekolahku-uji-web` tidak dipakai lagi.
@@ -48,10 +48,10 @@ Bukti fitur lama & keputusan reuse: `CURRENT_FEATURE_AUDIT.md`. Pengaturan fitur
 | F11 | Cerita alumni/orang tua: jenis hubungan; consent wajib | completed | |
 | F12 | Dasbor: minat/kunjungan, pengingat konten, statistik agregat tanpa PII | completed | |
 | F13 | Pratinjau draf desktop+HP, blok reusable, feature flags | completed | |
-| F14 | Seleksi lengkap | completed di Sekolahku App (M14) | |
+| F14 | Seleksi lengkap | completed di Satu Sekolah App (M14) | |
 | F15 | Video & media sosial: `/media`, section beranda, klik-untuk-memuat, CSP | completed | |
 
-## Platform multi-sekolah & dua produk (Sekolahku Web & Sekolahku App)
+## Platform multi-sekolah & dua produk (Satu Sekolah Web & Satu Sekolah App)
 Rincian di repo: `SAAS_ARCHITECTURE.md`, `PANDUAN_PLATFORM.md`, `docs/BLUEPRINT_ADDENDUM_v2.1.md`, `docs/PANDUAN_APP.md`.
 
 Keputusan pemilik produk: minat & kunjungan tetap di Web, penerimaan penuh di App; satu portal di `/portal` pada domain sekolah; PWA dulu; database App per sekolah.
@@ -81,15 +81,33 @@ Dengan butir penautan minat, **semua bagian blueprint v2.0 + addendum v2.1 sudah
 
 **Login staf App:** `WEB_ORIGIN` di proyek App harus menunjuk alamat platform proyek website (bukan domain sekolah mana pun).
 
+## Perbaikan audit (28 Okt 2026, cabang `perbaikan-audit`)
+Audit kesesuaian kebutuhan (289 kebutuhan, RTM & laporan terpisah) menemukan 76 temuan. Yang bisa diselesaikan lewat kode sudah diperbaiki dan dites; uji total **core 10 · web 190 · portal 78** lulus pada database baru, typecheck bersih.
+
+| Area | Perbaikan utama |
+|---|---|
+| Data anak | Super Admin tidak pernah mengunduh berkas siswa; izin bantuan hanya-baca di jalur produksi; persetujuan publikasi album ditegakkan; foto guru via REST hanya dengan persetujuan; identitas pelapor rahasia hanya untuk Koordinator Kesiswaan (`student_affairs.coordinate`) |
+| App | Modul tertutup menolak aksi, bukan hanya halaman; percobaan rilis/persetujuan PPDB yang ditolak diaudit; uji pemisahan tugas; ekspor & pemulihan database App + berkas (`ekspor`/`pulihkan`); registri menolak cadangan `DATABASE_URI` di produksi; `CRON_SECRET` waktu-konstan; disk lokal ditolak di produksi |
+| Web | Rate limit di database (lintas instance) + batas pendaftaran sekolah per IP; idempotensi form kontak; batas `limit` REST anonim; header keamanan (HSTS dll.); `GET /api/kesehatan`; retensi data per sekolah (mati bawaan); proteksi media terpakai mencakup halaman Alumni; status Portal Penerimaan dari App; arsip pengumuman tetap dapat dibuka dengan lencana |
+| Operasional | Tugas terjadwal via GitHub Actions; pemeriksa Data API Supabase (produksi diverifikasi tertutup 28 Okt); runbook ditulis ulang untuk Vercel + Supabase; variabel env terdokumentasi |
+| Uji | Uji tenancy stabil pada database baru; suite App keluar kode 0; ID uji ganda dibereskan |
+
+Migrasi baru (Web, aditif): `20261028_155027_rate_limit_hits`, `20261028_155432_contact_idempotency`, `20261028_160043_retensi_data`. Tidak ada migrasi App baru.
+
+**Nama produk:** sejak 28 Okt 2026 **Satu Sekolah** (Satu Sekolah Web & Satu Sekolah App; paket `@satusekolah/*`). Sengaja tidak diganti karena dipakai sistem yang sedang berjalan: header `x-sekolahku-*`, cookie `sekolahku_sesi`/`sekolahku_sekali`, garam kunci `sekolahku-secrets`, nama bucket, role database, dan proyek Supabase "Sekolahku".
+
 ## Tersisa
 Butir 1–4 hanya bisa dilakukan pemilik (kata sandi dan kunci). Rincian langkah: `GO_LIVE_CHECKLIST.md`.
 1. `WEB_ORIGIN` proyek App = alamat `….vercel.app` proyek website, lalu Redeploy (login staf App gagal sebelum ini benar).
 2. Ganti kata sandi akun CMS awal; hapus berkas rahasia lokal yang tidak diperlukan.
 3. SMTP (Gmail + App Password) di Web dan App — wajib sebelum menyetujui sekolah baru (undangan 72 jam) dan sebelum App dibuka untuk orang tua.
-4. Cron: App `GET /portal/api/jobs` tiap 5–15 menit; Web `GET /api/payload-jobs/run` tiap jam (Authorization Bearer CRON_SECRET; cron bawaan Vercel Hobby hanya sekali sehari).
-5. Gabungkan cabang `tautan-minat-portal` → jalankan migrasi App `--semua` → buka `/setup/isi-data` sekali untuk menambah 121 pengalihan URL lama.
+4. Tugas terjadwal: isi secret GitHub `WEB_JOBS_URL`, `WEB_CRON_SECRET`, `APP_JOBS_URL`, `APP_CRON_SECRET` agar `.github/workflows/cron.yml` berjalan (atau pakai cron-job.org). Daftarkan `/api/kesehatan` di monitor uptime.
+5. Gabungkan cabang `perbaikan-audit` (berisi `tautan-minat-portal`) → migrasi Web jalan otomatis; jalankan migrasi App `--semua` → buka `/setup/isi-data` sekali untuk menambah 121 pengalihan URL lama. Sebelumnya pastikan `PLATFORM_DATABASE_URL` terisi di proyek App (kini wajib di produksi) dan ubah `PLATFORM_NAME` menjadi `Satu Sekolah` bila masih "Sekolahku".
 6. Aktivasi modul App bertahap untuk KPS: isi Pengaturan sekolah, tetapkan peran staf (BK/UKS oleh pimpinan), Pilot dulu.
 7. Data resmi dari sekolah — `CONTENT_GAPS.md` (PPDB, kontak terverifikasi, guru, prestasi, BOS); lalu peluncuran resmi (NOINDEX=false).
 8. Setelah stabil: hapus database Neon & store Vercel Blob lama; hapus proyek uji Vercel.
 9. Uji keyboard & pembaca layar manual.
 10. (Opsional) Domain platform sendiri untuk konsol & pendaftaran sekolah; `PLATFORM_ROOT_DOMAIN` untuk subdomain otomatis sekolah.
+11. Blueprint v2.0 (25 Okt 2026) belum ada di repo; simpan di `docs/` agar kebutuhan modul App dapat ditelusuri.
+12. Keputusan sekolah: masa retensi data (Pengaturan Sekolah → Privasi & Retensi), lalu cantumkan di Kebijakan Privasi.
+13. Belum dibangun (butuh keputusan/skala): MFA, draf untuk global pengaturan/menu/alumni, pratinjau bertoken, uji pembaca layar & WCAG 2.2 manual.

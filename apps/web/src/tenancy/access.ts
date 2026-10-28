@@ -1,7 +1,7 @@
 import type { Access, AccessArgs, PayloadRequest, Where } from 'payload'
 import { isStaff, isSuperAdmin } from '../access/roles'
 import { idOf, tenantByHost } from './resolve'
-import { hasProduct } from '@sekolahku/core'
+import { hasProduct } from '@satusekolah/core'
 
 type MaybeUser = PayloadRequest['user'] | null | undefined
 
@@ -33,7 +33,7 @@ export async function requestTenantId(req: PayloadRequest): Promise<number | nul
   const host = req.headers?.get?.('host')
   if (!host || !req.payload) return null
   const t = await tenantByHost(req.payload, host)
-  // visitors only reach a school's content while it subscribes to Sekolahku Web
+  // visitors only reach a school's content while it subscribes to Satu Sekolah Web
   return t && hasProduct(t, 'web') ? t.id : null
 }
 

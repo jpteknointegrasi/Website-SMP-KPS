@@ -58,7 +58,7 @@ export async function createApplication(payload: Payload, value: ApplicationInpu
     payload,
     value.adminEmail,
     `Pendaftaran ${value.schoolName} diterima (${reference})`,
-    `<p>Yth. ${escapeHtml(value.adminName)},</p><p>Pendaftaran <b>${escapeHtml(value.schoolName)}</b> ke platform Sekolahku sudah kami terima dengan nomor <b>${reference}</b>.</p><p>Tim kami akan meninjau dan mengirim kabar ke email ini. Bila disetujui, Anda menerima tautan untuk mengatur kata sandi akun Admin Teknis sekolah.</p>`,
+    `<p>Yth. ${escapeHtml(value.adminName)},</p><p>Pendaftaran <b>${escapeHtml(value.schoolName)}</b> ke platform Satu Sekolah sudah kami terima dengan nomor <b>${reference}</b>.</p><p>Tim kami akan meninjau dan mengirim kabar ke email ini. Bila disetujui, Anda menerima tautan untuk mengatur kata sandi akun Admin Teknis sekolah.</p>`,
     'konfirmasi pendaftaran sekolah',
   )
   return { ok: true, reference, duplicate: false }
@@ -134,7 +134,7 @@ export async function approve(payload: Payload, operator: User, value: ApprovalI
     payload,
     made.adminEmail,
     `${made.schoolName} disetujui — atur kata sandi Admin Teknis`,
-    `<p>Selamat, pendaftaran <b>${escapeHtml(made.schoolName)}</b> di platform Sekolahku sudah disetujui.</p><p>Anda menjadi <b>Admin Teknis</b> sekolah. Atur kata sandi melalui tautan berikut (berlaku 72 jam):</p><p><a href="${inviteUrl}">${inviteUrl}</a></p><p>Setelah masuk, Anda dapat membuat akun staf lain dan mengatur perannya di menu Pengguna.</p>`,
+    `<p>Selamat, pendaftaran <b>${escapeHtml(made.schoolName)}</b> di platform Satu Sekolah sudah disetujui.</p><p>Anda menjadi <b>Admin Teknis</b> sekolah. Atur kata sandi melalui tautan berikut (berlaku 72 jam):</p><p><a href="${inviteUrl}">${inviteUrl}</a></p><p>Setelah masuk, Anda dapat membuat akun staf lain dan mengatur perannya di menu Pengguna.</p>`,
     'undangan Admin Teknis',
   )
   return { ok: true, tenantId: made.tenantId, adminUserId: made.adminUserId, schoolName: made.schoolName, slug: value.slug, domain: made.domain, inviteUrl, emailed, adminEmail: made.adminEmail, app: value.appPlan !== 'none' }

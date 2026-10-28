@@ -1,5 +1,5 @@
 /**
- * Karya siswa from Sekolahku App (Web↔App, addendum D). For a school that subscribes to the App and has the
+ * Karya siswa from Satu Sekolah App (Web↔App, addendum D). For a school that subscribes to the App and has the
  * "Karya siswa" feature on, the scheduler pulls works whose publication consent was given in the App and creates
  * them here as DRAFTS ("Ajukan Review") for editorial moderation — nothing is published automatically. Works whose
  * consent was withdrawn in the App get consentStatus "withdrawn", which hides them from the public site.
@@ -7,7 +7,7 @@
  */
 import { createHash } from 'crypto'
 import type { Payload } from 'payload'
-import { PORTAL_BASE_PATH, PORTAL_HOST_HEADER, PORTAL_PROXY_HEADER, PORTAL_SYNC_HEADER, hasProduct, type SchoolInfo } from '@sekolahku/core'
+import { PORTAL_BASE_PATH, PORTAL_HOST_HEADER, PORTAL_PROXY_HEADER, PORTAL_SYNC_HEADER, hasProduct, type SchoolInfo } from '@satusekolah/core'
 import { scopePayload } from '../tenancy/scoped'
 import { readFlags } from './flags'
 
@@ -17,7 +17,7 @@ type Feed = {
 }
 
 /** Editorial note of media created by the import (identifies them when consent is withdrawn). */
-const importNote = (ref: string) => `Dari Sekolahku App (karya ${ref}).`
+const importNote = (ref: string) => `Dari Satu Sekolah App (karya ${ref}).`
 
 const CATEGORIES = new Set(['tulisan', 'seni', 'sains', 'teknologi', 'video', 'proyek_sosial'])
 const EXT: Record<string, string> = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp' }
@@ -74,7 +74,7 @@ export async function syncAppWorks(payload: Payload, school: SchoolInfo, fetcher
         collection: 'media',
         overrideAccess: true,
         file: { data, mimetype: mime, name: `karya-${w.ref.slice(0, 8)}-${media.length + 1}.${EXT[mime]}`, size: data.length },
-        data: { alt: `Karya siswa: ${w.title}`.slice(0, 200), sha256: sha, consent: 'approved', reviewStatus: 'pending', license: 'Izin publikasi dari orang tua/wali, tercatat di Sekolahku App.', editorialNote: importNote(w.ref) },
+        data: { alt: `Karya siswa: ${w.title}`.slice(0, 200), sha256: sha, consent: 'approved', reviewStatus: 'pending', license: 'Izin publikasi dari orang tua/wali, tercatat di Satu Sekolah App.', editorialNote: importNote(w.ref) },
       } as never)
       media.push((doc as { id: number }).id)
     }
@@ -109,7 +109,7 @@ export async function syncAppWorks(payload: Payload, school: SchoolInfo, fetcher
         collection: 'student-works',
         id: d.id,
         overrideAccess: true,
-        context: { systemActor: 'Sekolahku App (izin ditarik)' },
+        context: { systemActor: 'Satu Sekolah App (izin ditarik)' },
         data: { consentStatus: 'withdrawn', _status: 'draft', workflowStatus: 'draft' },
       } as never)
       hidden++
@@ -120,7 +120,7 @@ export async function syncAppWorks(payload: Payload, school: SchoolInfo, fetcher
       collection: 'media',
       where: { and: [{ editorialNote: { equals: importNote(ref) } }, { reviewStatus: { not_equals: 'blocked' } }] },
       overrideAccess: true,
-      context: { systemActor: 'Sekolahku App (izin ditarik)' },
+      context: { systemActor: 'Satu Sekolah App (izin ditarik)' },
       data: { reviewStatus: 'blocked', consent: 'unknown', editorialNote: `${importNote(ref)} Izin publikasi ditarik di App — jangan dipakai.` },
     } as never)
   }

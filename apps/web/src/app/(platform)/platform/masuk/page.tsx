@@ -15,7 +15,7 @@ export default async function MasukPlatform() {
     <div className="pub__main">
       <main id="main" className="pub__box pub__box--narrow" tabIndex={-1}>
         <p className="small muted" style={{ letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 4 }}>
-          Sekolahku
+          Satu Sekolah
         </p>
         <h1>Konsol platform</h1>
         <p className="muted">Khusus Super Admin platform. Admin dan staf sekolah masuk lewat alamat website sekolahnya masing-masing.</p>

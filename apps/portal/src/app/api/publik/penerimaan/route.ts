@@ -3,7 +3,7 @@ import { publicSummary } from '@/modules/admissions/config'
 import { moduleOpen } from '@/server/settings'
 
 /**
- * Public admissions summary for the school's website (Sekolahku Web, addendum D: "ringkasan publik"): open/closed,
+ * Public admissions summary for the school's website (Satu Sekolah Web, addendum D: "ringkasan publik"): open/closed,
  * dates, paths and required documents. No applicant data. Cached briefly.
  */
 export async function GET() {

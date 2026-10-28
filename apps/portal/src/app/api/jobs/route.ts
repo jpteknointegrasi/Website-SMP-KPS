@@ -1,5 +1,5 @@
-import { hasProduct } from '@sekolahku/core'
-import { platformDatabaseUrl, schoolById } from '@sekolahku/core/registry'
+import { hasProduct } from '@satusekolah/core'
+import { platformDatabaseUrl, schoolById } from '@satusekolah/core/registry'
 import pg from 'pg'
 import { schoolDb } from '@/db/school-db'
 import { processOutbox } from '@/server/outbox'
@@ -8,7 +8,7 @@ import '@/modules/register'
 import { runScheduled } from '@/modules/jobs'
 
 /**
- * Background work for every school with Sekolahku App (cron, e.g. every 5 minutes): outbox delivery (e-mail,
+ * Background work for every school with Satu Sekolah App (cron, e.g. every 5 minutes): outbox delivery (e-mail,
  * notifications, events) and scheduled duties (expiring offers, due dates). Protected by CRON_SECRET.
  */
 export async function GET(req: Request) {

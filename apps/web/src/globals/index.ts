@@ -131,7 +131,7 @@ export const SiteSettings: GlobalConfig = {
           label: 'Tautan & Sosial',
           fields: [
             safeUrlField('portalUrl', 'URL Portal Sekolah', {
-              description: 'Kosong = tombol Portal Sekolah disembunyikan. Bila sekolah berlangganan Sekolahku App, tombol selalu "Masuk Portal" ke /portal dan isian ini tidak dipakai.',
+              description: 'Kosong = tombol Portal Sekolah disembunyikan. Bila sekolah berlangganan Satu Sekolah App, tombol selalu "Masuk Portal" ke /portal dan isian ini tidak dipakai.',
             }),
             safeUrlField('alumniUrl', 'URL Portal Alumni', {
               description: 'Kosong = tombol portal alumni disembunyikan.',

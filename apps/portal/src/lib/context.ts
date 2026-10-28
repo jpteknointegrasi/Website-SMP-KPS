@@ -1,8 +1,8 @@
 import 'server-only'
 import { cache } from 'react'
 import { cookies, headers } from 'next/headers'
-import { STAFF_COOKIE, fetchStaff, hasProduct, isLive, portalRequestHost, type SchoolInfo, type StaffMember } from '@sekolahku/core'
-import { schoolByHost } from '@sekolahku/core/registry'
+import { STAFF_COOKIE, fetchStaff, hasProduct, isLive, portalRequestHost, type SchoolInfo, type StaffMember } from '@satusekolah/core'
+import { schoolByHost } from '@satusekolah/core/registry'
 import { SchoolDbError, schoolDb } from '@/db/school-db'
 
 /** In production the portal only answers requests passed on by the website (fails closed on misconfiguration). */
@@ -17,7 +17,7 @@ export const portalSchool = cache(async (): Promise<SchoolInfo | null> => {
   return isLive(s) ? s : null
 })
 
-/** The school may use Sekolahku App right now. */
+/** The school may use Satu Sekolah App right now. */
 export const portalEnabled = cache(async () => hasProduct(await portalSchool(), 'app'))
 
 /**

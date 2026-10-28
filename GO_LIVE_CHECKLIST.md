@@ -12,7 +12,7 @@ Status per 28 Oktober 2026. ✅ selesai · ⏳ menunggu pemilik proyek/sekolah �
 | A5 | Isi awal resmi KPS (`/setup/isi-data`): 7 berita, 4 agenda, 51 foto, halaman Alumni IKA KPS | ✅ | |
 | A6 | Konten contoh tersembunyi di publik (`SHOW_DEMO_CONTENT=false`) | ✅ | |
 | A7 | Data privat tertutup untuk publik; Data API Supabase ditutup | ✅ | minat, pemesanan, pesan, berkas privat → 403 |
-| A8 | Tes otomatis | ✅ | core 8 · web 141 · portal 60, semua lulus |
+| A8 | Tes otomatis | ✅ | core 10 · web 190 · portal 78, semua lulus pada database baru (setelah perbaikan audit 28 Okt) |
 | A9 | Lighthouse HP & axe WCAG AA | ✅ | lihat QA_REPORT |
 | A10 | Audit keamanan independen (platform & App) | ✅ | semua temuan diperbaiki dan dites |
 | A11 | Peta pengalihan URL WordPress lama lengkap (`REDIRECT_MAP.csv`, 142 baris) | ✅ | 21 halaman, 109 artikel, kategori, tag, penulis |
@@ -24,9 +24,12 @@ Status per 28 Oktober 2026. ✅ selesai · ⏳ menunggu pemilik proyek/sekolah �
 | B1 | `WEB_ORIGIN` proyek App = alamat `….vercel.app` proyek website | ⏳ | Vercel → proyek App → Settings → Environment Variables → Redeploy. **Login staf App gagal sebelum ini benar** |
 | B2 | Ganti kata sandi akun CMS awal; hapus berkas rahasia lokal | ⏳ | Login CMS → Akun → ubah sandi (Admin Teknis KPS & operator platform) |
 | B3 | SMTP (Gmail + App Password) di proyek website **dan** App | ⏳ | Wajib sebelum menyetujui sekolah baru: undangan Admin Teknis (72 jam), reset sandi, verifikasi akun keluarga |
-| B4 | Cron job App `GET /portal/api/jobs` tiap 5–15 menit | ⏳ | cron-job.org, header `Authorization: Bearer <CRON_SECRET>`. Cron bawaan Vercel (paket Hobby) hanya sekali sehari |
-| B5 | Cron job Web `GET /api/payload-jobs/run` tiap jam | ⏳ | Header `Authorization: Bearer <CRON_SECRET>` website. Menjalankan penerbitan terjadwal, sinkron karya & penautan minat; cron Vercel bawaan hanya sekali sehari |
-| B6 | Backup pertama | ⏳ | Isi `apps/web/.env.vercel` (`DATABASE_URI` dari Supabase → Connect → Session pooler) → `BACKUP-DATA-PRODUKSI.bat`; ulangi tiap minggu |
+| B4 | Tugas terjadwal App `GET /portal/api/jobs` tiap 5–15 menit | ⏳ | Isi secret GitHub `APP_JOBS_URL` + `APP_CRON_SECRET` (workflow `cron.yml`, tiap 10 menit), atau cron-job.org dengan header `Authorization: Bearer <CRON_SECRET>` |
+| B5 | Tugas terjadwal Web `GET /api/payload-jobs/run` | ⏳ | Secret GitHub `WEB_JOBS_URL` + `WEB_CRON_SECRET` (workflow yang sama). Menjalankan terbit terjadwal, kuota kunjungan, sinkron karya & minat, retensi |
+| B6 | Backup pertama + uji pulih | ⏳ | `BACKUP-DATA-PRODUKSI.bat` (Web) dan `EKSPOR-DATA-APP.bat` (App KPS + berkas); uji pulih ke database terpisah (DEPLOYMENT_RUNBOOK §5); ulangi tiap minggu |
+| B7 | Monitor uptime | ⏳ | UptimeRobot/BetterStack → `https://www.smpkps.sch.id/api/kesehatan` tiap 5 menit |
+| B8 | `PLATFORM_DATABASE_URL` di proyek App = role hanya-baca | ⏳ | Wajib di produksi sejak perbaikan audit; tanpa ini App menolak berjalan |
+| B9 | `PLATFORM_NAME=Satu Sekolah` di kedua proyek Vercel | ⏳ | Bila masih "Sekolahku", judul CMS/konsol memakai nama lama |
 
 Paket gratis Supabase tidak menyediakan backup yang bisa diunduh atau dipulihkan ke titik waktu tertentu, jadi B6 adalah satu-satunya cadangan sampai proyek pindah ke paket berbayar.
 
@@ -47,16 +50,19 @@ Paket gratis Supabase tidak menyediakan backup yang bisa diunduh atau dipulihkan
 | D4 | Umumkan alamat baru | ⏳ | Bio Instagram @smpnas.kps, kanal KPS TV, grup orang tua |
 | D5 | Uji cepat setelah tayang | ⏳ | Beranda, Pendaftaran, Kontak (kirim 1 pesan uji lalu tandai *Spam*), login admin, login staf App |
 
-## E. Sekolahku App untuk KPS (bertahap)
+## E. Satu Sekolah App untuk KPS (bertahap)
 1. Isi Pengaturan sekolah (alamat, kontak, kepala sekolah, NIP).
 2. Tetapkan peran staf. BK dan UKS ditetapkan pimpinan, bukan Super Admin.
 3. Aktifkan modul Pilot dulu (Buku Induk, Kartu), staf saja.
 4. Undang orang tua setelah SMTP stabil.
 
-## F. Deploy berikutnya (cabang `tautan-minat-portal`)
-- Migrasi Web `20261028_054340_tautan_minat_portal` (aditif: 3 kolom minat + tugas terjadwal).
-- Migrasi App `0007_lead_link` per sekolah: `npm run portal:migrate -- --semua`.
-- Setelah deploy, buka `/setup/isi-data` di domain KPS untuk menambah 121 pengalihan baru (idempoten).
+## F. Deploy berikutnya (cabang `perbaikan-audit`, berisi `tautan-minat-portal`)
+1. Backup dulu (B6). Pastikan B8 terisi, lalu gabungkan ke `main`.
+2. Migrasi Web (otomatis saat build, semua aditif): `20261028_054340_tautan_minat_portal`, `20261028_155027_rate_limit_hits`, `20261028_155432_contact_idempotency`, `20261028_160043_retensi_data`.
+3. Migrasi App `0007_lead_link` per sekolah: `npm run portal:migrate -- --semua` (juga dijalankan build App).
+4. Buka `/setup/isi-data` di domain KPS untuk menambah 121 pengalihan baru (idempoten).
+5. Uji cepat: `/api/kesehatan` → 200; kirim satu pesan kontak; masuk staf App; Super Admin tidak bisa mengunduh berkas siswa.
+6. Isi B4/B5 (secret GitHub) dan B9 (`PLATFORM_NAME`).
 
 ## G. Data yang masih dibutuhkan dari sekolah
 Ringkasan per penanggung jawab ada di `CONTENT_GAPS.md` (#1–#36). Yang paling berpengaruh pada kesan pertama:
@@ -70,4 +76,4 @@ Ringkasan per penanggung jawab ada di `CONTENT_GAPS.md` (#1–#36). Yang paling 
 - Mingguan: backup, cek Pesan Masuk & Minat, panel Pengingat di dasbor.
 - Bulanan: tinjau FAQ, layanan (URL masih hidup?), dokumen lewat tanggal tinjau.
 - Setelah 1–2 minggu stabil: hapus database Neon, store Vercel Blob, dan proyek `sekolahku-uji-web`.
-- ➖ Paket Vercel: Hobby hanya untuk penggunaan non-komersial. Begitu platform dijual ke sekolah lain, pindah ke Pro (kode tidak berubah).
+- Paket Vercel & Supabase: Hobby/gratis hanya untuk penggunaan non-komersial dan tanpa backup terkelola. **Wajib** pindah ke Vercel Pro + Supabase berbayar sebelum menyetujui sekolah kedua yang membayar (kode tidak berubah).

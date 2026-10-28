@@ -31,9 +31,9 @@ describe('alamat sekolah', () => {
   it('host dinormalisasi; subdomain platform dikenali', () => {
     expect(normalizeHost('WWW.SmpKps.sch.id:443')).toBe('www.smpkps.sch.id')
     expect(normalizeHost('a.b., c')).toBe('a.b')
-    expect(subdomainSlug('sman1.sekolahku.id', 'sekolahku.id')).toBe('sman1')
-    expect(subdomainSlug('x.y.sekolahku.id', 'sekolahku.id')).toBeNull()
-    expect(subdomainSlug('sekolahku.id', 'sekolahku.id')).toBeNull()
+    expect(subdomainSlug('sman1.satusekolah.my.id', 'satusekolah.my.id')).toBe('sman1')
+    expect(subdomainSlug('x.y.satusekolah.my.id', 'satusekolah.my.id')).toBeNull()
+    expect(subdomainSlug('satusekolah.my.id', 'satusekolah.my.id')).toBeNull()
   })
 })
 
@@ -46,7 +46,7 @@ describe('produk dijual terpisah', () => {
     expect(hasProduct(school({ status: 'suspended' }), 'web')).toBe(false)
     expect(hasProduct(null, 'web')).toBe(false)
   })
-  it('penerimaan siswa baru di portal hanya bila Sekolahku App aktif', () => {
+  it('penerimaan siswa baru di portal hanya bila Satu Sekolah App aktif', () => {
     expect(admissionsMode(school())).toBe('web')
     expect(admissionsMode(school({ app: { plan: 'standard', status: 'active' } }))).toBe('app')
     expect(admissionsMode(school({ app: { plan: 'standard', status: 'paused' } }))).toBe('web')

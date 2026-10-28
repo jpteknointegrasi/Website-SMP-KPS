@@ -206,7 +206,7 @@ describe('APP-06 kartu siswa QR', () => {
     expect(card!.tokenHash).toHaveLength(64)
     const [printable] = await cards.cardsForPrint(c, [card!.id])
     expect(printable!.qr).toContain('<svg')
-    const token = /\/portal\/v\/([A-Za-z0-9_-]+)/.exec(cards.verifyUrl(c, (await import('@sekolahku/core')).openSecret(card!.tokenSealed)))![1]!
+    const token = /\/portal\/v\/([A-Za-z0-9_-]+)/.exec(cards.verifyUrl(c, (await import('@satusekolah/core')).openSecret(card!.tokenSealed)))![1]!
     const pub = await cards.verifyToken(ctxAnon(A), token)
     expect(pub).toMatchObject({ found: true, valid: true, status: 'Berlaku', detail: null })
     const staffView = await cards.verifyToken(ctxStaff(A, await staff(A, ['pustakawan'])), token)

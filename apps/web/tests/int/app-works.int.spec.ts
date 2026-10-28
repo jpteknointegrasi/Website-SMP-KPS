@@ -1,5 +1,5 @@
 /**
- * WEB-APP-01: karya siswa from Sekolahku App arrive as drafts in review (never published automatically), images
+ * WEB-APP-01: karya siswa from Satu Sekolah App arrive as drafts in review (never published automatically), images
  * become media awaiting review, re-runs create no duplicates, withdrawn consent hides the work, and the sync speaks
  * to the portal only with the shared secret.
  */
@@ -9,7 +9,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import config from '@/payload.config'
 import { syncAppWorks } from '@/lib/app-works'
 import { toInfo } from '@/tenancy/resolve'
-import { PORTAL_SYNC_HEADER } from '@sekolahku/core'
+import { PORTAL_SYNC_HEADER } from '@satusekolah/core'
 import { createTestSchool, dropTestSchool, type TestSchool } from './school'
 
 const RUN = `w${Date.now().toString(36)}`

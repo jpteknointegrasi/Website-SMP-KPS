@@ -3,7 +3,7 @@
  * state an authorised person can retry (§47.4). Consumers are idempotent (event ids are unique per event).
  */
 import { and, asc, eq, isNull, lte, sql } from 'drizzle-orm'
-import type { SchoolInfo } from '@sekolahku/core'
+import type { SchoolInfo } from '@satusekolah/core'
 import { mailLog, outboxEvents } from '@/db/schema'
 import type { SchoolDb } from '@/db/school-db'
 import { sendMail } from './mail'

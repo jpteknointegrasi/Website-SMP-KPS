@@ -1,5 +1,5 @@
 import 'server-only'
-import { hasProduct } from '@sekolahku/core'
+import { hasProduct } from '@satusekolah/core'
 import { rawPayload } from '@/lib/payload'
 import { toInfo } from '@/tenancy/resolve'
 import type { AuditLog, SchoolApplication, Tenant } from '@/payload-types'

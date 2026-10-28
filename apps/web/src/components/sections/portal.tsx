@@ -1,4 +1,4 @@
-/** Website sections fed by the school's Sekolahku App (public, consented content only). Render nothing without it. */
+/** Website sections fed by the school's Satu Sekolah App (public, consented content only). Render nothing without it. */
 import { portalAdmissions, portalPublic } from '@/lib/portal'
 import { formatDate } from '@/lib/format'
 

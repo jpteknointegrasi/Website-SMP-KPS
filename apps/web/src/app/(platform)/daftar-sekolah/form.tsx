@@ -85,13 +85,13 @@ export function ApplicationForm() {
         <label className="check">
           <input type="checkbox" name="wantWeb" defaultChecked={state ? v.wantWeb === 'on' : true} />
           <span>
-            <b>Sekolahku Web</b> — website sekolah & CMS: berita, agenda, galeri, informasi pendaftaran, minat & kunjungan.
+            <b>Satu Sekolah Web</b> — website sekolah & CMS: berita, agenda, galeri, informasi pendaftaran, minat & kunjungan.
           </span>
         </label>
         <label className="check">
           <input type="checkbox" name="wantApp" defaultChecked={v.wantApp === 'on'} />
           <span>
-            <b>Sekolahku App</b> — portal sekolah: penerimaan siswa baru, buku induk, presensi, nilai & rapor, layanan TU.
+            <b>Satu Sekolah App</b> — portal sekolah: penerimaan siswa baru, buku induk, presensi, nilai & rapor, layanan TU.
           </span>
         </label>
         {e.products ? <em className="fld">{e.products}</em> : null}

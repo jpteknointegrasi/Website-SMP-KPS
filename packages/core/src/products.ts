@@ -1,7 +1,7 @@
 /**
- * Sekolahku is sold as two products that a school buys separately:
- *   web — Sekolahku Web: public website + CMS, information, interest form, school visits / open house
- *   app — Sekolahku App: portal (PWA) for applicants, students, guardians, teachers, BK, staff; full admissions
+ * Satu Sekolah is sold as two products that a school buys separately:
+ *   web — Satu Sekolah Web: public website + CMS, information, interest form, school visits / open house
+ *   app — Satu Sekolah App: portal (PWA) for applicants, students, guardians, teachers, BK, staff; full admissions
  * Each product checks its own entitlement on the server. Neither product reads the other's tables.
  */
 import { timingSafeEqual } from 'crypto'

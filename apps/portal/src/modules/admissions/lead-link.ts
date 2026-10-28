@@ -1,5 +1,5 @@
 /**
- * Interest form (minat, Sekolahku Web) → application (Sekolahku App), addendum D: "App dapat menautkan minat ke
+ * Interest form (minat, Satu Sekolah Web) → application (Satu Sekolah App), addendum D: "App dapat menautkan minat ke
  * aplikasi pendaftaran dengan persetujuan pendaftar".
  *
  * - Only the family who owns the application can ask for the link, with an explicit consent. Staff cannot do it for

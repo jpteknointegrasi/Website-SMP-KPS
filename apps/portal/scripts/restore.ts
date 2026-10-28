@@ -1,7 +1,7 @@
 /**
  * Restores an export (scripts/export.ts) into the school's App database:
  *
- *   npm run pulihkan -w @sekolahku/portal -- --sekolah <kode> --dari <folder> --ya
+ *   npm run pulihkan -w @satusekolah/portal -- --sekolah <kode> --dari <folder> --ya
  *
  * Only into an EMPTY database of the same school that has been migrated (npm run migrate -- --sekolah <kode>):
  * refused if any data table holds rows or the database/export belongs to another school. Rows are loaded in

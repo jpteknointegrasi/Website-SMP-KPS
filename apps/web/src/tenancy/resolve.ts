@@ -1,8 +1,8 @@
 import type { Payload } from 'payload'
-import { isLive, normalizeHost, type SchoolInfo } from '@sekolahku/core'
+import { isLive, normalizeHost, type SchoolInfo } from '@satusekolah/core'
 import { DEFAULT_TENANT_SLUG, DEFAULT_TIMEZONE, PLATFORM_ROOT_DOMAIN, isSchoolTimezone } from './config'
 
-/** What the rest of the app needs to know about the school serving a request (shared shape with Sekolahku App). */
+/** What the rest of the app needs to know about the school serving a request (shared shape with Satu Sekolah App). */
 export type TenantInfo = SchoolInfo
 export { isLive, normalizeHost }
 

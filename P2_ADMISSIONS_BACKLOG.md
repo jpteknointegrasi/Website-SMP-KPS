@@ -1,6 +1,6 @@
 # Backlog P2 — Pendaftaran & Seleksi Lengkap (F14)
 
-> **Digantikan (Oktober 2026):** pendaftaran & seleksi lengkap dibangun di **Sekolahku App** (modul M14, `/portal/penerimaan`), bukan di website. Lihat `docs/BLUEPRINT_ADDENDUM_v2.1.md` bagian C. Dokumen ini disimpan sebagai catatan prasyarat kebijakan; flag website `fullAdmissions` tetap mati.
+> **Digantikan (Oktober 2026):** pendaftaran & seleksi lengkap dibangun di **Satu Sekolah App** (modul M14, `/portal/penerimaan`), bukan di website. Lihat `docs/BLUEPRINT_ADDENDUM_v2.1.md` bagian C. Dokumen ini disimpan sebagai catatan prasyarat kebijakan; flag website `fullAdmissions` tetap mati.
 
 Status di website: **tidak dibangun, flag `fullAdmissions` terkunci mati.** Mode "Pendaftaran lengkap" ditolak di CMS. Tidak ada pengumpulan dokumen siswa atau keputusan seleksi di website saat ini.
 

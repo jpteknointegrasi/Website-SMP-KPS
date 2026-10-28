@@ -1,5 +1,5 @@
 /**
- * Vercel build for Sekolahku Web: database migrations, then `next build`.
+ * Vercel build for Satu Sekolah Web: database migrations, then `next build`.
  *
  * Guard: a Preview build runs migrations only when the project states that its Preview database is a COPY
  * (PREVIEW_DATABASE_IS_COPY=true, set on the Preview environment only, pointing DATABASE_URI at a Neon branch or a

@@ -1,5 +1,5 @@
 /**
- * AUD-xx: fixes for the independent audit of Sekolahku Web (Oct 2026). Each describe block names its finding.
+ * AUD-xx: fixes for the independent audit of Satu Sekolah Web (Oct 2026). Each describe block names its finding.
  * Runs in a throw-away school; REST calls go through Payload's real route handlers with the school's Host header.
  */
 import { getPayload, type Payload, type PayloadRequest } from 'payload'

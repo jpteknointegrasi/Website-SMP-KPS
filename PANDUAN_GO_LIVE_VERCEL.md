@@ -1,5 +1,7 @@
 # Panduan Go-Live di Vercel (paket gratis)
 
+> **Arsip (Oktober 2026).** Panduan ini menjelaskan susunan awal satu sekolah dengan Neon + Vercel Blob. Produksi sekarang memakai **dua proyek Vercel (Web & App) + Supabase** dan multi-sekolah: lihat `DEPLOYMENT_RUNBOOK.md`, `PANDUAN_PLATFORM.md`, dan `GO_LIVE_CHECKLIST.md`. Bagian batas paket gratis dan syarat Vercel Hobby (non-komersial) tetap berlaku.
+
 Susunan: **Vercel Hobby** (website) + **Neon Free** (database PostgreSQL) + **Vercel Blob** (foto & dokumen). Semua dibuat dari dashboard Vercel, tanpa Supabase.
 
 > **Syarat paket gratis:** Vercel Hobby hanya untuk penggunaan non-komersial. Jika pembuat/pengelola website menerima bayaran, aturan Vercel mewajibkan paket Pro. Kode tidak perlu diubah saat pindah ke Pro.

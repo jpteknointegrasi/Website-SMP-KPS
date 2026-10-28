@@ -1,7 +1,7 @@
-# Panduan Sekolahku App (portal `/portal`)
+# Panduan Satu Sekolah App (portal `/portal`)
 
-Sekolahku App adalah portal sekolah untuk staf, siswa dan orang tua/wali. Dilayani di `/portal` pada domain sekolah,
-diteruskan oleh Sekolahku Web. Setiap sekolah memiliki database App sendiri. Rancangan lengkap: `BLUEPRINT_ADDENDUM_v2.1.md`.
+Satu Sekolah App adalah portal sekolah untuk staf, siswa dan orang tua/wali. Dilayani di `/portal` pada domain sekolah,
+diteruskan oleh Satu Sekolah Web. Setiap sekolah memiliki database App sendiri. Rancangan lengkap: `BLUEPRINT_ADDENDUM_v2.1.md`.
 
 ## 1. Siapa masuk ke mana
 
@@ -49,7 +49,7 @@ jalur & biaya pendaftaran.
 ```bash
 npm run portal:migrate -- --sekolah <kode>      # skema database App sekolah (aman diulang)
 npm run portal:demo -- --sekolah <kode> --admin <email-cms>   # DATA CONTOH — hanya database uji, ditolak di production
-npm test -w @sekolahku/portal                    # uji integrasi (butuh PostgreSQL lokal)
+npm test -w @satusekolah/portal                    # uji integrasi (butuh PostgreSQL lokal)
 ```
 
 Variabel lingkungan: `apps/portal/.env.example`. Wajib di produksi: `PLATFORM_DATABASE_URL` (role hanya-baca),

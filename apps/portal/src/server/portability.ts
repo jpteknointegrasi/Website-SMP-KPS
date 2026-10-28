@@ -15,7 +15,7 @@
 import { promises as fs } from 'fs'
 import path from 'path'
 import type pg from 'pg'
-import type { SchoolInfo } from '@sekolahku/core'
+import type { SchoolInfo } from '@satusekolah/core'
 import type { Storage } from './storage'
 
 export const EXPORT_FORMAT = 1

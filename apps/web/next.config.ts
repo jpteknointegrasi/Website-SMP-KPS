@@ -8,8 +8,8 @@ const __filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(__filename)
 
 const nextConfig: NextConfig = {
-  // shared code of Sekolahku Web & App (TypeScript source)
-  transpilePackages: ['@sekolahku/core'],
+  // shared code of Satu Sekolah Web & App (TypeScript source)
+  transpilePackages: ['@satusekolah/core'],
   // development only: open the site on a school's host name mapped to this machine (multi-school testing)
   allowedDevOrigins: (process.env.DEV_HOSTS || 'www.smpkps.sch.id,localhost,127.0.0.1').split(',').map((h) => h.trim()),
   outputFileTracingRoot: path.resolve(dirname, '../..'),

@@ -1,7 +1,7 @@
 /**
  * Exports a school's whole App database and its stored files (portability §30 / backup):
  *
- *   npm run ekspor -w @sekolahku/portal -- --sekolah <kode> [--keluar <folder>]
+ *   npm run ekspor -w @satusekolah/portal -- --sekolah <kode> [--keluar <folder>]
  *
  * Connects through the school registry (sealed database URL, ownership checked). Writes one JSON file per table,
  * the files under berkas/, and manifest.json (school, schema version, row counts, time). Default folder:

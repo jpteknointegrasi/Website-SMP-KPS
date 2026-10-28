@@ -1,11 +1,11 @@
 /**
- * POR-xx: Sekolahku App foundation against a real platform database (registry contract) and two real per-school
+ * POR-xx: Satu Sekolah App foundation against a real platform database (registry contract) and two real per-school
  * App databases. Everything created here is removed afterwards.
  */
 import { randomBytes } from 'crypto'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
-import { sealSecret } from '@sekolahku/core'
-import { appDatabaseUrl, clearRegistryCache, schoolByHost, schoolById } from '@sekolahku/core/registry'
+import { sealSecret } from '@satusekolah/core'
+import { appDatabaseUrl, clearRegistryCache, schoolByHost, schoolById } from '@satusekolah/core/registry'
 import { SchoolDbError, closeSchoolDbs, migrateSchoolDb, schoolDb } from '@/db/school-db'
 import { dropDatabase, quietPool } from './helpers'
 

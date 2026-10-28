@@ -4,8 +4,8 @@
  */
 import pg from 'pg'
 import { randomBytes } from 'crypto'
-import { sealSecret, type SchoolInfo } from '@sekolahku/core'
-import { clearRegistryCache, schoolById } from '@sekolahku/core/registry'
+import { sealSecret, type SchoolInfo } from '@satusekolah/core'
+import { clearRegistryCache, schoolById } from '@satusekolah/core/registry'
 import { closeSchoolDbs, migrateSchoolDb, schoolDb, type SchoolDb } from '@/db/school-db'
 import { staffMembers, staffRoles } from '@/db/schema'
 import { makeCtx, type AccountActor, type Ctx, type StaffActor } from '@/server/context'

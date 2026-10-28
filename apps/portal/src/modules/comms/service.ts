@@ -13,7 +13,7 @@ import { today } from '@/server/time'
 import { activeYear, guardianAccounts, homeroomStudents } from '../scope'
 import { scheduled } from '../jobs'
 import type { SchoolDb } from '@/db/school-db'
-import type { SchoolInfo } from '@sekolahku/core'
+import type { SchoolInfo } from '@satusekolah/core'
 import { makeCtx } from '@/server/context'
 
 export const AUDIENCE_LABEL: Record<Audience['type'], string> = { all: 'Semua warga sekolah', staff: 'Staf/guru', families: 'Semua siswa & orang tua', students: 'Siswa', guardians: 'Orang tua/wali', homerooms: 'Rombel tertentu', grades: 'Tingkat tertentu' }

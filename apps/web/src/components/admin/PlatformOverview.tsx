@@ -3,7 +3,7 @@ import React from 'react'
 import { isSuperAdmin } from '@/access/roles'
 import { toInfo } from '@/tenancy/resolve'
 import { tzAbbr } from '@/tenancy/config'
-import { PLAN_LABELS } from '@sekolahku/core'
+import { PLAN_LABELS } from '@satusekolah/core'
 
 const STATUS: Record<string, string> = { active: 'Aktif', trial: 'Uji coba', suspended: 'Ditangguhkan' }
 

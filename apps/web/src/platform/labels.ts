@@ -1,4 +1,4 @@
-import { PLAN_LABELS } from '@sekolahku/core'
+import { PLAN_LABELS } from '@satusekolah/core'
 
 export const SCHOOL_STATUS: Record<string, { label: string; tone: string }> = {
   active: { label: 'Aktif', tone: 'ok' },

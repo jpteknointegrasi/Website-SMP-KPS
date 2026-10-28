@@ -1,11 +1,11 @@
-# Sekolahku — Website & Portal Sekolah
+# Satu Sekolah — Website & Portal Sekolah
 
 Monorepo dua produk yang dijual terpisah, di atas satu inti (lihat `docs/BLUEPRINT_ADDENDUM_v2.1.md`):
 
 | Folder | Produk | Teknologi |
 |---|---|---|
-| `apps/web` | **Sekolahku Web**: website publik + CMS, minat, kunjungan/open house (sekolah pertama: SMP Nasional KPS) | Next.js 16 + Payload CMS 3 + PostgreSQL |
-| `apps/portal` | **Sekolahku App**: portal PWA di `/portal` (penerimaan siswa baru, akademik, layanan); database per sekolah | Next.js 16 + Drizzle + PostgreSQL |
+| `apps/web` | **Satu Sekolah Web**: website publik + CMS, minat, kunjungan/open house (sekolah pertama: SMP Nasional KPS) | Next.js 16 + Payload CMS 3 + PostgreSQL |
+| `apps/portal` | **Satu Sekolah App**: portal PWA di `/portal` (penerimaan siswa baru, akademik, layanan); database per sekolah | Next.js 16 + Drizzle + PostgreSQL |
 | `packages/core` | Inti bersama: sekolah/domain, zona waktu, langganan produk, login staf bersama, penyegelan rahasia | TypeScript |
 
 Perintah dijalankan dari folder utama (npm workspaces): `npm ci`, `npm run dev` (website, :3000), `npm run dev:portal`
