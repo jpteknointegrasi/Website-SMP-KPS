@@ -59,7 +59,7 @@ export async function DashboardOps({ payload, user, timezone }: { payload: Tenan
           </li>
           <li><a href="/admin/collections/visit-bookings?where[status][equals]=pending">Kunjungan menunggu konfirmasi: <strong>{pending}</strong></a><span>Terkonfirmasi: {confirmedUpcoming} · 30 hari: hadir {attended30}, tidak hadir {noshow30}</span></li>
         </ul>
-        {role === 'admissions' || user?.canExportLeads ? <p><a href="/api/leads/export">Unduh CSV minat (tercatat di audit)</a></p> : null}
+        {role === 'admissions' || user?.canExportLeads ? <p><a href="/api/leads/export">Unduh CSV minat (maks. 5.000 terbaru; tercatat di audit)</a></p> : null}
       </div>,
     )
   }

@@ -1,5 +1,6 @@
 import { randomBytes, randomInt } from 'crypto'
 import type { PayloadRequest } from 'payload'
+import { ipFromHeaders } from './rate-limit'
 
 /** Bump when the privacy text shown next to the consent checkbox changes materially. */
 export const CONSENT_VERSION = 'privasi-2026-10'
@@ -31,8 +32,7 @@ export const makeReference = (prefix: string) => {
 
 export const randomToken = () => randomBytes(24).toString('base64url')
 
-export const clientIp = (req: PayloadRequest) =>
-  req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || req.headers.get('x-real-ip') || 'local'
+export const clientIp = (req: PayloadRequest) => ipFromHeaders(req.headers)
 
 /** Spam: honeypot filled or submitted faster than a human could. */
 export const looksLikeBot = (body: { website?: unknown; startedAt?: unknown }) => {

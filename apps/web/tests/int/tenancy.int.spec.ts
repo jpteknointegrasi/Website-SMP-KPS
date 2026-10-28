@@ -112,6 +112,9 @@ describe('TEN-02 publik lewat REST (Host menentukan sekolah)', () => {
 })
 
 describe('TEN-03 staf sekolah A terhadap data sekolah B', () => {
+  it('akun staf uji tidak pernah menjadi Super Admin (aturan "akun pertama" tidak mengenai tes)', () => {
+    for (const u of Object.values(staff)) expect(u.role).not.toBe('superadmin')
+  })
   it('tidak dapat membaca draf/berita sekolah B', async () => {
     await expect(raw.findByID({ collection: 'posts', id: ids.Bdraft, draft: true, user: staff.Aeditor, overrideAccess: false })).rejects.toThrow()
     const list = await raw.find({ collection: 'posts', where: { slug: { equals: `ppdb-${RUN}` } }, user: staff.Aadmin, overrideAccess: false, draft: true })
@@ -195,7 +198,7 @@ describe('TEN-06 Payload ber-tenant (dipakai halaman, endpoint, job)', () => {
 
 describe('TEN-07 endpoint publik mengikuti alamat', () => {
   it('pesan kontak dari alamat B tersimpan di sekolah B saja', async () => {
-    const body = { name: `Penanya ${RUN}`, email: 'a@contoh.id', category: 'umum', message: 'Halo, saya ingin bertanya.', consent: true, startedAt: Date.now() - 10_000 }
+    const body = { name: `Penanya ${RUN}`, email: 'a@contoh.id', category: 'umum', message: 'Halo, saya ingin bertanya.', consent: true, startedAt: Date.now() - 10_000, idempotencyKey: randomBytes(16).toString('hex') }
     const req = { payload: raw, headers: new Headers({ host: B.domain, 'x-forwarded-for': '10.200.1.1' }), json: async () => body } as unknown as PayloadRequest
     const res = await contactSubmitEndpoint.handler(req)
     expect(res.status).toBe(200)
@@ -230,9 +233,9 @@ describe('TEN-08 fitur & paket per sekolah', () => {
 describe('TEN-09 audit & Super Admin', () => {
   it('log audit tercatat per sekolah; admin A tidak membaca log sekolah B', async () => {
     await raw.update({ collection: 'posts', id: ids.Bpost, user: staff.Beditor, overrideAccess: false, data: { title: `Rahasia B ${RUN}` } as never })
-    const mine = await raw.find({ collection: 'audit-logs', where: { docId: { equals: String(ids.Bpost) } }, user: staff.Aadmin, overrideAccess: false })
+    const mine = await raw.find({ collection: 'audit-logs', where: { and: [{ collectionSlug: { equals: 'posts' } }, { docId: { equals: String(ids.Bpost) } }] }, user: staff.Aadmin, overrideAccess: false })
     expect(mine.totalDocs).toBe(0)
-    const theirs = await raw.find({ collection: 'audit-logs', where: { docId: { equals: String(ids.Bpost) } }, user: staff.Badmin, overrideAccess: false })
+    const theirs = await raw.find({ collection: 'audit-logs', where: { and: [{ collectionSlug: { equals: 'posts' } }, { docId: { equals: String(ids.Bpost) } }] }, user: staff.Badmin, overrideAccess: false })
     expect(theirs.totalDocs).toBeGreaterThan(0)
   })
   it('Super Admin melihat kedua sekolah', async () => {
@@ -300,7 +303,7 @@ describe('TEN-12 langganan per produk (Web / App dijual terpisah)', () => {
     await raw.update({ collection: 'tenants', id: B.id, overrideAccess: true, data: { web: { plan: 'none', status: 'active' } } as never })
     clearTenantCache()
     expect(Object.values(await readFlags(B.payload)).some(Boolean)).toBe(false)
-    const body = { name: `Penanya ${RUN}`, email: 'a@contoh.id', category: 'umum', message: 'Halo, saya ingin bertanya.', consent: true, startedAt: Date.now() - 10_000 }
+    const body = { name: `Penanya ${RUN}`, email: 'a@contoh.id', category: 'umum', message: 'Halo, saya ingin bertanya.', consent: true, startedAt: Date.now() - 10_000, idempotencyKey: randomBytes(16).toString('hex') }
     const req = { payload: raw, headers: new Headers({ host: B.domain, 'x-forwarded-for': '10.202.1.1' }), json: async () => body } as unknown as PayloadRequest
     expect((await contactSubmitEndpoint.handler(req)).status).toBe(404)
     await raw.update({ collection: 'tenants', id: B.id, overrideAccess: true, data: { web: { plan: 'basic', status: 'active' } } as never })

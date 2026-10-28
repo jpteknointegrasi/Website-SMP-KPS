@@ -2,7 +2,7 @@ import { schoolTimezone } from '../tenancy/timezone'
 import type { CollectionConfig, Field } from 'payload'
 import { defineContent } from './_factory'
 import { safeUrlField, seoFields, slugField } from '../fields/common'
-import { editorialOnly, anyone, adminOnly } from '../access/roles'
+import { editorialOnly, anyone, adminOnly, isStaff } from '../access/roles'
 import { auditAfterChange, auditAfterDelete } from '../hooks/audit'
 
 const nowLte = () => ({ publishedAt: { less_than_equal: new Date().toISOString() } })
@@ -374,7 +374,14 @@ export const Staff = defineContent({
       { label: 'Tenaga kependidikan', value: 'staf' },
     ] },
     { name: 'subjects', type: 'text', label: 'Mata pelajaran / bidang', admin: { description: 'Pisahkan dengan koma. Contoh: Matematika, IPA. Hanya yang dikonfirmasi sekolah.' } },
-    { name: 'photo', type: 'upload', relationTo: 'media', label: 'Foto (setelah identitas diverifikasi)' },
+    {
+      name: 'photo',
+      type: 'upload',
+      relationTo: 'media',
+      label: 'Foto (setelah identitas diverifikasi)',
+      // not even the media id leaves the server without consent (REST /api/staff included)
+      access: { read: ({ req: { user }, doc }) => isStaff(user) || (doc as { publicationConsent?: boolean } | undefined)?.publicationConsent === true },
+    },
     { name: 'bio', type: 'textarea', label: 'Bio singkat', maxLength: 400, admin: { description: 'Jangan memuat NIK, alamat rumah, nomor pribadi atau data kepegawaian.' } },
     { name: 'publicationConsent', type: 'checkbox', label: 'Persetujuan publikasi foto', defaultValue: false, admin: { description: 'Foto hanya tampil publik bila dicentang.' } },
     { name: 'active', type: 'checkbox', label: 'Masih aktif', defaultValue: true, index: true, admin: { position: 'sidebar', description: 'Nonaktif = turun dari halaman publik; riwayat & audit tetap ada.' } },
@@ -436,6 +443,8 @@ export const Albums = defineContent({
   labels: { singular: 'Album', plural: 'Album Galeri' },
   group: 'Konten',
   defaultSort: '-eventDate',
+  // Photos of children: an album is public only with recorded publication consent (staff always see it).
+  publicWhere: () => ({ publicationConsent: { equals: true } }),
   fields: [
     titleField('Judul album'),
     slugField(),
@@ -451,7 +460,13 @@ export const Albums = defineContent({
         { name: 'caption', type: 'text', label: 'Keterangan' },
       ],
     },
-    { name: 'publicationConsent', type: 'checkbox', label: 'Persetujuan publikasi foto', defaultValue: false, admin: { position: 'sidebar' } },
+    {
+      name: 'publicationConsent',
+      type: 'checkbox',
+      label: 'Persetujuan publikasi foto',
+      defaultValue: false,
+      admin: { position: 'sidebar', description: 'Album hanya tampil publik bila dicentang, walaupun sudah diterbitkan.' },
+    },
   ],
 })
 

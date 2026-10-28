@@ -177,6 +177,7 @@ export interface Config {
       releaseVisitHolds: TaskReleaseVisitHolds;
       syncAppWorks: TaskSyncAppWorks;
       syncAppLeads: TaskSyncAppLeads;
+      anonymizeExpiredData: TaskAnonymizeExpiredData;
       schedulePublish: TaskSchedulePublish;
       inline: {
         input: unknown;
@@ -483,11 +484,17 @@ export interface Album {
         id?: string | null;
       }[]
     | null;
+  /**
+   * Album hanya tampil publik bila dicentang, walaupun sudah diterbitkan.
+   */
   publicationConsent?: boolean | null;
   /**
    * Kontributor: pilih "Ajukan Review" lalu klik Simpan Draf. Editor menerbitkan setelah review.
    */
   workflowStatus: 'draft' | 'in_review' | 'published' | 'archived';
+  /**
+   * Wajib diisi editor saat mengembalikan konten dari "Ajukan Review" ke Draf.
+   */
   reviewNote?: string | null;
   /**
    * Data contoh hanya tampil bila SHOW_DEMO_CONTENT=true. Produksi wajib false.
@@ -871,6 +878,9 @@ export interface Page {
    * Kontributor: pilih "Ajukan Review" lalu klik Simpan Draf. Editor menerbitkan setelah review.
    */
   workflowStatus: 'draft' | 'in_review' | 'published' | 'archived';
+  /**
+   * Wajib diisi editor saat mengembalikan konten dari "Ajukan Review" ke Draf.
+   */
   reviewNote?: string | null;
   /**
    * Data contoh hanya tampil bila SHOW_DEMO_CONTENT=true. Produksi wajib false.
@@ -943,6 +953,9 @@ export interface Post {
    * Kontributor: pilih "Ajukan Review" lalu klik Simpan Draf. Editor menerbitkan setelah review.
    */
   workflowStatus: 'draft' | 'in_review' | 'published' | 'archived';
+  /**
+   * Wajib diisi editor saat mengembalikan konten dari "Ajukan Review" ke Draf.
+   */
   reviewNote?: string | null;
   /**
    * Data contoh hanya tampil bila SHOW_DEMO_CONTENT=true. Produksi wajib false.
@@ -1038,6 +1051,9 @@ export interface MediaItem {
    * Kontributor: pilih "Ajukan Review" lalu klik Simpan Draf. Editor menerbitkan setelah review.
    */
   workflowStatus: 'draft' | 'in_review' | 'published' | 'archived';
+  /**
+   * Wajib diisi editor saat mengembalikan konten dari "Ajukan Review" ke Draf.
+   */
   reviewNote?: string | null;
   /**
    * Data contoh hanya tampil bila SHOW_DEMO_CONTENT=true. Produksi wajib false.
@@ -1180,6 +1196,9 @@ export interface Event {
    * Kontributor: pilih "Ajukan Review" lalu klik Simpan Draf. Editor menerbitkan setelah review.
    */
   workflowStatus: 'draft' | 'in_review' | 'published' | 'archived';
+  /**
+   * Wajib diisi editor saat mengembalikan konten dari "Ajukan Review" ke Draf.
+   */
   reviewNote?: string | null;
   /**
    * Data contoh hanya tampil bila SHOW_DEMO_CONTENT=true. Produksi wajib false.
@@ -1246,6 +1265,9 @@ export interface Document {
    * Kontributor: pilih "Ajukan Review" lalu klik Simpan Draf. Editor menerbitkan setelah review.
    */
   workflowStatus: 'draft' | 'in_review' | 'published' | 'archived';
+  /**
+   * Wajib diisi editor saat mengembalikan konten dari "Ajukan Review" ke Draf.
+   */
   reviewNote?: string | null;
   /**
    * Data contoh hanya tampil bila SHOW_DEMO_CONTENT=true. Produksi wajib false.
@@ -1332,6 +1354,9 @@ export interface Faq {
    * Kontributor: pilih "Ajukan Review" lalu klik Simpan Draf. Editor menerbitkan setelah review.
    */
   workflowStatus: 'draft' | 'in_review' | 'published' | 'archived';
+  /**
+   * Wajib diisi editor saat mengembalikan konten dari "Ajukan Review" ke Draf.
+   */
   reviewNote?: string | null;
   /**
    * Data contoh hanya tampil bila SHOW_DEMO_CONTENT=true. Produksi wajib false.
@@ -1405,6 +1430,9 @@ export interface StudentWork {
    * Kontributor: pilih "Ajukan Review" lalu klik Simpan Draf. Editor menerbitkan setelah review.
    */
   workflowStatus: 'draft' | 'in_review' | 'published' | 'archived';
+  /**
+   * Wajib diisi editor saat mengembalikan konten dari "Ajukan Review" ke Draf.
+   */
   reviewNote?: string | null;
   /**
    * Data contoh hanya tampil bila SHOW_DEMO_CONTENT=true. Produksi wajib false.
@@ -1495,6 +1523,9 @@ export interface Guide {
    * Kontributor: pilih "Ajukan Review" lalu klik Simpan Draf. Editor menerbitkan setelah review.
    */
   workflowStatus: 'draft' | 'in_review' | 'published' | 'archived';
+  /**
+   * Wajib diisi editor saat mengembalikan konten dari "Ajukan Review" ke Draf.
+   */
   reviewNote?: string | null;
   /**
    * Data contoh hanya tampil bila SHOW_DEMO_CONTENT=true. Produksi wajib false.
@@ -1570,6 +1601,9 @@ export interface Announcement {
    * Kontributor: pilih "Ajukan Review" lalu klik Simpan Draf. Editor menerbitkan setelah review.
    */
   workflowStatus: 'draft' | 'in_review' | 'published' | 'archived';
+  /**
+   * Wajib diisi editor saat mengembalikan konten dari "Ajukan Review" ke Draf.
+   */
   reviewNote?: string | null;
   /**
    * Data contoh hanya tampil bila SHOW_DEMO_CONTENT=true. Produksi wajib false.
@@ -1620,6 +1654,9 @@ export interface Service {
    * Kontributor: pilih "Ajukan Review" lalu klik Simpan Draf. Editor menerbitkan setelah review.
    */
   workflowStatus: 'draft' | 'in_review' | 'published' | 'archived';
+  /**
+   * Wajib diisi editor saat mengembalikan konten dari "Ajukan Review" ke Draf.
+   */
   reviewNote?: string | null;
   /**
    * Data contoh hanya tampil bila SHOW_DEMO_CONTENT=true. Produksi wajib false.
@@ -1672,6 +1709,9 @@ export interface Staff {
    * Kontributor: pilih "Ajukan Review" lalu klik Simpan Draf. Editor menerbitkan setelah review.
    */
   workflowStatus: 'draft' | 'in_review' | 'published' | 'archived';
+  /**
+   * Wajib diisi editor saat mengembalikan konten dari "Ajukan Review" ke Draf.
+   */
   reviewNote?: string | null;
   /**
    * Data contoh hanya tampil bila SHOW_DEMO_CONTENT=true. Produksi wajib false.
@@ -1747,6 +1787,9 @@ export interface Program {
    * Kontributor: pilih "Ajukan Review" lalu klik Simpan Draf. Editor menerbitkan setelah review.
    */
   workflowStatus: 'draft' | 'in_review' | 'published' | 'archived';
+  /**
+   * Wajib diisi editor saat mengembalikan konten dari "Ajukan Review" ke Draf.
+   */
   reviewNote?: string | null;
   /**
    * Data contoh hanya tampil bila SHOW_DEMO_CONTENT=true. Produksi wajib false.
@@ -1819,6 +1862,9 @@ export interface Extracurricular {
    * Kontributor: pilih "Ajukan Review" lalu klik Simpan Draf. Editor menerbitkan setelah review.
    */
   workflowStatus: 'draft' | 'in_review' | 'published' | 'archived';
+  /**
+   * Wajib diisi editor saat mengembalikan konten dari "Ajukan Review" ke Draf.
+   */
   reviewNote?: string | null;
   /**
    * Data contoh hanya tampil bila SHOW_DEMO_CONTENT=true. Produksi wajib false.
@@ -1890,6 +1936,9 @@ export interface Facility {
    * Kontributor: pilih "Ajukan Review" lalu klik Simpan Draf. Editor menerbitkan setelah review.
    */
   workflowStatus: 'draft' | 'in_review' | 'published' | 'archived';
+  /**
+   * Wajib diisi editor saat mengembalikan konten dari "Ajukan Review" ke Draf.
+   */
   reviewNote?: string | null;
   /**
    * Data contoh hanya tampil bila SHOW_DEMO_CONTENT=true. Produksi wajib false.
@@ -1963,6 +2012,9 @@ export interface Achievement {
    * Kontributor: pilih "Ajukan Review" lalu klik Simpan Draf. Editor menerbitkan setelah review.
    */
   workflowStatus: 'draft' | 'in_review' | 'published' | 'archived';
+  /**
+   * Wajib diisi editor saat mengembalikan konten dari "Ajukan Review" ke Draf.
+   */
   reviewNote?: string | null;
   /**
    * Data contoh hanya tampil bila SHOW_DEMO_CONTENT=true. Produksi wajib false.
@@ -2003,6 +2055,9 @@ export interface Testimonial {
    * Kontributor: pilih "Ajukan Review" lalu klik Simpan Draf. Editor menerbitkan setelah review.
    */
   workflowStatus: 'draft' | 'in_review' | 'published' | 'archived';
+  /**
+   * Wajib diisi editor saat mengembalikan konten dari "Ajukan Review" ke Draf.
+   */
   reviewNote?: string | null;
   /**
    * Data contoh hanya tampil bila SHOW_DEMO_CONTENT=true. Produksi wajib false.
@@ -2106,6 +2161,9 @@ export interface AdmissionsCycle {
    * Kontributor: pilih "Ajukan Review" lalu klik Simpan Draf. Editor menerbitkan setelah review.
    */
   workflowStatus: 'draft' | 'in_review' | 'published' | 'archived';
+  /**
+   * Wajib diisi editor saat mengembalikan konten dari "Ajukan Review" ke Draf.
+   */
   reviewNote?: string | null;
   /**
    * Data contoh hanya tampil bila SHOW_DEMO_CONTENT=true. Produksi wajib false.
@@ -2180,6 +2238,10 @@ export interface Lead {
   marketingOptIn?: boolean | null;
   consentVersion?: string | null;
   consentAt?: string | null;
+  /**
+   * Data pribadi dikosongkan otomatis sesuai Pengaturan Sekolah → Privasi & Retensi.
+   */
+  anonymizedAt?: string | null;
   idempotencyKey?: string | null;
   history?:
     | {
@@ -2264,6 +2326,10 @@ export interface VisitBooking {
   consentAt?: string | null;
   cancelTokenHash?: string | null;
   cancelTokenExpiresAt?: string | null;
+  /**
+   * Data pribadi dikosongkan otomatis sesuai Pengaturan Sekolah → Privasi & Retensi.
+   */
+  anonymizedAt?: string | null;
   idempotencyKey?: string | null;
   history?:
     | {
@@ -2304,6 +2370,11 @@ export interface ContactMessage {
    */
   linkedLead?: (number | null) | Lead;
   emailNotified?: boolean | null;
+  /**
+   * Data pribadi dikosongkan otomatis sesuai Pengaturan Sekolah → Privasi & Retensi.
+   */
+  anonymizedAt?: string | null;
+  idempotencyKey?: string | null;
   /**
    * Hanya Super Admin platform. Staf sekolah selalu bekerja di sekolahnya sendiri.
    */
@@ -2355,7 +2426,19 @@ export interface SiteSetting {
   notifyContactEmail?: string | null;
   notifyAdmissionsEmail?: string | null;
   /**
-   * Kosong = tombol Portal Sekolah disembunyikan.
+   * Minat berstatus Ditutup / Masuk proses resmi, dihitung dari tanggal masuk.
+   */
+  retensiMinatBulan?: number | null;
+  /**
+   * Pesan berstatus Selesai / Spam, dihitung dari tanggal masuk.
+   */
+  retensiPesanBulan?: number | null;
+  /**
+   * Pemesanan Hadir / Tidak hadir / Dibatalkan / Kedaluwarsa, dihitung dari tanggal pesan.
+   */
+  retensiKunjunganBulan?: number | null;
+  /**
+   * Kosong = tombol Portal Sekolah disembunyikan. Bila sekolah berlangganan Sekolahku App, tombol selalu "Masuk Portal" ke /portal dan isian ini tidak dipakai.
    */
   portalUrl?: string | null;
   /**
@@ -2593,7 +2676,8 @@ export interface PayloadJob {
     | {
         executedAt: string;
         completedAt: string;
-        taskSlug: 'inline' | 'releaseVisitHolds' | 'syncAppWorks' | 'syncAppLeads' | 'schedulePublish';
+        taskSlug:
+          'inline' | 'releaseVisitHolds' | 'syncAppWorks' | 'syncAppLeads' | 'anonymizeExpiredData' | 'schedulePublish';
         taskID: string;
         input?:
           | {
@@ -2626,7 +2710,9 @@ export interface PayloadJob {
         id?: string | null;
       }[]
     | null;
-  taskSlug?: ('inline' | 'releaseVisitHolds' | 'syncAppWorks' | 'syncAppLeads' | 'schedulePublish') | null;
+  taskSlug?:
+    | ('inline' | 'releaseVisitHolds' | 'syncAppWorks' | 'syncAppLeads' | 'anonymizeExpiredData' | 'schedulePublish')
+    | null;
   queue?: string | null;
   waitUntil?: string | null;
   processing?: boolean | null;
@@ -3805,6 +3891,7 @@ export interface LeadsSelect<T extends boolean = true> {
   marketingOptIn?: T;
   consentVersion?: T;
   consentAt?: T;
+  anonymizedAt?: T;
   idempotencyKey?: T;
   history?:
     | T
@@ -3868,6 +3955,7 @@ export interface VisitBookingsSelect<T extends boolean = true> {
   consentAt?: T;
   cancelTokenHash?: T;
   cancelTokenExpiresAt?: T;
+  anonymizedAt?: T;
   idempotencyKey?: T;
   history?:
     | T
@@ -3899,6 +3987,8 @@ export interface ContactMessagesSelect<T extends boolean = true> {
   internalNote?: T;
   linkedLead?: T;
   emailNotified?: T;
+  anonymizedAt?: T;
+  idempotencyKey?: T;
   tenant?: T;
   updatedAt?: T;
   createdAt?: T;
@@ -3925,6 +4015,9 @@ export interface SiteSettingsSelect<T extends boolean = true> {
   contactVerified?: T;
   notifyContactEmail?: T;
   notifyAdmissionsEmail?: T;
+  retensiMinatBulan?: T;
+  retensiPesanBulan?: T;
+  retensiKunjunganBulan?: T;
   portalUrl?: T;
   alumniUrl?: T;
   socials?:
@@ -4261,6 +4354,18 @@ export interface TaskSyncAppLeads {
   input?: unknown;
   output: {
     linked?: number | null;
+  };
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "TaskAnonymizeExpiredData".
+ */
+export interface TaskAnonymizeExpiredData {
+  input?: unknown;
+  output: {
+    leads?: number | null;
+    messages?: number | null;
+    visits?: number | null;
   };
 }
 /**

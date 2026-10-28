@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import { buildIcs, localDate } from '@/lib/ics'
 import { isSafeUrl } from '@/fields/common'
-import { validateContact, rateLimited } from '@/endpoints/contact'
+import { validateContact } from '@/endpoints/contact'
+import { memoryLimited as rateLimited } from '@/lib/rate-limit'
 import { formatEventWhen } from '@/lib/format'
 
 describe('ICS & tanggal WITA', () => {
@@ -39,7 +40,7 @@ describe('FORM-01/02 formulir kontak', () => {
     expect(errors.email).toBeTruthy()
     expect(errors.consent).toBeTruthy()
   })
-  it('membatasi laju pengiriman per IP', () => {
+  it('membatasi laju pengiriman per IP (cadangan memori)', () => {
     const ip = `ip-${Math.random()}`
     const results = Array.from({ length: 7 }, () => rateLimited(ip))
     expect(results.slice(0, 5).every((r) => !r)).toBe(true)

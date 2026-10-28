@@ -4,6 +4,7 @@ import '@fontsource-variable/plus-jakarta-sans'
 import '@fontsource-variable/inter'
 import './styles.css'
 import { Header } from '@/components/layout/Header'
+import { portalLink } from '@/lib/portal-link'
 import { Footer } from '@/components/layout/Footer'
 import { getFlags, getGlobals, getLinkFlags, hrefAllowed, listSocialAccounts } from '@/lib/queries'
 import { Analytics } from '@/components/ui/Analytics'
@@ -102,7 +103,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           items={header}
           schoolName={settings.schoolName}
           logoUrl={logo?.url}
-          portalUrl={settings.portalUrl || (hasProduct(school, 'app') ? PORTAL_BASE_PATH : null)}
+          portal={portalLink({ appActive: hasProduct(school, 'app'), portalUrl: settings.portalUrl })}
         />
         <main id="main" tabIndex={-1}>
           {children}

@@ -2,7 +2,7 @@ import type { Endpoint, Where } from 'payload'
 import { endpointPayload, noSchool } from '../tenancy/endpoint'
 import type { TenantPayload } from '../tenancy/scoped'
 import { createHash } from 'crypto'
-import { rateLimited } from './contact'
+import { rateLimited } from '../lib/rate-limit'
 import { readFlags, flagOff } from '../lib/flags'
 import { canSeeLeads } from '../access/roles'
 import { recordEvent } from '../lib/analytics'
@@ -130,7 +130,7 @@ export const visitBookingEndpoint: Endpoint = {
     if (!p) return noSchool()
     const flags = await readFlags(p)
     if (!flags.schoolVisits) return flagOff()
-    if (rateLimited(`visit:${clientIp(req)}`)) return json({ ok: false, error: 'Terlalu banyak pengiriman. Coba lagi beberapa menit lagi.' }, 429)
+    if (await rateLimited(p, `visit:${clientIp(req)}`)) return json({ ok: false, error: 'Terlalu banyak pengiriman. Coba lagi beberapa menit lagi.' }, 429)
     let body: Record<string, unknown> = {}
     try {
       body = ((await req.json?.()) ?? {}) as Record<string, unknown>
@@ -158,12 +158,15 @@ export const visitBookingEndpoint: Endpoint = {
     const status = session.requiresConfirmation ? 'pending' : 'confirmed'
     const token = randomToken()
     const reference = makeReference('KJG')
-    // link (never create) an existing lead with the same contact
+    // link (never create) an existing open lead with the same contact in the SAME admissions cycle as the session
+    // (a session without a cycle only links leads without a cycle)
     const contactOr: Where[] = []
     if (value.email) contactOr.push({ email: { equals: value.email } })
     if (value.phoneNormalized) contactOr.push({ phoneNormalized: { equals: value.phoneNormalized } })
+    const sessionCycle = session.cycle && typeof session.cycle === 'object' ? session.cycle.id : (session.cycle ?? null)
+    const sameCycle: Where = sessionCycle ? { cycle: { equals: sessionCycle } } : { or: [{ cycle: { exists: false } }, { cycle: { equals: null } }] }
     const lead = contactOr.length
-      ? (await p.find({ collection: 'leads', where: { and: [{ or: contactOr }, { status: { not_equals: 'closed' } }] }, sort: '-createdAt', limit: 1, depth: 0, overrideAccess: true })).docs[0]
+      ? (await p.find({ collection: 'leads', where: { and: [{ or: contactOr }, { status: { not_equals: 'closed' } }, sameCycle] }, sort: '-createdAt', limit: 1, depth: 0, overrideAccess: true })).docs[0]
       : undefined
     try {
       const { sessionId, ...rest } = value
@@ -209,7 +212,7 @@ export const visitCancelEndpoint: Endpoint = {
     const p = await endpointPayload(req)
     if (!p) return noSchool()
     if (!(await readFlags(p)).schoolVisits) return flagOff()
-    if (rateLimited(`cancel:${clientIp(req)}`)) return json({ ok: false, error: 'Terlalu banyak percobaan. Coba lagi nanti.' }, 429)
+    if (await rateLimited(p, `cancel:${clientIp(req)}`)) return json({ ok: false, error: 'Terlalu banyak percobaan. Coba lagi nanti.' }, 429)
     let body: Record<string, unknown> = {}
     try {
       body = ((await req.json?.()) ?? {}) as Record<string, unknown>

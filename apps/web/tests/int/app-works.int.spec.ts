@@ -20,6 +20,7 @@ let school: TestSchool
 let png: Buffer
 const env = { origin: process.env.PORTAL_ORIGIN, secret: process.env.PORTAL_PROXY_SECRET }
 let withdrawn: string[] = []
+let editor: any
 const calls: { url: string; secret: string | null; body?: string }[] = []
 
 const fetcher = (async (input: RequestInfo | URL, init?: RequestInit) => {
@@ -40,6 +41,7 @@ beforeAll(async () => {
   await school.payload.updateGlobal({ slug: 'feature-flags', overrideAccess: true, data: { studentWorks: true } })
   process.env.PORTAL_ORIGIN = 'http://portal.test'
   process.env.PORTAL_PROXY_SECRET = 'rahasia-sinkron-uji-0123456789'
+  editor = { ...(await school.payload.create({ collection: 'users', overrideAccess: true, data: { email: `${RUN}-editor@test.invalid`, password: `Pw-${RUN}-0123456789`, name: 'Editor', role: 'editor' } })), collection: 'users' }
   png = await sharp({ create: { width: 64, height: 48, channels: 3, background: { r: Math.floor(Math.random() * 255), g: 120, b: 200 } } }).png().toBuffer()
 })
 afterAll(async () => {
@@ -73,6 +75,18 @@ describe('WEB-APP-01 karya dari App', () => {
     withdrawn = [REF]
     expect(await syncAppWorks(raw, await info(), fetcher)).toMatchObject({ hidden: 1 })
     expect((await school.payload.find({ collection: 'student-works', where: { title: { equals: `Lukisan ${RUN}` } }, overrideAccess: false })).docs).toHaveLength(0)
+    // AUD-18: the work is unpublished (not just hidden) and its imported images can no longer be used
+    const after = (await school.payload.findByID({ collection: 'student-works', id: w.id, overrideAccess: true, depth: 0 })) as any
+    expect(after).toMatchObject({ _status: 'draft', workflowStatus: 'draft', consentStatus: 'withdrawn' })
+    const img = (await school.payload.findByID({ collection: 'media', id: w.cover.id, overrideAccess: true, depth: 0 })) as any
+    expect(img.reviewStatus).toBe('blocked')
+    expect(img.editorialNote).toMatch(/ditarik/)
+    // the cover picker of other content excludes it, and the server rejects it on publish (drafts skip validation)
+    await expect(
+      school.payload.create({ collection: 'posts', overrideAccess: false, user: editor, data: { title: `Pakai karya ${RUN}`, slug: `pakai-karya-${RUN}`, cover: w.cover.id, _status: 'published' } as never }),
+    ).rejects.toThrow(/Foto sampul/)
+    // a re-run changes nothing
+    expect(await syncAppWorks(raw, await info(), fetcher)).toMatchObject({ hidden: 0 })
   })
   it('dilewati bila fitur karya nonaktif atau tidak berlangganan App', async () => {
     await school.payload.updateGlobal({ slug: 'feature-flags', overrideAccess: true, data: { studentWorks: false } })

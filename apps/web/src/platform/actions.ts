@@ -3,7 +3,9 @@
  * Server actions of the platform pages. Thin wrappers: each re-checks the platform address and (for the console)
  * the signed-in Super Admin here — never trusting the page that rendered the form — then calls platform/service.ts.
  */
+import { headers } from 'next/headers'
 import { redirect } from 'next/navigation'
+import { ipFromHeaders } from '@/lib/rate-limit'
 import { revalidatePath } from 'next/cache'
 import { rawPayload } from '@/lib/payload'
 import { PLATFORM_ROOT_DOMAIN } from '@/tenancy/config'
@@ -23,7 +25,7 @@ export async function submitApplication(_prev: FormState, fd: FormData): Promise
   if (String(fd.get('website') ?? '').trim()) redirect('/daftar-sekolah/terkirim')
   const { value, errors } = readApplication(fd)
   if (Object.keys(errors).length) return { errors, message: 'Periksa kembali isian yang ditandai.', values: valuesOf(fd) }
-  const r = await createApplication(await rawPayload(), value)
+  const r = await createApplication(await rawPayload(), value, { ip: ipFromHeaders(await headers()) })
   if (!r.ok) return { message: r.message, values: valuesOf(fd) }
   redirect(`/daftar-sekolah/terkirim?ref=${encodeURIComponent(r.reference)}`)
 }

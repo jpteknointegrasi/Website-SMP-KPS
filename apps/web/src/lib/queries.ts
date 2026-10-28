@@ -12,6 +12,7 @@ import type {
 } from '@/payload-types'
 import { cache } from 'react'
 import { readFlags, type Flags } from './flags'
+import { demoAllowed } from '@/access/roles'
 
 /**
  * Public data access. Every query runs with overrideAccess:false and no user,
@@ -168,6 +169,33 @@ export async function findBySlug<T>(collection: string, slug: string, depth = 2)
   return (res.docs[0] as T) ?? null
 }
 
+/**
+ * An ARCHIVED announcement, for its own detail page only (brief §7.2: old links keep working with an "Diarsipkan"
+ * badge). Archived records stay non-public everywhere else: collection access (REST, lists, search, sitemap) is
+ * unchanged. This server-side read is limited to one slug, published, non-demo, archived announcements of this
+ * school, and selects only the fields the page shows (no staff-only fields).
+ */
+export async function findArchivedAnnouncement(slug: string): Promise<Announcement | null> {
+  const payload = await payloadClient()
+  const and: Where[] = [{ slug: { equals: slug } }, { _status: { equals: 'published' } }, { archivedAt: { exists: true } }, { archivedAt: { not_equals: null } }]
+  if (!demoAllowed()) and.push({ isDemo: { not_equals: true } })
+  const res = await payload.find({
+    collection: 'announcements',
+    where: { and },
+    limit: 1,
+    depth: 0,
+    draft: false,
+    overrideAccess: true,
+    select: { title: true, slug: true, excerpt: true, content: true, audience: true, category: true, displayStart: true, displayEnd: true, attachments: true, contact: true, archivedAt: true, isDemo: true, seo: true },
+  })
+  const a = res.docs[0] as Announcement | undefined
+  if (!a) return null
+  // attachments through PUBLIC access, like any page: a non-public document never appears
+  const ids = (a.attachments ?? []).map((d) => (typeof d === 'object' ? d.id : d))
+  const docs = ids.length ? (await payload.find({ collection: 'documents', where: { id: { in: ids } }, limit: ids.length, depth: 0, ...pub })).docs : []
+  return { ...a, attachments: docs }
+}
+
 export async function listCollection(collection: string, opts: { where?: Where; sort?: string; limit?: number; page?: number; depth?: number } = {}) {
   const payload = await payloadClient()
   return payload.find({
@@ -227,7 +255,13 @@ export async function search(q: string, type?: string, page = 1) {
       types.map(async (t) => {
         const res = await payload.find({
           collection: t,
-          where: { and: [notArchived, t === 'faqs' ? { title: { like: query } } : { or: [{ title: { like: query } }, { excerpt: { like: query } }] }] },
+          where: {
+            and: [
+              notArchived,
+              t === 'faqs' ? { title: { like: query } } : { or: [{ title: { like: query } }, { excerpt: { like: query } }] },
+              ...(t === 'pages' ? [{ slug: { in: Object.keys(PAGE_ROUTES) } }] : []),
+            ],
+          },
           limit: 30,
           depth: 0,
           ...pub,
@@ -235,8 +269,8 @@ export async function search(q: string, type?: string, page = 1) {
         return res.docs.map((d) => {
           const doc = d as { id: number; title: string; slug: string; excerpt?: string | null; updatedAt: string; publishedAt?: string | null }
           const href = t === 'pages' ? pagePath(doc.slug) : t === 'faqs' ? `/faq#${doc.slug}` : `${SEARCH_TYPES[t].base}/${doc.slug}`
-          return { type: t, label: SEARCH_TYPES[t].label, title: doc.title, excerpt: doc.excerpt ?? '', href, date: doc.publishedAt ?? doc.updatedAt }
-        })
+          return { type: t, label: SEARCH_TYPES[t].label, title: doc.title, excerpt: doc.excerpt ?? '', href: href ?? '', date: doc.publishedAt ?? doc.updatedAt }
+        }).filter((r) => r.href)
       }),
     )
   ).flat()
@@ -244,8 +278,18 @@ export async function search(q: string, type?: string, page = 1) {
   return { results: all.slice((page - 1) * perPage, page * perPage), total: all.length, totalPages: Math.ceil(all.length / perPage) }
 }
 
-export const pagePath = (slug: string) =>
-  ({ tentang: '/tentang', 'visi-misi': '/tentang/visi-misi', sejarah: '/tentang/sejarah', 'kebijakan-privasi': '/kebijakan-privasi', alumni: '/alumni' })[slug] ?? `/tentang`
+/**
+ * CMS pages that have a public route (each route reads its page by this slug). Other pages have no URL of their
+ * own, so search leaves them out instead of linking somewhere unrelated.
+ */
+export const PAGE_ROUTES: Record<string, string> = {
+  tentang: '/tentang',
+  'visi-misi': '/tentang/visi-misi',
+  sejarah: '/tentang/sejarah',
+  'kebijakan-privasi': '/kebijakan-privasi',
+  alumni: '/alumni',
+}
+export const pagePath = (slug: string): string | null => PAGE_ROUTES[slug] ?? null
 
 export type { Event }
 

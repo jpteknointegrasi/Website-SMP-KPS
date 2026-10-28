@@ -166,6 +166,7 @@ export const Leads: CollectionConfig = {
     { name: 'marketingOptIn', type: 'checkbox', label: 'Bersedia menerima info berikutnya', admin: { readOnly: true, position: 'sidebar' } },
     { name: 'consentVersion', type: 'text', label: 'Versi persetujuan', admin: { readOnly: true, position: 'sidebar' } },
     { name: 'consentAt', type: 'date', label: 'Waktu persetujuan', admin: { readOnly: true, position: 'sidebar' } },
+    { name: 'anonymizedAt', type: 'date', label: 'Dianonimkan (retensi)', index: true, admin: { readOnly: true, position: 'sidebar', description: 'Data pribadi dikosongkan otomatis sesuai Pengaturan Sekolah → Privasi & Retensi.' } },
     { name: 'idempotencyKey', type: 'text', unique: true, index: true, admin: { hidden: true } },
     historyField,
   ],
@@ -356,6 +357,7 @@ export const VisitBookings: CollectionConfig = {
     // sha256 of the self-cancel token; the token itself is shown once to the visitor and never stored
     { name: 'cancelTokenHash', type: 'text', index: true, access: { read: () => false, update: () => false }, admin: { hidden: true } },
     { name: 'cancelTokenExpiresAt', type: 'date', access: { read: ({ req: { user } }) => isStaff(user) }, admin: { hidden: true } },
+    { name: 'anonymizedAt', type: 'date', label: 'Dianonimkan (retensi)', index: true, admin: { readOnly: true, position: 'sidebar', description: 'Data pribadi dikosongkan otomatis sesuai Pengaturan Sekolah → Privasi & Retensi.' } },
     { name: 'idempotencyKey', type: 'text', unique: true, index: true, admin: { hidden: true } },
     historyField,
   ],

@@ -4,6 +4,7 @@ import { usePathname } from 'next/navigation'
 import React, { useEffect, useRef, useState } from 'react'
 import { Icon } from '../ui/Icon'
 import { ThemeToggle } from './ThemeToggle'
+import type { PortalLink } from '@/lib/portal-link'
 
 type Item = {
   label: string
@@ -15,12 +16,13 @@ export const Header = ({
   items,
   schoolName,
   logoUrl,
-  portalUrl,
+  portal,
 }: {
   items: Item[]
   schoolName: string
   logoUrl?: string | null
-  portalUrl?: string | null
+  /** from lib/portal-link.ts */
+  portal?: PortalLink
 }) => {
   const [open, setOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
@@ -154,13 +156,9 @@ export const Header = ({
               <Icon name="search" size={20} />
             </Link>
             <ThemeToggle />
-            {portalUrl ? (
-              <a
-                href={portalUrl}
-                className="btn btn--outline btn--sm hide-md"
-                {...(portalUrl.startsWith('/') ? {} : { target: '_blank', rel: 'noopener noreferrer' })}
-              >
-                Portal Sekolah
+            {portal ? (
+              <a href={portal.href} className="btn btn--outline btn--sm hide-md" {...(portal.external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}>
+                {portal.label}
               </a>
             ) : null}
             <Link href="/pendaftaran" className="btn btn--gold btn--sm hide-sm">
@@ -217,9 +215,9 @@ export const Header = ({
           <Link href="/pendaftaran" className="btn btn--gold">
             Informasi Pendaftaran
           </Link>
-          {portalUrl ? (
-            <a href={portalUrl} className="btn btn--line" {...(portalUrl.startsWith("/") ? {} : { target: "_blank", rel: "noopener noreferrer" })}>
-              Portal Sekolah
+          {portal ? (
+            <a href={portal.href} className="btn btn--line" {...(portal.external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}>
+              {portal.label}
             </a>
           ) : null}
         </div>

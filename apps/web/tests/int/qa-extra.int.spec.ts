@@ -63,18 +63,36 @@ describe('CMS-06 pulihkan revisi', () => {
 })
 
 describe('CMS-07 media yang dipakai tidak bisa dihapus', () => {
+  const blocked = (id: number) => expect(payload.delete({ collection: 'media', id, user: users.admin, overrideAccess: false })).rejects.toThrow(/masih dipakai/)
   it('dipakai berita, blok halaman, dan beranda → ditolak dengan daftar pemakaian', async () => {
     const m = track('media', await payload.create({ collection: 'media', user: users.editor, overrideAccess: false, data: { alt: `uji ${RUN}` }, file: file(png, 'image/png', 'a.png') } as never))
     const post = track('posts', await payload.create({ collection: 'posts', overrideAccess: true, data: { title: `Pakai ${RUN}`, slug: `pakai-${RUN}`, cover: m.id, _status: 'published' } as never }))
-    await expect(payload.delete({ collection: 'media', id: m.id, user: users.admin, overrideAccess: false })).rejects.toThrow(/masih dipakai/)
+    await blocked(m.id)
     await payload.update({ collection: 'posts', id: post.id, overrideAccess: true, data: { cover: null } as never })
     // used only inside a page block
     const pg = track('pages', await payload.create({ collection: 'pages', overrideAccess: true, data: { title: `Hal ${RUN}`, slug: `hal-${RUN}`, layout: [{ blockType: 'imageText', heading: 'x', image: m.id }], _status: 'published' } as never }))
-    await expect(payload.delete({ collection: 'media', id: m.id, user: users.admin, overrideAccess: false })).rejects.toThrow(/masih dipakai/)
+    await blocked(m.id)
     await payload.update({ collection: 'pages', id: pg.id, overrideAccess: true, data: { layout: [] } as never })
+    // used only on the homepage (hero slides, still a draft for a new school)
+    const home = (await payload.findGlobal({ slug: 'homepage', depth: 0, draft: true, overrideAccess: true })) as any
+    await payload.updateGlobal({ slug: 'homepage', overrideAccess: true, draft: true, data: { hero: { ...home.hero, slides: [m.id] } } as never })
+    await expect(payload.delete({ collection: 'media', id: m.id, user: users.admin, overrideAccess: false })).rejects.toThrow(/homepage\.hero\.slides/)
+    await payload.updateGlobal({ slug: 'homepage', overrideAccess: true, draft: true, data: { hero: { ...home.hero, slides: [] } } as never })
     // free now
     const del = await payload.delete({ collection: 'media', id: m.id, user: users.admin, overrideAccess: false })
     expect(del.id).toBe(m.id)
+    created.splice(created.findIndex((c) => c.collection === 'media' && c.id === m.id), 1)
+  })
+  it.each([
+    ['foto pembuka', 'heroImage', (id: number) => ({ heroImage: id }), /alumni-page\.heroImage/],
+    ['foto pengurus (array)', 'committee', (id: number) => ({ committee: [{ name: 'Ketua', role: 'Ketua IKA', photo: id }] }), /alumni-page\.committee\[0\]\.photo/],
+    ['gambar kegiatan (array)', 'activities', (id: number) => ({ activities: [{ title: 'Reuni', image: id }] }), /alumni-page\.activities\[0\]\.image/],
+  ])('dipakai halaman alumni: %s → ditolak', async (_n, key, data, where) => {
+    const m = track('media', await payload.create({ collection: 'media', user: users.editor, overrideAccess: false, data: { alt: `alumni ${RUN}` }, file: file(png, 'image/png', 'al.png') } as never))
+    await payload.updateGlobal({ slug: 'alumni-page', overrideAccess: true, data: data(m.id) as never })
+    await expect(payload.delete({ collection: 'media', id: m.id, user: users.admin, overrideAccess: false })).rejects.toThrow(where)
+    await payload.updateGlobal({ slug: 'alumni-page', overrideAccess: true, data: { [key]: key === 'heroImage' ? null : [] } as never })
+    expect((await payload.delete({ collection: 'media', id: m.id, user: users.admin, overrideAccess: false })).id).toBe(m.id)
     created.splice(created.findIndex((c) => c.collection === 'media' && c.id === m.id), 1)
   })
 })
@@ -119,7 +137,8 @@ describe('SEC-04 berkas privat', () => {
 })
 
 describe('FORM-01 formulir kontak', () => {
-  const call = async (body: Record<string, unknown>) => {
+  const call = async (input: Record<string, unknown>) => {
+    const body = { idempotencyKey: randomBytes(16).toString('hex'), ...input }
     const req = { payload, headers: new Headers({ host: school.domain, 'x-forwarded-for': `10.77.${Math.floor(Math.random() * 250)}.${Math.floor(Math.random() * 250)}` }), json: async () => body } as unknown as PayloadRequest
     const res = await contactSubmitEndpoint.handler(req)
     return { status: res.status, json: await res.json() }
