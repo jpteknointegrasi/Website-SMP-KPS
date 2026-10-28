@@ -8,6 +8,7 @@ import * as migration_20261026_032802_product_subscriptions from './20261026_032
 import * as migration_20261027_011036_app_karya from './20261027_011036_app_karya';
 import * as migration_20261027_085548_alumni_ika_agenda from './20261027_085548_alumni_ika_agenda';
 import * as migration_20261027_180348_platform_school_applications from './20261027_180348_platform_school_applications';
+import * as migration_20261028_054340_tautan_minat_portal from './20261028_054340_tautan_minat_portal';
 
 export const migrations = [
   {
@@ -58,6 +59,11 @@ export const migrations = [
   {
     up: migration_20261027_180348_platform_school_applications.up,
     down: migration_20261027_180348_platform_school_applications.down,
-    name: '20261027_180348_platform_school_applications'
+    name: '20261027_180348_platform_school_applications',
+  },
+  {
+    up: migration_20261028_054340_tautan_minat_portal.up,
+    down: migration_20261028_054340_tautan_minat_portal.down,
+    name: '20261028_054340_tautan_minat_portal'
   },
 ];

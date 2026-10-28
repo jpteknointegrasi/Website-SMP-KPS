@@ -110,6 +110,12 @@ export const applications = pgTable(
     assistedReason: text('assisted_reason'),
     duplicateOf: uuid('duplicate_of'),
     withdrawnAt: ts('withdrawn_at'),
+    // Link to an interest form (minat) the family filled on the school website (addendum D), with their consent
+    leadLinkState: text('lead_link_state'), // null | requested | linked | not_found
+    leadLinkConsentAt: ts('lead_link_consent_at'),
+    leadRef: text('lead_ref'), // the website's interest reference number
+    leadDate: ts('lead_date'),
+    leadCheckedAt: ts('lead_checked_at'),
     createdAt: ts('created_at').notNull().defaultNow(),
     updatedAt: ts('updated_at').notNull().defaultNow(),
     version: integer('version').notNull().default(1),
@@ -118,6 +124,7 @@ export const applications = pgTable(
     uniqueIndex('applications_regno_uq').on(t.registrationNo),
     index('applications_cycle_status_idx').on(t.cycleId, t.status),
     index('applications_owner_idx').on(t.ownerAccountId),
+    index('applications_lead_link_idx').on(t.leadLinkState),
   ],
 )
 

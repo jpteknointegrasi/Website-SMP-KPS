@@ -47,9 +47,9 @@ Mode dipilih otomatis oleh `admissionsMode()`. Satu periode hanya punya **satu**
 | Data | Sumber resmi | Ke produk lain | Mekanisme |
 |---|---|---|---|
 | Profil, berita, galeri, halaman, FAQ publik | Web | — | — |
-| Minat calon orang tua, kunjungan/open house | Web | App dapat menautkan minat ke aplikasi pendaftaran dengan persetujuan pendaftar | API Web → App (berikutnya) |
-| Periode/gelombang/kuota/hasil penerimaan | App | Ringkasan publik (status dibuka/ditutup, tanggal) tampil di website | Event `admission.cycle_published` → Web (berikutnya) |
-| Kalender akademik | App | Kegiatan bertanda *publik* tampil di agenda website | Event/API App → Web (berikutnya) |
+| Minat calon orang tua, kunjungan/open house | Web | App dapat menautkan minat ke aplikasi pendaftaran dengan persetujuan pendaftar | Sinkron server-ke-server `/portal/api/sinkron/minat` (dibangun 28 Okt) |
+| Periode/gelombang/kuota/hasil penerimaan | App | Ringkasan publik (status dibuka/ditutup, tanggal) tampil di website | API publik `/portal/api/publik/penerimaan`, dibaca website sisi server |
+| Kalender akademik | App | Kegiatan bertanda *publik* tampil di agenda website | API publik `/portal/api/publik/website`, dibaca website sisi server |
 | Pengumuman terarah (kelas, wali) | App | Tidak | — |
 | Karya, prestasi, cerita dari data siswa | App (data privat) | Usulan ke website setelah kurasi dan consent | Usulan → Web sebagai draf |
 | Akun staf | Inti (saat ini tabel `users` Web) | Dipakai App lewat login bersama | ADR-05 |
@@ -139,6 +139,8 @@ sekolahku/
 | Audit keamanan independen tahap App | completed | 1 tinggi + 6 sedang + beberapa rendah, diperbaiki dan dites (SEC-01..02) |
 | Karya siswa App → website (izin wali, moderasi CMS, penarikan izin) | completed | KRY-01, WEB-APP-01; sinkron server-ke-server `x-sekolahku-sync` |
 | Cakupan akses bantuan (operasional / data siswa) | completed | KRY-02, CMP-06 |
+| Pendaftaran sekolah publik + konsol Super Admin; mode tata kelola Super Admin di App | completed | PLT-01/02 |
+| Penautan minat ↔ pendaftaran atas persetujuan keluarga (bagian D) | completed | LEAD-01..03, WEB-APP-02 |
 
-Panduan operasional: `docs/PANDUAN_APP.md`. Semua uji: core 8, web 127, portal 53. **Belum di produksi**: jangan aktifkan
-langganan App untuk sekolah nyata sebelum diuji di Preview pada branch database terpisah (PANDUAN_APP §4).
+Panduan operasional: `docs/PANDUAN_APP.md`. Semua uji: core 8, web 141, portal 60. Semua bagian addendum ini sudah dibangun.
+Produksi sejak 27 Oktober 2026 (Supabase); untuk KPS modul App diaktifkan bertahap (PANDUAN_APP §4).

@@ -6,6 +6,7 @@ import React from 'react'
 import { fieldsFor, RELATION_LABEL, type AppField } from '@/modules/admissions/fields'
 import type { applicationView } from '@/modules/admissions/apply'
 import { OUTCOME } from '@/modules/admissions/fields'
+import { LEAD_LINK_LABEL } from '@/modules/admissions/lead-link'
 import { fmtDate, fmtDateTime } from '@/server/time'
 import { GENDER_LABEL } from '@/modules/students/fields'
 import { APP_TONE, DOC_TONE, INVOICE_TONE, ITEM_TONE, PARTICIPANT_TONE, PAYMENT_TONE, REENROLL_TONE } from './tones'
@@ -348,7 +349,64 @@ export function StatusSummary({ v, tz }: { v: View; tz: string }) {
       </dd>
       <dt>Dikirim</dt>
       <dd>{v.app.submittedAt ? fmtDateTime(v.app.submittedAt, tz) : '—'}</dd>
+      {v.app.leadLinkState ? (
+        <>
+          <dt>Formulir minat website</dt>
+          <dd>
+            {LEAD_LINK_LABEL[v.app.leadLinkState] ?? v.app.leadLinkState}
+            {v.app.leadLinkState === 'linked' && v.app.leadRef ? (
+              <>
+                {' '}
+                · <span className="mono">{v.app.leadRef}</span>
+                {v.app.leadDate ? ` (${fmtDate(v.app.leadDate, tz)})` : ''}
+              </>
+            ) : null}
+          </dd>
+        </>
+      ) : null}
     </dl>
+  )
+}
+
+/**
+ * The family links this application to the interest form they filled on the school website (Sekolahku Web), with
+ * explicit consent. Shown only when the school also runs the website product.
+ */
+export function LeadLinkPanel({ v, back, tz }: { v: View; back: string; tz: string }) {
+  const s = v.app.leadLinkState
+  if (['withdrawn', 'rejected'].includes(v.app.status) && s !== 'linked') return null
+  return (
+    <Card title="Formulir minat di website">
+      {s === 'linked' ? (
+        <p className="small" style={{ margin: 0 }}>
+          Pendaftaran ini sudah tertaut dengan formulir minat <span className="mono">{v.app.leadRef}</span>
+          {v.app.leadDate ? ` yang Anda isi pada ${fmtDate(v.app.leadDate, tz)}` : ''}.
+        </p>
+      ) : s === 'requested' ? (
+        <>
+          <p className="small">Permintaan penautan sudah dicatat dan menunggu pencocokan dengan website sekolah (biasanya kurang dari satu jam).</p>
+          <ActionForm action="ppdb.batal_tautkan_minat" back={back} hidden={{ id: v.app.id }}>
+            <Submit tone="ghost">Batalkan permintaan</Submit>
+          </ActionForm>
+        </>
+      ) : (
+        <>
+          {s === 'not_found' ? (
+            <Notice tone="warn" title="Belum ditemukan">
+              Tidak ada formulir minat dengan email akun ini. Bila Anda mengisinya dengan email lain, hubungi panitia penerimaan.
+            </Notice>
+          ) : null}
+          <p className="small">
+            Pernah mengisi formulir minat di website sekolah? Tautkan agar panitia tahu riwayat komunikasi Anda. Pencocokan memakai email akun ini; tidak ada data
+            lain yang dipindahkan.
+          </p>
+          <ActionForm action="ppdb.tautkan_minat" back={back} hidden={{ id: v.app.id }}>
+            <Check name="setuju" label="Saya setuju pendaftaran ini ditautkan dengan formulir minat yang saya isi di website sekolah." />
+            <Submit tone="ghost">Tautkan formulir minat</Submit>
+          </ActionForm>
+        </>
+      )}
+    </Card>
   )
 }
 
