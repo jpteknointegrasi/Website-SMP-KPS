@@ -10,6 +10,7 @@ import { REST_GET } from '@payloadcms/next/routes'
 import config from '@/payload.config'
 import type { TenantPayload } from '@/tenancy/scoped'
 import { createTestSchool, dropTestSchool, type TestSchool } from './school'
+import { runAsTenant } from '@/lib/payload'
 
 const RUN = `a${Date.now().toString(36)}`
 let raw: Payload
@@ -295,5 +296,20 @@ describe('AUD-09 retensi data (anonimisasi, bawaan mati)', () => {
   it('terdaftar sebagai tugas terjadwal Payload', () => {
     const task = (payload.config.jobs?.tasks ?? []).find((t) => t.slug === 'anonymizeExpiredData')
     expect(task?.schedule?.length).toBeGreaterThan(0)
+  })
+})
+
+describe('AUD-10 tautan hasil pencarian halaman', () => {
+  it('halaman ber-rute ditautkan ke rutenya; halaman tanpa rute tidak muncul (bukan ke /tentang)', async () => {
+    const { search, pagePath } = await import('@/lib/queries')
+    const word = `Cariuji${RUN}`
+    const pub = { _status: 'published', workflowStatus: 'published' }
+    // a routed page (slug "sejarah") in this test school, plus a page with no route of its own
+    await payload.create({ collection: 'pages', overrideAccess: true, data: { title: `Sejarah ${word}`, slug: 'sejarah', ...pub } as never })
+    await payload.create({ collection: 'pages', overrideAccess: true, data: { title: `Halaman lepas ${word}`, slug: `lepas-${RUN}`, ...pub } as never })
+    const r = await runAsTenant(school.id, () => search(word, 'pages'))
+    expect(r.results.map((x) => x.href)).toEqual(['/tentang/sejarah'])
+    expect(pagePath('tidak-ada')).toBeNull()
+    expect(pagePath('kebijakan-privasi')).toBe('/kebijakan-privasi')
   })
 })

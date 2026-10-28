@@ -227,7 +227,13 @@ export async function search(q: string, type?: string, page = 1) {
       types.map(async (t) => {
         const res = await payload.find({
           collection: t,
-          where: { and: [notArchived, t === 'faqs' ? { title: { like: query } } : { or: [{ title: { like: query } }, { excerpt: { like: query } }] }] },
+          where: {
+            and: [
+              notArchived,
+              t === 'faqs' ? { title: { like: query } } : { or: [{ title: { like: query } }, { excerpt: { like: query } }] },
+              ...(t === 'pages' ? [{ slug: { in: Object.keys(PAGE_ROUTES) } }] : []),
+            ],
+          },
           limit: 30,
           depth: 0,
           ...pub,
@@ -235,8 +241,8 @@ export async function search(q: string, type?: string, page = 1) {
         return res.docs.map((d) => {
           const doc = d as { id: number; title: string; slug: string; excerpt?: string | null; updatedAt: string; publishedAt?: string | null }
           const href = t === 'pages' ? pagePath(doc.slug) : t === 'faqs' ? `/faq#${doc.slug}` : `${SEARCH_TYPES[t].base}/${doc.slug}`
-          return { type: t, label: SEARCH_TYPES[t].label, title: doc.title, excerpt: doc.excerpt ?? '', href, date: doc.publishedAt ?? doc.updatedAt }
-        })
+          return { type: t, label: SEARCH_TYPES[t].label, title: doc.title, excerpt: doc.excerpt ?? '', href: href ?? '', date: doc.publishedAt ?? doc.updatedAt }
+        }).filter((r) => r.href)
       }),
     )
   ).flat()
@@ -244,8 +250,18 @@ export async function search(q: string, type?: string, page = 1) {
   return { results: all.slice((page - 1) * perPage, page * perPage), total: all.length, totalPages: Math.ceil(all.length / perPage) }
 }
 
-export const pagePath = (slug: string) =>
-  ({ tentang: '/tentang', 'visi-misi': '/tentang/visi-misi', sejarah: '/tentang/sejarah', 'kebijakan-privasi': '/kebijakan-privasi', alumni: '/alumni' })[slug] ?? `/tentang`
+/**
+ * CMS pages that have a public route (each route reads its page by this slug). Other pages have no URL of their
+ * own, so search leaves them out instead of linking somewhere unrelated.
+ */
+export const PAGE_ROUTES: Record<string, string> = {
+  tentang: '/tentang',
+  'visi-misi': '/tentang/visi-misi',
+  sejarah: '/tentang/sejarah',
+  'kebijakan-privasi': '/kebijakan-privasi',
+  alumni: '/alumni',
+}
+export const pagePath = (slug: string): string | null => PAGE_ROUTES[slug] ?? null
 
 export type { Event }
 
