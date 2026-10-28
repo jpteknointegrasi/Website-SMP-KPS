@@ -313,3 +313,17 @@ describe('AUD-10 tautan hasil pencarian halaman', () => {
     expect(pagePath('kebijakan-privasi')).toBe('/kebijakan-privasi')
   })
 })
+
+describe('AUD-11 API minat mengikuti aturan "ditutup → hubungi sekolah"', () => {
+  it('siklus ditutup dengan tawaran kontak → POST /api/leads/submit 403; tawaran minat berikutnya → 200', async () => {
+    const { interestSubmitEndpoint } = await import('@/endpoints/interest')
+    await payload.updateGlobal({ slug: 'feature-flags', overrideAccess: true, data: { interestForm: true } })
+    const cycle = await payload.create({ collection: 'admissions-cycles', overrideAccess: true, data: { academicYear: '2097/2098', admissionStatus: 'closed', mode: 'interest_form', interestFormEnabled: true, closedOffer: 'contact', _status: 'published', workflowStatus: 'published' } as never })
+    const body = () => ({ parentName: `Wali Tutup ${RUN}`, phone: '081234567890', interests: ['info'], consent: true, cycle: cycle.id, idempotencyKey: randomBytes(16).toString('hex') })
+    const closed = await interestSubmitEndpoint.handler(epReq(body()))
+    expect(closed.status).toBe(403)
+    expect((await payload.count({ collection: 'leads', where: { parentName: { equals: `Wali Tutup ${RUN}` } }, overrideAccess: true })).totalDocs).toBe(0)
+    await payload.update({ collection: 'admissions-cycles', id: cycle.id, overrideAccess: true, data: { closedOffer: 'interest_next' } as never })
+    expect((await interestSubmitEndpoint.handler(epReq(body()))).status).toBe(200)
+  })
+})

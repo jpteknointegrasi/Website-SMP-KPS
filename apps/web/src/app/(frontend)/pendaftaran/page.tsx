@@ -10,6 +10,7 @@ import { RichText } from '@/components/ui/RichText'
 import { Icon } from '@/components/ui/Icon'
 import { STATUS_LABEL } from '@/components/sections/home'
 import { formatDate } from '@/lib/format'
+import { interestOpenFor } from '@/lib/admissions'
 import { DocumentList } from '@/components/content/DocumentList'
 import { MediaEmbed } from '@/components/media/MediaCard'
 import { FaqList } from '@/components/content/FaqList'
@@ -37,11 +38,8 @@ export default async function Page() {
   const viaPortal = admissionsMode(await currentTenant()) === 'app'
   const openExternal = !viaPortal && status === 'open' && externalOk
   const openPortal = viaPortal && status === 'open'
-  const interestOn =
-    flags.interestForm &&
-    Boolean(cycle) &&
-    (cycle!.interestFormEnabled || mode === 'interest_form') &&
-    (status !== 'closed' || cycle!.closedOffer === 'interest_next')
+  // same rule as /pendaftaran/minat and POST /api/leads/submit
+  const interestOn = flags.interestForm && interestOpenFor(cycle)
   const docs = (cycle?.infoDocuments ?? []).filter((d): d is Document => typeof d === 'object' && d !== null)
   const videos = (cycle?.videos ?? []).filter((v): v is MediaItem => typeof v === 'object' && v !== null)
 

@@ -5,6 +5,7 @@ import { readFlags, flagOff } from '../lib/flags'
 import { canExportLeads } from '../access/roles'
 import { auditAction } from '../hooks/audit'
 import { recordEvent } from '../lib/analytics'
+import { interestOpenFor } from '../lib/admissions'
 import {
   CONSENT_VERSION,
   EMAIL_RE,
@@ -70,9 +71,9 @@ export const interestSubmitEndpoint: Endpoint = {
     }
     if (looksLikeBot(body)) return json({ ok: true, reference: makeReference('MNT') })
 
-    // the cycle must be published and allow the interest form
+    // the cycle must be published and accept the interest form (same rule as /pendaftaran and /pendaftaran/minat)
     const cycles = await p.find({ collection: 'admissions-cycles', sort: '-academicYear', limit: 5, depth: 0, overrideAccess: false, draft: false })
-    const allowed = cycles.docs.filter((c) => c.interestFormEnabled || c.mode === 'interest_form')
+    const allowed = cycles.docs.filter(interestOpenFor)
     if (!allowed.length) return json({ ok: false, error: 'Form minat sedang tidak dibuka. Silakan hubungi sekolah.' }, 403)
     const wanted = body.cycle === 'undecided' ? null : allowed.find((c) => String(c.id) === String(body.cycle)) ?? allowed[0]
 
