@@ -10,6 +10,7 @@ import config from '@/payload.config'
 import { approve, createApplication, reject } from '@/platform/service'
 import { readApplication, readApproval } from '@/platform/validation'
 import { schoolOwningHost } from '@/tenancy/resolve'
+import { ensurePlatformSuperAdmin } from './school'
 import { dropTestSchool } from './school'
 import type { User } from '@/payload-types'
 
@@ -36,6 +37,7 @@ const appByRef = async (reference: string) => (await raw.find({ collection: 'sch
 
 beforeAll(async () => {
   raw = await getPayload({ config })
+  await ensurePlatformSuperAdmin(raw)
   operator = (await raw.create({ collection: 'users', overrideAccess: true, data: { email: `${RUN}-super@test.invalid`, password: pw(), name: 'Super', role: 'superadmin' } })) as User
   users.push(operator.id)
 })
