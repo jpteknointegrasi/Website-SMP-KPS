@@ -8,7 +8,7 @@ import type { SchoolDb } from '@/db/school-db'
 import { accountSessions, accounts, auditEvents, persons, staffMembers, staffRoles, supportGrants } from '@/db/schema'
 import { GUARDED_ROLES, IMPLICIT_ROLES, permissionsOf, type Permission } from './roles'
 import { sha256 } from './secrets'
-import { forbidden, fail } from './errors'
+import { forbidden, fail, UserError } from './errors'
 
 export type StaffActor = {
   kind: 'staff'
@@ -214,6 +214,25 @@ export function requireStaff(ctx: Ctx, ...perms: Permission[]): StaffActor {
   if (perms.length && !perms.some((p) => s.perms.has(p))) forbidden()
   return s
 }
+/**
+ * Runs a sensitive action and, when it is refused for lack of authority (missing permission, separation of duties),
+ * records the attempt as `<action>_denied` before re-throwing (P2-03). The record is written on its own, outside the
+ * refused transaction, so it survives the rollback; it holds ids and codes only, never personal data.
+ */
+export async function auditDenied<T>(ctx: Ctx, action: string, object: { type: string; id: string | null }, run: () => Promise<T>): Promise<T> {
+  try {
+    return await run()
+  } catch (e) {
+    if (e instanceof UserError && e.code === 'forbidden' && ctx.staff) {
+      await ctx.db
+        .insert(auditEvents)
+        .values({ actorType: 'staff', actorId: ctx.staff.id, action: `${action}_denied`, objectType: object.type, objectId: object.id, correlationId: ctx.correlationId, meta: { roles: [...ctx.staff.roles].sort().join(',') } })
+        .catch((err) => console.error('[audit] percobaan ditolak tidak tercatat', (err as Error).message))
+    }
+    throw e
+  }
+}
+
 export const hasPerm = (ctx: Ctx, ...perms: Permission[]) => Boolean(ctx.staff && perms.some((p) => ctx.staff!.perms.has(p)))
 
 export function requireAccount(ctx: Ctx): AccountActor {

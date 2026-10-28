@@ -2,10 +2,11 @@
  * PPDB-01..07: the full admission chain on a real database — cycle approval by someone else, application with
  * documents and fee, verification, selection with locked scores, decision approval within quota (concurrent
  * approvals cannot overbook), release visibility, offer, re-enrolment with verified payment, idempotent conversion.
+ * PPDB-08: separation of duties (creator/proposer ≠ approver, also for the App admin) and audited refused attempts.
  */
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { eq } from 'drizzle-orm'
-import { applicationDocuments, guardianLinks, invoices, payments, seatReservations, students } from '@/db/schema'
+import { applicationDocuments, auditEvents, decisionBatches, guardianLinks, invoices, payments, seatReservations, students } from '@/db/schema'
 import * as cfg from '@/modules/admissions/config'
 import * as apply from '@/modules/admissions/apply'
 import * as review from '@/modules/admissions/review'
@@ -262,5 +263,65 @@ describe('PPDB-07 kedaluwarsa penawaran', () => {
     expect(seats.filter((s) => s.state === 'expired')).toHaveLength(1)
     expect(seats.some((s) => s.state === 'reserved' || s.state === 'confirmed')).toBe(false)
     await expect(dec.respondToOffer(ctxAccount(A, fam2, new Date(Date.now() + 9 * 86400_000)), app2, true, null)).rejects.toThrow(/tidak berlaku|Batas waktu/)
+  })
+})
+
+describe('PPDB-08 pemisahan tugas & percobaan yang ditolak tercatat (P2-03)', () => {
+  it('pembuat periode tidak dapat menyetujuinya — juga Admin App yang memegang semua hak penerimaan', async () => {
+    const adm = await staff(A, ['school_admin'])
+    expect(adm.perms.has('admissions.manage') && adm.perms.has('admissions.approve') && adm.perms.has('admissions.release')).toBe(true)
+    const a = ctxStaff(A, adm)
+    const id = await cfg.createCycle(a, { code: 'PPDB28', name: 'PPDB 2028/2029', targetYear: '2028/2029', targetGrade: 'VII' })
+    await cfg.updateCycle(a, id, { name: 'PPDB 2028/2029', openAt: new Date(Date.now() + 86400_000), closeAt: new Date(Date.now() + 30 * 86400_000), selectionEnabled: false, offerDays: 7, reenrollDays: 14, requireNik: false, info: null, dataNotice: null, helpContact: null }, null)
+    await cfg.setCycleStatus(a, id, 'ready_for_review', null)
+    await expect(cfg.setCycleStatus(a, id, 'approved', null)).rejects.toMatchObject({ code: 'forbidden', message: expect.stringMatching(/selain pembuatnya/) })
+    // panitia pengelola who created it, holding the approver role too, is refused as well
+    const both = await staff(A, ['panitia_pengelola', 'panitia_penyetuju'])
+    const id2 = await cfg.createCycle(ctxStaff(A, both), { code: 'PPDB28B', name: 'PPDB 2028/2029 B', targetYear: '2028/2029', targetGrade: 'VIII' })
+    await cfg.updateCycle(ctxStaff(A, both), id2, { name: 'B', openAt: new Date(Date.now() + 86400_000), closeAt: new Date(Date.now() + 30 * 86400_000), selectionEnabled: false, offerDays: 7, reenrollDays: 14, requireNik: false, info: null, dataNotice: null, helpContact: null }, null)
+    await cfg.setCycleStatus(ctxStaff(A, both), id2, 'ready_for_review', null)
+    await expect(cfg.setCycleStatus(ctxStaff(A, both), id2, 'approved', null)).rejects.toMatchObject({ code: 'forbidden' })
+    expect((await cfg.loadCycle(A.db, id))!.status).toBe('ready_for_review')
+    // someone else approves
+    await cfg.setCycleStatus(ctxStaff(A, approver), id, 'approved', null)
+    expect((await cfg.loadCycle(A.db, id))!.status).toBe('approved')
+    const denied = await A.db.select().from(auditEvents).where(eq(auditEvents.action, 'admissions.cycle_approve_denied'))
+    expect(denied.map((d) => d.actorId).sort()).toEqual([adm.id, both.id].sort())
+  })
+
+  it('pengusul keputusan tidak dapat menyetujuinya — juga Admin App', async () => {
+    const adm = await staff(A, ['school_admin'])
+    const a = ctxStaff(A, adm)
+    // a proposal by the admin (no entries needed for the duty rule), submitted for review
+    const [b] = await A.db.insert(decisionBatches).values({ cycleId, title: 'Usulan admin', proposedBy: adm.id, status: 'proposed' }).returning()
+    await dec.submitBatch(a, b!.id)
+    await expect(dec.approveBatch(a, b!.id, null)).rejects.toMatchObject({ code: 'forbidden', message: expect.stringMatching(/selain pengusul/) })
+    const [mgrBatch] = await A.db.insert(decisionBatches).values({ cycleId, title: 'Usulan pengelola+penyetuju', proposedBy: manager.id, status: 'in_review' }).returning()
+    const mgrApprover = { ...manager, roles: new Set([...manager.roles, 'panitia_penyetuju']), perms: new Set([...manager.perms, 'admissions.approve' as const]) }
+    await expect(dec.approveBatch(ctxStaff(A, mgrApprover), mgrBatch!.id, null)).rejects.toMatchObject({ code: 'forbidden' })
+    const [st] = await A.db.select().from(decisionBatches).where(eq(decisionBatches.id, b!.id))
+    expect(st!.status).toBe('in_review')
+    expect(st!.approvedBy).toBeNull()
+    const denied = await A.db.select().from(auditEvents).where(eq(auditEvents.action, 'admissions.batch_approve_denied'))
+    expect(denied.some((d) => d.actorId === adm.id && d.objectId === b!.id)).toBe(true)
+    // another approver may approve
+    await dec.approveBatch(ctxStaff(A, approver), b!.id, null)
+  })
+
+  it('penilai yang mencoba merilis hasil ditolak dan percobaannya tercatat di audit (tanpa data pribadi)', async () => {
+    const [b] = await A.db.select().from(decisionBatches).where(eq(decisionBatches.title, 'Usulan admin'))
+    expect(b!.status).toBe('approved')
+    expect(assessor.perms.has('admissions.release')).toBe(false)
+    await expect(dec.releaseBatch(ctxStaff(A, assessor), b!.id, null)).rejects.toMatchObject({ code: 'forbidden' })
+    const [after] = await A.db.select().from(decisionBatches).where(eq(decisionBatches.id, b!.id))
+    expect(after!.status).toBe('approved')
+    const denied = await A.db.select().from(auditEvents).where(eq(auditEvents.action, 'admissions.batch_release_denied'))
+    const mine = denied.filter((d) => d.actorId === assessor.id)
+    expect(mine).toHaveLength(1)
+    expect(mine[0]).toMatchObject({ actorType: 'staff', objectType: 'decision_batch', objectId: b!.id })
+    expect(mine[0]!.meta).toEqual({ roles: 'panitia_penilai' })
+    // a validation error (not a refusal of authority) is not recorded as denied
+    await expect(dec.releaseBatch(ctxStaff(A, publisher), '00000000-0000-0000-0000-000000000000', null)).rejects.toThrow(/sudah disetujui/)
+    expect((await A.db.select().from(auditEvents).where(eq(auditEvents.action, 'admissions.batch_release_denied'))).filter((d) => d.actorId === publisher.id)).toHaveLength(0)
   })
 })

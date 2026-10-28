@@ -6,9 +6,9 @@
  */
 import { and, asc, desc, eq, inArray, isNull, lte, sql } from 'drizzle-orm'
 import { accounts, admissionPaths, applications, decisionBatches, decisionVersions, persons, reenrollments, seatReservations } from '@/db/schema'
-import { requireAccount, requireStaff, type Ctx } from '@/server/context'
+import { auditDenied, requireAccount, requireStaff, type Ctx } from '@/server/context'
 import { command, expectVersion, type Db } from '@/server/command'
-import { fail, notFound } from '@/server/errors'
+import { fail, forbidden, notFound } from '@/server/errors'
 import type { SchoolInfo } from '@sekolahku/core'
 import type { SchoolDb } from '@/db/school-db'
 import { makeCtx } from '@/server/context'
@@ -93,13 +93,16 @@ export async function submitBatch(ctx: Ctx, id: string) {
  * Approval reserves seats for every "offered" result, atomically per path (rows locked), within the quota. The
  * approver must be someone other than the proposer.
  */
-export async function approveBatch(ctx: Ctx, id: string, version: string | null) {
+export const approveBatch = (ctx: Ctx, id: string, version: string | null) =>
+  auditDenied(ctx, 'admissions.batch_approve', { type: 'decision_batch', id }, () => approveBatchGuarded(ctx, id, version))
+
+async function approveBatchGuarded(ctx: Ctx, id: string, version: string | null) {
   const s = requireStaff(ctx, 'admissions.approve')
   await command(ctx, 'admissions.batch_approve', {}, async (tx, fx) => {
     const b = await loadBatch(tx, id)
     if (!b || b.status !== 'in_review') fail('Usulan belum diajukan untuk persetujuan.')
     expectVersion(b!.version, version)
-    if (b!.proposedBy === s.id) fail('Usulan harus disetujui oleh pejabat selain pengusul.')
+    if (b!.proposedBy === s.id) forbidden('Usulan harus disetujui oleh pejabat selain pengusul.')
     const c = (await loadCycle(tx, b!.cycleId))!
     const vers = await tx.select({ v: decisionVersions, pathId: applications.pathId }).from(decisionVersions).innerJoin(applications, eq(applications.id, decisionVersions.applicationId)).where(eq(decisionVersions.batchId, id))
     const offered = vers.filter((x) => x.v.outcome === 'offered')
@@ -134,7 +137,10 @@ export async function approveBatch(ctx: Ctx, id: string, version: string | null)
  * Release: results become visible at `releaseAt` (or now). Earlier versions of the same applications are superseded.
  * Families get a neutral notice only when the result is actually visible (scheduled job otherwise).
  */
-export async function releaseBatch(ctx: Ctx, id: string, releaseAt: Date | null) {
+export const releaseBatch = (ctx: Ctx, id: string, releaseAt: Date | null) =>
+  auditDenied(ctx, 'admissions.batch_release', { type: 'decision_batch', id }, () => releaseBatchGuarded(ctx, id, releaseAt))
+
+async function releaseBatchGuarded(ctx: Ctx, id: string, releaseAt: Date | null) {
   const s = requireStaff(ctx, 'admissions.release')
   await command(ctx, 'admissions.batch_release', {}, async (tx, fx) => {
     const b = await loadBatch(tx, id)
