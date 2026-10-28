@@ -1,6 +1,7 @@
 /**
  * CMP-01..06: library circulation rules, UKS restricted content, organisation proposals → calendar, alumni consent,
  * leadership dashboard & purpose-bound exports, support access (read-only, time-limited, audited).
+ * CMP-07: website feed follows the family audience of modules (Pilot/Aktif).
  * PLT-APP-01..02: the platform Super Admin in a school's App (governance only; grants read-only; no files; writes audited).
  */
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
@@ -19,6 +20,8 @@ import { loadPlatformAdmin, loadSupport, makeCtx } from '@/server/context'
 import { academicEvents, auditEvents, consents, files, mailLog, notifications, students, supportGrants } from '@/db/schema'
 import { canReadFile } from '@/server/files'
 import { dispatchAction } from '@/server/dispatch'
+import { getModules } from '@/server/settings'
+import { websiteFeed } from '@/modules/website/feed'
 import '@/modules/register'
 import { accountFromToken, ctxAccount, ctxAnon, ctxStaff, harness, pdf, png, staff, type School } from './helpers'
 import type { AccountActor, StaffActor } from '@/server/context'
@@ -249,5 +252,21 @@ describe('PLT-APP-02 setiap perubahan oleh Super Admin tercatat', () => {
     const res = await dispatchAction(pctx, 'siswa.ubah', fd)
     expect(res.status).toBe(303)
     expect(new URL(res.headers.get('location')!, 'http://x').searchParams.get('galat')).toMatch(/^Super Admin platform hanya/)
+  })
+})
+
+describe('CMP-07 konten publik untuk website mengikuti status modul keluarga', () => {
+  it('cerita alumni berizin hanya terbit saat modul Alumni Pilot/Aktif (bukan Konfigurasi), sama seperti agenda & prestasi', async () => {
+    const k = ctxStaff(A, admin, now)
+    expect((await AL.publicStories(A.db)).length).toBeGreaterThan(0) // CMP-04 left a consented story
+    const feed = async () => websiteFeed(A.db, await getModules(A.db), '2026-10-12')
+    await setModuleState(k, 'alumni', 'configuring')
+    expect((await feed()).alumni).toEqual([])
+    await setModuleState(k, 'alumni', 'pilot')
+    expect((await feed()).alumni[0]).toMatchObject({ name: 'Citra' })
+    await setModuleState(k, 'alumni', 'active')
+    expect((await feed()).alumni).toHaveLength(1)
+    await setModuleState(k, 'akademik', 'configuring')
+    expect((await feed()).events).toEqual([])
   })
 })
