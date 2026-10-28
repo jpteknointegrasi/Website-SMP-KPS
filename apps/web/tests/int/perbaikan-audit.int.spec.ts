@@ -228,3 +228,72 @@ describe('AUD-08 endpoint kesehatan /api/kesehatan', () => {
     expect(await res.json()).toMatchObject({ ok: false, db: false })
   })
 })
+
+describe('AUD-09 retensi data (anonimisasi, bawaan mati)', () => {
+  const future = new Date(Date.now() + 400 * 86400_000) // ~13 months ahead: today's records are "older than 12 months"
+  let session: number
+  const ids: Record<string, number> = {}
+  beforeAll(async () => {
+    session = (await payload.create({ collection: 'visit-sessions', overrideAccess: true, data: { title: `Sesi ${RUN}`, kind: 'open_house', sessionStatus: 'closed', startAt: new Date(Date.now() + 86400_000).toISOString(), capacity: 20, capacityUnit: 'families' } as never })).id
+    const lead = (status: string, extra = {}) => payload.create({ collection: 'leads', overrideAccess: true, data: { parentName: `Wali Retensi ${RUN}`, email: 'r@contoh.id', phone: '081200000000', message: 'pesan pribadi', studentName: 'Anak', interests: ['info'], reference: `RET-${status}-${RUN}`, status, ...extra } as never })
+    ids.leadClosed = (await lead('closed', { closeReason: 'other', notes: [{ text: 'catatan privat' }] })).id
+    ids.leadConverted = (await lead('converted')).id
+    ids.leadOpen = (await lead('contacted')).id
+    const msg = (status: string) => payload.create({ collection: 'contact-messages', overrideAccess: true, data: { name: `Penanya Retensi ${RUN}`, email: 'p@contoh.id', category: 'umum', message: 'isi pesan pribadi', internalNote: 'catatan', reference: `PSN-RET-${status}-${RUN}`, status } as never })
+    ids.msgDone = (await msg('done')).id
+    ids.msgNew = (await msg('new')).id
+    const book = (status: string) => payload.create({ collection: 'visit-bookings', overrideAccess: true, context: { capacityReserved: true }, data: { session, parentName: `Pemesan Retensi ${RUN}`, email: 'k@contoh.id', participants: 1, reference: `KJG-RET-${status}-${RUN}`, status, note: 'catatan pemesan', internalNote: 'catatan petugas' } as never })
+    ids.bookAttended = (await book('attended')).id
+    ids.bookConfirmed = (await book('confirmed')).id
+  })
+  it('pengaturan kosong (bawaan) → tidak ada yang dianonimkan', async () => {
+    const { anonymizeExpired } = await import('@/lib/retention')
+    expect(await anonymizeExpired(payload, future)).toEqual({ leads: 0, 'contact-messages': 0, 'visit-bookings': 0 })
+  })
+  it('pengaturan retensi hanya untuk Admin Teknis', async () => {
+    const asEditor = (await payload.findGlobal({ slug: 'site-settings', depth: 0, user: users.editor, overrideAccess: false } as never)) as any
+    expect('retensiMinatBulan' in asEditor).toBe(false)
+    await payload.updateGlobal({ slug: 'site-settings', user: users.editor, overrideAccess: false, data: { retensiMinatBulan: 1 } as never })
+    expect(((await payload.findGlobal({ slug: 'site-settings', depth: 0, overrideAccess: true })) as any).retensiMinatBulan ?? null).toBeNull()
+    await payload.updateGlobal({ slug: 'site-settings', user: users.admin, overrideAccess: false, data: { retensiMinatBulan: 12, retensiPesanBulan: 12, retensiKunjunganBulan: 12 } as never })
+    expect(((await payload.findGlobal({ slug: 'site-settings', depth: 0, overrideAccess: true })) as any).retensiMinatBulan).toBe(12)
+  })
+  it('yang selesai & lebih tua dari N bulan dianonimkan (tidak dihapus); yang masih berjalan/baru utuh; audit hanya angka', async () => {
+    const { anonymizeExpired, ANONYMIZED_NAME } = await import('@/lib/retention')
+    // not old enough yet
+    expect(await anonymizeExpired(payload)).toEqual({ leads: 0, 'contact-messages': 0, 'visit-bookings': 0 })
+    const r = await anonymizeExpired(payload, future)
+    expect(r).toEqual({ leads: 2, 'contact-messages': 1, 'visit-bookings': 1 })
+    const get = (c: string, id: number) => payload.findByID({ collection: c as 'leads', id, overrideAccess: true, depth: 0 }) as Promise<any>
+    const l = await get('leads', ids.leadClosed)
+    expect(l).toMatchObject({ parentName: ANONYMIZED_NAME, status: 'closed', reference: `RET-closed-${RUN}` })
+    expect(l.email ?? null).toBeNull()
+    expect(l.phone ?? null).toBeNull()
+    expect(l.message ?? null).toBeNull()
+    expect(l.studentName ?? null).toBeNull()
+    expect(l.notes).toEqual([])
+    expect(l.anonymizedAt).toBeTruthy()
+    expect((await get('leads', ids.leadOpen)).parentName).toBe(`Wali Retensi ${RUN}`)
+    const m = await get('contact-messages', ids.msgDone)
+    expect(m.name).toBe(ANONYMIZED_NAME)
+    expect(m.message).not.toContain('pribadi')
+    expect(m.internalNote ?? null).toBeNull()
+    expect((await get('contact-messages', ids.msgNew)).name).toBe(`Penanya Retensi ${RUN}`)
+    const b = await get('visit-bookings', ids.bookAttended)
+    expect(b).toMatchObject({ parentName: ANONYMIZED_NAME, status: 'attended' })
+    expect(b.note ?? null).toBeNull()
+    expect(b.internalNote ?? null).toBeNull()
+    expect((await get('visit-bookings', ids.bookConfirmed)).parentName).toBe(`Pemesan Retensi ${RUN}`)
+    // audit: one entry with counts, no names
+    const logs = await payload.find({ collection: 'audit-logs', where: { action: { equals: 'retention' } }, overrideAccess: true })
+    expect(logs.totalDocs).toBe(1)
+    expect(logs.docs[0]!.docTitle).toBe('Anonimisasi retensi: minat 2, pesan 1, kunjungan 1')
+    expect((await payload.count({ collection: 'audit-logs', where: { or: [{ docTitle: { like: `Wali Retensi ${RUN}` } }, { docTitle: { like: `Penanya Retensi ${RUN}` } }] }, overrideAccess: true })).totalDocs).toBe(0)
+    // idempotent
+    expect(await anonymizeExpired(payload, future)).toEqual({ leads: 0, 'contact-messages': 0, 'visit-bookings': 0 })
+  })
+  it('terdaftar sebagai tugas terjadwal Payload', () => {
+    const task = (payload.config.jobs?.tasks ?? []).find((t) => t.slug === 'anonymizeExpiredData')
+    expect(task?.schedule?.length).toBeGreaterThan(0)
+  })
+})

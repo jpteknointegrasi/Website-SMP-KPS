@@ -11,6 +11,7 @@ import * as migration_20261027_180348_platform_school_applications from './20261
 import * as migration_20261028_054340_tautan_minat_portal from './20261028_054340_tautan_minat_portal';
 import * as migration_20261028_155027_rate_limit_hits from './20261028_155027_rate_limit_hits';
 import * as migration_20261028_155432_contact_idempotency from './20261028_155432_contact_idempotency';
+import * as migration_20261028_160043_retensi_data from './20261028_160043_retensi_data';
 
 export const migrations = [
   {
@@ -76,6 +77,11 @@ export const migrations = [
   {
     up: migration_20261028_155432_contact_idempotency.up,
     down: migration_20261028_155432_contact_idempotency.down,
-    name: '20261028_155432_contact_idempotency'
+    name: '20261028_155432_contact_idempotency',
+  },
+  {
+    up: migration_20261028_160043_retensi_data.up,
+    down: migration_20261028_160043_retensi_data.down,
+    name: '20261028_160043_retensi_data'
   },
 ];

@@ -54,6 +54,7 @@ import { isSuperAdmin } from './access/roles'
 import { readFlags } from './lib/flags'
 import { releaseExpiredHolds } from './lib/capacity'
 import { healthEndpoint } from './endpoints/health'
+import { anonymizeAllSchools } from './lib/retention'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
@@ -300,6 +301,21 @@ export default buildConfig({
           return { output: { linked } }
         },
         outputSchema: [{ name: 'linked', type: 'number' }],
+      },
+      {
+        // Privacy retention: anonymise finished leads/messages/visit bookings older than each school's setting
+        // (Pengaturan Sekolah → Privasi & Retensi; empty = off). Counts only are audited per school.
+        slug: 'anonymizeExpiredData',
+        schedule: [{ cron: '40 2 * * *', queue: 'default' }],
+        handler: async ({ req }) => {
+          const r = await anonymizeAllSchools(req.payload)
+          return { output: { leads: r.leads, messages: r['contact-messages'], visits: r['visit-bookings'] } }
+        },
+        outputSchema: [
+          { name: 'leads', type: 'number' },
+          { name: 'messages', type: 'number' },
+          { name: 'visits', type: 'number' },
+        ],
       },
     ],
     // Serverless (Vercel) has no long-running process: jobs are triggered by cron → /api/payload-jobs/run

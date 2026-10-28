@@ -1,6 +1,18 @@
-import type { GlobalConfig } from 'payload'
+import type { Field, GlobalConfig } from 'payload'
 import { editorialOnly, anyone, isAdmin, isEditorial } from '../access/roles'
 import { safeUrlField } from '../fields/common'
+
+/** Admin-only number of months; empty = retention off (src/lib/retention.ts). */
+const retentionField = (name: string, label: string, description: string): Field => ({
+  name,
+  type: 'number',
+  label,
+  min: 1,
+  max: 120,
+  admin: { width: '33%', description, step: 1 },
+  access: { read: ({ req: { user } }) => isAdmin(user), create: ({ req: { user } }) => isAdmin(user), update: ({ req: { user } }) => isAdmin(user) },
+  validate: (v: unknown) => (v === null || v === undefined || (Number.isInteger(v) && Number(v) >= 1 && Number(v) <= 120) ? true : 'Isi bilangan bulat 1–120, atau kosongkan.'),
+})
 
 export const SiteSettings: GlobalConfig = {
   slug: 'site-settings',
@@ -98,6 +110,21 @@ export const SiteSettings: GlobalConfig = {
           fields: [
             { name: 'notifyContactEmail', type: 'email', label: 'Email penerima pemberitahuan pesan kontak' },
             { name: 'notifyAdmissionsEmail', type: 'email', label: 'Email penerima pemberitahuan minat/kunjungan' },
+          ],
+        },
+        {
+          label: 'Privasi & Retensi',
+          description:
+            'Berapa lama data pribadi calon orang tua dan pengirim pesan disimpan setelah urusannya selesai. Kebijakan ini keputusan sekolah. Kosong = tidak pernah dianonimkan otomatis. Data tidak dihapus: nama, kontak, pesan dan catatan dikosongkan, statistik tetap utuh. Hanya Admin Teknis.',
+          fields: [
+            {
+              type: 'row',
+              fields: [
+                retentionField('retensiMinatBulan', 'Minat calon orang tua (bulan)', 'Minat berstatus Ditutup / Masuk proses resmi, dihitung dari tanggal masuk.'),
+                retentionField('retensiPesanBulan', 'Pesan kontak (bulan)', 'Pesan berstatus Selesai / Spam, dihitung dari tanggal masuk.'),
+                retentionField('retensiKunjunganBulan', 'Pemesanan kunjungan (bulan)', 'Pemesanan Hadir / Tidak hadir / Dibatalkan / Kedaluwarsa, dihitung dari tanggal pesan.'),
+              ],
+            },
           ],
         },
         {
