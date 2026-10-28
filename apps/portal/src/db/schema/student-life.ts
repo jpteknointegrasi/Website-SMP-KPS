@@ -172,7 +172,7 @@ export const affairsReports = pgTable('affairs_reports', {
   reporterType: text('reporter_type').notNull(), // account | staff
   reporterId: text('reporter_id').notNull(),
   reporterName: text('reporter_name'),
-  hideIdentity: boolean('hide_identity').notNull().default(false), // reporter hidden from handlers other than coordinator
+  hideIdentity: boolean('hide_identity').notNull().default(false), // reporter shown only to student_affairs.coordinate (Waka Kesiswaan); see affairs redactReporter
   status: text('status').notNull().default('received'), // received | clarification | follow_up | closed
   assignedTo: uuid('assigned_to').references(() => staffMembers.id),
   outcome: text('outcome'),

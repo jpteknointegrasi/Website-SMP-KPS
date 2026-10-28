@@ -9,7 +9,7 @@ import * as W from '@/modules/works/service'
 import { grantSupport } from '@/modules/admin/service'
 import { signIn, signUp, verifyEmail } from '@/modules/identity/service'
 import { processOutbox } from '@/server/outbox'
-import { loadSupport } from '@/server/context'
+import { loadPlatformAdmin, loadSupport, makeCtx } from '@/server/context'
 import { isPortalSync } from '@sekolahku/core'
 import { eq } from 'drizzle-orm'
 import { mailLog } from '@/db/schema'
@@ -90,10 +90,21 @@ describe('KRY-01 karya ke website', () => {
 })
 
 describe('KRY-02 cakupan akses bantuan', () => {
-  it('izin operasional tidak membaca Buku Induk', async () => {
+  it('izin operasional tidak membaca Buku Induk (jalur produksi: loadPlatformAdmin); izin "data siswa" hanya membaca', async () => {
+    const op = { id: 5, email: 'op@platform.test', name: 'Op', role: 'superadmin', schoolId: null } as never
     await grantSupport(ctxStaff(A, admin, now), { email: 'op@platform.test', reason: 'Memeriksa antrean email sekolah', hours: 1 })
-    const sup = await loadSupport(A.db, { id: 5, email: 'op@platform.test', name: 'Op', role: 'superadmin', schoolId: null } as never, now)
+    const sup = await loadSupport(A.db, op, now)
     expect(sup?.perms.has('students.read')).toBe(false)
     expect(sup?.perms.has('audit.view')).toBe(true)
+    const pa = (await loadPlatformAdmin(A.db, op, now))!
+    expect(pa.perms.has('students.read')).toBe(false)
+    const pctx = makeCtx({ school: A.school, db: A.db, staff: pa, now })
+    await expect(S.listStudents(pctx, {})).rejects.toMatchObject({ code: 'forbidden' })
+    // with a "data siswa" grant: the register is readable, but no student write and no work proposal
+    await grantSupport(ctxStaff(A, admin, now), { email: 'op@platform.test', reason: 'Membantu memeriksa data siswa', hours: 2, scope: 'data_siswa' })
+    const pa2 = (await loadPlatformAdmin(A.db, op, now))!
+    const p2 = makeCtx({ school: A.school, db: A.db, staff: pa2, now })
+    await expect(S.listStudents(p2, {})).resolves.toBeTruthy()
+    await expect(S.updateStudent(p2, alya, { fullName: 'Ubah' }, null)).rejects.toMatchObject({ code: 'forbidden' })
   })
 })

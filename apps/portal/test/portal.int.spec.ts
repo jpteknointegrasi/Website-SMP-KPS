@@ -2,16 +2,16 @@
  * POR-xx: Sekolahku App foundation against a real platform database (registry contract) and two real per-school
  * App databases. Everything created here is removed afterwards.
  */
-import pg from 'pg'
 import { randomBytes } from 'crypto'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { sealSecret } from '@sekolahku/core'
 import { appDatabaseUrl, clearRegistryCache, schoolByHost, schoolById } from '@sekolahku/core/registry'
 import { SchoolDbError, closeSchoolDbs, migrateSchoolDb, schoolDb } from '@/db/school-db'
+import { dropDatabase, quietPool } from './helpers'
 
 const RUN = `p${Date.now().toString(36)}`
-const platform = new pg.Pool({ connectionString: process.env.PLATFORM_DATABASE_URL })
-const admin = new pg.Pool({ connectionString: process.env.TEST_PG_ADMIN_URL })
+const platform = quietPool(process.env.PLATFORM_DATABASE_URL)
+const admin = quietPool(process.env.TEST_PG_ADMIN_URL)
 const dbUrl = (name: string) => process.env.TEST_PG_ADMIN_URL!.replace(/\/[^/]+$/, `/${name}`)
 const ids: Record<string, number> = {}
 
@@ -37,7 +37,7 @@ beforeAll(async () => {
 afterAll(async () => {
   await closeSchoolDbs()
   for (const id of Object.values(ids)) await platform.query('DELETE FROM tenants WHERE id = $1', [id])
-  for (const k of ['a', 'b']) await admin.query(`DROP DATABASE IF EXISTS app_${RUN}_${k} WITH (FORCE)`)
+  for (const k of ['a', 'b']) await dropDatabase(admin, `app_${RUN}_${k}`)
   await platform.end()
   await admin.end()
 })
@@ -83,7 +83,7 @@ describe('POR-03 migrasi tidak pernah mengubah database yang bukan miliknya', ()
   it('database tidak kosong yang belum ditandai (mis. database platform) ditolak tanpa diubah', async () => {
     const name = `app_${RUN}_c`
     await admin.query(`CREATE DATABASE ${name}`)
-    const c = new pg.Pool({ connectionString: dbUrl(name) })
+    const c = quietPool(dbUrl(name))
     try {
       await c.query('CREATE TABLE users (id serial primary key)')
       const a = (await schoolById(ids.a!))!
@@ -93,8 +93,7 @@ describe('POR-03 migrasi tidak pernah mengubah database yang bukan miliknya', ()
       expect(t.rows.map((r) => r.table_name)).toEqual(['users']) // nothing added
     } finally {
       await c.end()
-      await closeSchoolDbs()
-      await admin.query(`DROP DATABASE IF EXISTS ${name} WITH (FORCE)`)
+      await dropDatabase(admin, name)
     }
   })
   it('alamat tak dikenal tidak jatuh ke sekolah bawaan bila fallback dimatikan (produksi)', async () => {
@@ -104,5 +103,17 @@ describe('POR-03 migrasi tidak pernah mengubah database yang bukan miliknya', ()
     expect(await schoolByHost(`acak-${RUN}.contoh.test`, { allowDefault: false })).toBeNull()
     delete process.env.DEFAULT_TENANT_SLUG
     clearRegistryCache()
+  })
+})
+
+describe('POR-04 koneksi idle yang diputus server tidak menjatuhkan proses', () => {
+  it('pool database sekolah menangani koneksi yang dihentikan (restart/DROP … WITH FORCE) lalu tersambung lagi', async () => {
+    const a = (await schoolById(ids.a!))!
+    const db = await schoolDb(a)
+    await db.execute('SELECT 1')
+    const killed = await admin.query(`SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = $1 AND pid <> pg_backend_pid()`, [`app_${RUN}_a`])
+    expect(killed.rowCount).toBeGreaterThan(0)
+    await new Promise((r) => setTimeout(r, 200))
+    await expect(db.execute('SELECT 1')).resolves.toBeTruthy()
   })
 })

@@ -13,7 +13,9 @@
     "test": "vitest run",
     "db:generate": "drizzle-kit generate",
     "migrate": "tsx scripts/migrate.ts",
-    "demo": "tsx scripts/demo.ts"
+    "demo": "tsx scripts/demo.ts",
+    "ekspor": "tsx scripts/export.ts",
+    "pulihkan": "tsx scripts/restore.ts"
   },
   "dependencies": {
     "@sekolahku/core": "*",

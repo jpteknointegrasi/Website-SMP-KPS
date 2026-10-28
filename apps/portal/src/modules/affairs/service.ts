@@ -114,6 +114,18 @@ export async function publicAchievements(db: Db, limit = 20) {
 }
 
 // ---------- reports ----------
+type ReportRow = typeof affairsReports.$inferSelect
+
+/**
+ * Reporter identity as this viewer may see it. A report filed with "hide identity" names its reporter only to the
+ * student-affairs coordinator (student_affairs.coordinate, Waka Kesiswaan) and to the reporter; every other handler
+ * (including the App admin) gets no name and no reporter id. Enforced here, for every read of reports.
+ */
+export function redactReporter(ctx: Ctx, r: ReportRow, mine = false): ReportRow & { reporterHidden: boolean } {
+  const hidden = r.hideIdentity && !mine && !hasPerm(ctx, 'student_affairs.coordinate')
+  return hidden ? { ...r, reporterId: '', reporterName: null, reporterHidden: true } : { ...r, reporterHidden: false }
+}
+
 export async function submitReport(ctx: Ctx, input: { category: string; description: string; occurredOn: string | null; location: string | null; hideIdentity: boolean; file: { name: string; buffer: Buffer } | null }) {
   if (!ctx.account && !ctx.staff) fail('Silakan masuk.', 'unauthenticated')
   if (!(input.category in REPORT_CATEGORIES)) fail('Pilih kategori.')
@@ -188,18 +200,20 @@ export async function reportView(ctx: Ctx, id: string) {
   const mine = (ctx.account && r!.reporterType === 'account' && r!.reporterId === ctx.account.id) || (ctx.staff && r!.reporterType === 'staff' && r!.reporterId === ctx.staff.id)
   if (!handler && !mine) forbidden()
   const events = await ctx.db.select().from(affairsEvents).where(and(eq(affairsEvents.reportId, id), handler ? undefined : eq(affairsEvents.internal, false))).orderBy(asc(affairsEvents.at))
-  const fileRows = r!.fileIds.length ? await ctx.db.select().from(files).where(inArray(files.id, r!.fileIds)) : []
+  // only what the page needs: uploader columns would name a confidential reporter
+  const fileRows = r!.fileIds.length ? await ctx.db.select({ id: files.id, originalName: files.originalName, mime: files.mime, size: files.size }).from(files).where(inArray(files.id, r!.fileIds)) : []
   const involved = handler && r!.studentIds.length ? await ctx.db.select({ id: students.id, name: persons.fullName, nis: students.nis }).from(students).innerJoin(persons, eq(persons.id, students.personId)).where(inArray(students.id, r!.studentIds)) : []
-  return { r: r!, events, files: fileRows, involved, handler, mine: Boolean(mine) }
+  return { r: redactReporter(ctx, r!, Boolean(mine)), events, files: fileRows, involved, handler, mine: Boolean(mine) }
 }
 
 export async function reportQueue(ctx: Ctx, closed = false) {
   requireStaff(ctx, 'student_affairs')
-  return ctx.db
+  const rows = await ctx.db
     .select()
     .from(affairsReports)
     .where(closed ? eq(affairsReports.status, 'closed') : inArray(affairsReports.status, ['received', 'clarification', 'follow_up']))
     .orderBy(desc(affairsReports.createdAt))
+  return rows.map((r) => redactReporter(ctx, r))
 }
 export async function myReports(ctx: Ctx) {
   const who = ctx.staff ? { t: 'staff', id: ctx.staff.id } : ctx.account ? { t: 'account', id: ctx.account.id } : null

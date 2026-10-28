@@ -3,11 +3,11 @@
  * checklist) → form. Status: draft → ready_for_review → approved → open → closed → archived. Opening, early closing,
  * extension and reopening need the right permission and a reason; set-up is frozen once approved.
  */
-import { and, asc, count, eq, inArray, ne } from 'drizzle-orm'
+import { and, asc, count, desc, eq, inArray, ne } from 'drizzle-orm'
 import { admissionCycles, admissionPaths, admissionWaves, applications, type ChecklistItemDef, type DocumentReq, type FormFieldDef, type SelectionComponent } from '@/db/schema'
-import { requireStaff, type Ctx } from '@/server/context'
+import { auditDenied, requireStaff, type Ctx } from '@/server/context'
 import { command, expectVersion, type Db } from '@/server/command'
-import { fail, notFound } from '@/server/errors'
+import { fail, forbidden, notFound } from '@/server/errors'
 
 const manage = (ctx: Ctx) => requireStaff(ctx, 'admissions.manage')
 
@@ -141,6 +141,12 @@ const TRANSITIONS: Record<string, { to: string[]; perm: 'admissions.manage' | 'a
 
 /** Moves a cycle to `to` (with reason when opening/closing/reopening). */
 export async function setCycleStatus(ctx: Ctx, id: string, to: string, reason: string | null) {
+  // approving and opening a cycle are sensitive: refused attempts are audited (P2-03)
+  if (to === 'approved' || to === 'open') return auditDenied(ctx, `admissions.cycle_${to === 'approved' ? 'approve' : 'open'}`, { type: 'admission_cycle', id }, () => setCycleStatusGuarded(ctx, id, to, reason))
+  return setCycleStatusGuarded(ctx, id, to, reason)
+}
+
+async function setCycleStatusGuarded(ctx: Ctx, id: string, to: string, reason: string | null) {
   const rule = TRANSITIONS[to]
   if (!rule) fail('Status tidak dikenal.')
   const s = requireStaff(ctx, rule!.perm)
@@ -155,7 +161,7 @@ export async function setCycleStatus(ctx: Ctx, id: string, to: string, reason: s
       if (paths.some((p) => !p.documents.length)) fail('Setiap jalur perlu daftar berkas.')
       if (c!.selectionEnabled && paths.some((p) => !p.components.length)) fail('Seleksi aktif: setiap jalur perlu komponen penilaian.')
     }
-    if (to === 'approved' && c!.createdBy === s.id) fail('Periode harus disetujui oleh orang lain selain pembuatnya.')
+    if (to === 'approved' && c!.createdBy === s.id) forbidden('Periode harus disetujui oleh orang lain selain pembuatnya.')
     const needsReason = to === 'closed' || (to === 'open' && c!.status === 'closed') || (to === 'ready_for_review' && c!.status === 'approved')
     if (needsReason && (!reason || reason.trim().length < 5)) fail('Tuliskan alasan perubahan status (minimal 5 karakter).')
     if (to === 'open') {
@@ -204,7 +210,7 @@ export async function cycleDetail(db: Db, id: string) {
 
 /** Public summary for the website and the public admissions page (no applicant data). */
 export async function publicSummary(db: Db, now: Date) {
-  const cycles = await db.select().from(admissionCycles).where(inArray(admissionCycles.status, ['approved', 'open', 'closed']))
+  const cycles = await db.select().from(admissionCycles).where(inArray(admissionCycles.status, ['approved', 'open', 'closed'])).orderBy(desc(admissionCycles.openAt), asc(admissionCycles.code))
   const out = []
   for (const c of cycles) {
     const d = (await cycleDetail(db, c.id))!
@@ -214,7 +220,7 @@ export async function publicSummary(db: Db, now: Date) {
       name: c.name,
       targetYear: c.targetYear,
       targetGrade: c.targetGrade,
-      status: acc.ok ? 'open' : c.status === 'closed' || (c.closeAt && now > c.closeAt) ? 'closed' : 'upcoming',
+      status: (acc.ok ? 'open' : c.status === 'closed' || (c.closeAt && now > c.closeAt) ? 'closed' : 'upcoming') as 'open' | 'closed' | 'upcoming',
       openAt: c.openAt,
       closeAt: c.closeAt,
       info: c.info,
@@ -223,5 +229,7 @@ export async function publicSummary(db: Db, now: Date) {
       paths: d.paths.filter((p) => p.active).map((p) => ({ name: p.name, description: p.description, registrationFee: p.registrationFee, documents: p.documents.map((x) => ({ label: x.label, required: x.required })) })),
     })
   }
-  return out
+  // the relevant cycle first: open, then upcoming, then closed; newest opening first within each (deterministic)
+  const rank = { open: 0, upcoming: 1, closed: 2 } as const
+  return out.sort((a, b) => rank[a.status] - rank[b.status] || (b.openAt?.getTime() ?? 0) - (a.openAt?.getTime() ?? 0) || a.name.localeCompare(b.name))
 }

@@ -13,6 +13,7 @@ import { ROLES } from '@/server/roles'
 import { moduleOpen, type Branding, type ModuleCode, type ModuleMap } from '@/server/settings'
 import { Icon, type IconName } from './icons'
 import { NavLink, FormEnhancer } from './client'
+import { AccountSignOut } from './signout'
 import { Avatar, P, publicFileUrl } from './kit'
 
 type Item = { label: string; href: string; icon: IconName; perms?: Permission[]; mod?: ModuleCode; when?: (ctx: Ctx) => boolean; exact?: boolean }
@@ -189,13 +190,12 @@ export async function Shell({ ctx, branding, modules, children, who }: { ctx: Ct
               Keluar
             </Link>
           ) : (
-            <form method="post" action={`${P}/aksi/akun.keluar`} className="inline">
-              <input type="hidden" name="_kembali" value="/masuk" />
+            <AccountSignOut action={`${P}/aksi/akun.keluar`}>
               <button className="btn btn--ghost btn--sm" type="submit">
                 <Icon name="logout" />
                 Keluar
               </button>
-            </form>
+            </AccountSignOut>
           )}
         </div>
         <main id="main" className="content" tabIndex={-1}>

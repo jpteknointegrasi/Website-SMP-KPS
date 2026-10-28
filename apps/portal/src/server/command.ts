@@ -22,6 +22,15 @@ export type Effects = {
   notify: (to: { type: 'account' | 'staff'; id: string }, n: { title: string; body?: string; link?: string; email?: string | null }) => void
 }
 
+/**
+ * Commands the platform Super Admin may run inside a school's App (governance mode, ADR-05): school settings & module
+ * activation, staff & roles, support grants (support.grant itself refuses the platform: the school consents, not the
+ * platform). Anything else — in particular every command behind a permission that only a school's support grant
+ * gives (students.*) — is refused: grant-derived permissions are read-only.
+ */
+export const PLATFORM_COMMANDS = /^(settings|staff|support)\./
+export const platformMayRun = (name: string) => PLATFORM_COMMANDS.test(name)
+
 export async function command<T>(
   ctx: Ctx,
   name: string,
@@ -29,6 +38,7 @@ export async function command<T>(
   run: (tx: Tx, fx: Effects) => Promise<T>,
 ): Promise<T> {
   if (ctx.staff?.support) forbidden('Akses bantuan teknis hanya untuk melihat.')
+  if (ctx.staff?.platform && !platformMayRun(name)) forbidden('Super Admin platform hanya dapat mengubah pengaturan sekolah, aktivasi modul, serta staf & peran. Data sekolah hanya dapat dilihat.')
   const audits: (typeof auditEvents.$inferInsert)[] = []
   const events: (typeof outboxEvents.$inferInsert)[] = []
   const notes: (typeof notifications.$inferInsert)[] = []
@@ -57,6 +67,12 @@ export async function command<T>(
       }
     }
     const value = await run(tx, fx)
+    // page visits of the Super Admin are audited at most every 15 minutes (platform.access); every WRITE is audited
+    // here, each entry naming the operator, even when the command itself recorded nothing
+    if (ctx.staff?.platform) {
+      if (!audits.length) fx.audit(name)
+      for (const a of audits) a.meta = { ...(a.meta ?? {}), platform: true, operator: ctx.staff.email }
+    }
     if (opKey) await tx.update(operationKeys).set({ result: (value ?? null) as never }).where(eq(operationKeys.key, opKey))
     if (audits.length) await tx.insert(auditEvents).values(audits)
     if (events.length) await tx.insert(outboxEvents).values(events)

@@ -1,6 +1,7 @@
 /**
- * LIFE-01..06: grade book & results submission, report cards (approve ≠ submitter, release, versions), BK
+ * LIFE-01..05: grade book & results submission, report cards (approve ≠ submitter, release, versions), BK
  * restricted notes & shared summaries, extracurricular consent & capacity, achievements & reports, promotion.
+ * KES-01: a confidential reporter is named to the student-affairs coordinator only (service layer).
  */
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { eq } from 'drizzle-orm'
@@ -15,7 +16,7 @@ import * as P from '@/modules/academic/promotion'
 import { signIn, signUp, verifyEmail } from '@/modules/identity/service'
 import { processOutbox } from '@/server/outbox'
 import { enrollments, mailLog, students } from '@/db/schema'
-import { accountFromToken, ctxAccount, ctxAnon, ctxStaff, harness, staff, type School } from './helpers'
+import { accountFromToken, ctxAccount, ctxAnon, ctxStaff, harness, pdf, staff, type School } from './helpers'
 import type { AccountActor, StaffActor } from '@/server/context'
 
 const h = harness('t4')
@@ -232,5 +233,36 @@ describe('LIFE-05 kenaikan kelas', () => {
       ['y1', 'ended', 'promoted'],
       ['y2', 'active', null],
     ])
+  })
+})
+
+describe('KES-01 identitas pelapor yang dirahasiakan', () => {
+  it('hanya Koordinator Kesiswaan (dan pelapor) melihat identitas; petugas lain & Admin App tidak — di layanan, bukan hanya halaman', async () => {
+    const rep = await K.submitReport(ctxAccount(A, ortuAlya, now), { category: 'perundungan', description: 'Ada siswa yang dirundung di lapangan basket.', occurredOn: '2026-12-02', location: 'Lapangan', hideIdentity: true, file: pdf() })
+    const open = await K.submitReport(ctxAccount(A, ortuAlya, now), { category: 'sarana', description: 'Lampu kelas VII A mati sejak pekan lalu.', occurredOn: null, location: null, hideIdentity: false, file: null })
+    expect(admin.perms.has('student_affairs')).toBe(true)
+    expect(admin.perms.has('student_affairs.coordinate')).toBe(false)
+    expect(kes.perms.has('student_affairs.coordinate')).toBe(true)
+    // coordinator sees the reporter
+    const vk = await K.reportView(ctxStaff(A, kes, now), rep)
+    expect(vk.r.reporterName).toBe(ortuAlya.name)
+    expect(vk.r.reporterHidden).toBe(false)
+    // App admin (handler without coordination) does not — neither name nor id, in the view and in the queue
+    const va = await K.reportView(ctxStaff(A, admin, now), rep)
+    expect(va.handler).toBe(true)
+    expect(va.r.reporterName).toBeNull()
+    expect(va.r.reporterId).toBe('')
+    expect(va.r.reporterHidden).toBe(true)
+    expect(JSON.stringify(va)).not.toContain(ortuAlya.id)
+    expect(JSON.stringify(va)).not.toContain(ortuAlya.name)
+    expect(va.files).toHaveLength(1) // attachment listed without its uploader
+    const q = await K.reportQueue(ctxStaff(A, admin, now))
+    expect(q.find((r) => r.id === rep)!.reporterName).toBeNull()
+    expect(q.find((r) => r.id === open)!.reporterName).toBe(ortuAlya.name) // not confidential → visible
+    expect((await K.reportQueue(ctxStaff(A, kes, now))).find((r) => r.id === rep)!.reporterName).toBe(ortuAlya.name)
+    // the reporter still sees their own report
+    const vm = await K.reportView(ctxAccount(A, ortuAlya, now), rep)
+    expect(vm.mine).toBe(true)
+    expect(vm.r.reporterHidden).toBe(false)
   })
 })

@@ -29,7 +29,7 @@ export default async function AffairsReport({ params, searchParams }: { params: 
             <div className="prose">{r.description}</div>
             <p className="small muted">
               {r.occurredOn ? `Kejadian ${fmtDate(r.occurredOn)}` : 'Tanggal tidak disebut'}
-              {r.location ? ` · ${r.location}` : ''} · pelapor: {v.handler ? `${r.reporterName ?? '—'}${r.hideIdentity ? ' (identitas dirahasiakan dari pihak lain)' : ''}` : 'Anda'}
+              {r.location ? ` · ${r.location}` : ''} · pelapor: {v.mine ? 'Anda' : r.reporterHidden ? 'dirahasiakan (hanya Koordinator Kesiswaan)' : `${r.reporterName ?? '—'}${r.hideIdentity ? ' (identitas dirahasiakan dari pihak lain)' : ''}`}
             </p>
             {v.files.map((f) => (
               <div key={f.id} className="small">

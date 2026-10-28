@@ -125,3 +125,26 @@ describe('sesi staf bersama (dikonfirmasi website, portal tidak memegang rahasia
     expect(cookieValue(null, 'payload-token')).toBeNull()
   })
 })
+
+describe('registri: role database platform', () => {
+  it('produksi menolak cadangan DATABASE_URI/DATABASE_URL (hak penuh); dev, uji & build tetap jalan', async () => {
+    const { platformDatabaseUrl, isProductionRuntime } = await import('../src/registry')
+    expect(platformDatabaseUrl({ NODE_ENV: 'production', PLATFORM_DATABASE_URL: 'postgres://ro@h/p', DATABASE_URI: 'postgres://rw@h/p' })).toBe('postgres://ro@h/p')
+    expect(() => platformDatabaseUrl({ NODE_ENV: 'production', DATABASE_URI: 'postgres://rw@h/p' })).toThrow(/PLATFORM_DATABASE_URL wajib/)
+    expect(() => platformDatabaseUrl({ NODE_ENV: 'production', DATABASE_URL: 'postgres://rw@h/p' })).toThrow(/hanya-baca/)
+    expect(platformDatabaseUrl({ NODE_ENV: 'production', NEXT_PHASE: 'phase-production-build', DATABASE_URI: 'postgres://rw@h/p' })).toBe('postgres://rw@h/p')
+    expect(platformDatabaseUrl({ NODE_ENV: 'development', DATABASE_URI: 'postgres://rw@h/p' })).toBe('postgres://rw@h/p')
+    expect(platformDatabaseUrl({ NODE_ENV: 'test' })).toBeUndefined()
+    expect(isProductionRuntime({ NODE_ENV: 'production' })).toBe(true)
+  })
+  it('peringatan bila role dapat INSERT/UPDATE tenants; tidak pernah gagal', async () => {
+    const { warnIfWritable } = await import('../src/registry')
+    const logs: string[] = []
+    const q = (w: boolean) => ({ query: async () => ({ rows: [{ w }] }) }) as never
+    expect(await warnIfWritable(q(true), (m) => logs.push(m))).toBe(true)
+    expect(logs[0]).toMatch(/hanya-baca/)
+    expect(await warnIfWritable(q(false), (m) => logs.push(m))).toBe(false)
+    expect(await warnIfWritable({ query: async () => { throw new Error('x') } } as never, (m) => logs.push(m))).toBe(false)
+    expect(logs).toHaveLength(1)
+  })
+})

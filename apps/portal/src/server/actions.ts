@@ -4,6 +4,7 @@
  */
 import type { Ctx } from './context'
 import { fail } from './errors'
+import { getModules, moduleOpen, type ModuleCode } from './settings'
 
 export type ActionResult = { redirect?: string; message?: string; cookies?: { name: string; value: string; maxAge: number }[] } | void
 export type ActionHandler = (ctx: Ctx, form: Form) => Promise<ActionResult>
@@ -14,6 +15,60 @@ export function defineAction(name: string, h: ActionHandler) {
   registry.set(name, h)
 }
 export const getAction = (name: string) => registry.get(name)
+
+/**
+ * Module of each form action, by name prefix (same codes as the page guards). An action of a module that is closed
+ * for the acting audience is refused exactly like its pages ("modul belum aktif"): hiding a page is not enough when
+ * the form can be posted directly. Prefixes not listed are not module-bound: account & sign-in (akun.*), settings,
+ * staff & roles, support access, notifications, outbox, and core academic data (years, homerooms, promotion), which
+ * the student register itself needs. Several modules: open when any of them is (fees of an application are paid
+ * through Keuangan while Penerimaan runs).
+ */
+export const ACTION_MODULES: Record<string, ModuleCode[]> = {
+  siswa: ['buku_induk'],
+  wali: ['buku_induk'],
+  koreksi: ['buku_induk'],
+  impor: ['buku_induk'],
+  kartu: ['kartu'],
+  ppdb: ['penerimaan'],
+  keuangan: ['keuangan', 'penerimaan'],
+  jadwal: ['akademik'],
+  kalender: ['akademik'],
+  pelajaran: ['akademik'],
+  presensi: ['akademik'],
+  izin: ['akademik'],
+  materi: ['akademik'],
+  tugas: ['akademik'],
+  nilai: ['nilai_rapor'],
+  rapor: ['nilai_rapor'],
+  pengumuman: ['pengumuman'],
+  layanan: ['layanan'],
+  bk: ['bk'],
+  ekskul: ['ekskul'],
+  prestasi: ['kesiswaan'],
+  laporan: ['kesiswaan'],
+  karya: ['kesiswaan'],
+  pustaka: ['perpustakaan'],
+  uks: ['uks'],
+  org: ['organisasi'],
+  alumni: ['alumni'],
+}
+/** Action prefixes deliberately not bound to a module (see above). Every registered action is in one of the lists. */
+export const UNBOUND_ACTION_PREFIXES = ['akun', 'pengaturan', 'staf', 'bantuan', 'notifikasi', 'outbox', 'akademik', 'kenaikan']
+export const actionNames = () => [...registry.keys()]
+export const actionModules = (name: string): ModuleCode[] => ACTION_MODULES[name.split('.')[0]!] ?? []
+
+/**
+ * Whether the action's module is open for whoever acts: staff from "Konfigurasi", families/students/applicants (and
+ * anonymous visitors) from "Pilot". A signed-in staff member counts as staff.
+ */
+export async function actionModuleOpen(ctx: Ctx, name: string) {
+  const mods = actionModules(name)
+  if (!mods.length) return true
+  const m = await getModules(ctx.db)
+  const who = ctx.staff ? 'staff' : 'family'
+  return mods.some((code) => moduleOpen(m, code, who))
+}
 
 /** Typed access to submitted fields. */
 export class Form {

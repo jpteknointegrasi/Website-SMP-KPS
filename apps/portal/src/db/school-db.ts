@@ -32,6 +32,9 @@ async function open(school: SchoolInfo, urlOverride?: string) {
   if (hit && hit.url === url) return hit
   if (hit) await hit.pool.end().catch(() => {})
   const pool = new pg.Pool({ connectionString: url, max: 5 })
+  // an idle client terminated by the server (restart, failover, DROP DATABASE … WITH FORCE) must not crash the
+  // process as an unhandled 'error' event; the pool replaces it on the next query
+  pool.on('error', (err) => console.warn(`[db-sekolah] koneksi idle ${school.slug} terputus: ${(err as { code?: string }).code ?? err.message}`))
   const entry = { url, pool, db: drizzle(pool, { schema }), verified: false }
   pools.set(school.id, entry)
   return entry
@@ -52,6 +55,12 @@ export async function schoolDb(school: SchoolInfo, urlOverride?: string): Promis
     e.verified = true
   }
   return e.db
+}
+
+/** The raw connection pool of the school's App database, after the same ownership check (backup & restore scripts). */
+export async function schoolPool(school: SchoolInfo, urlOverride?: string): Promise<pg.Pool> {
+  await schoolDb(school, urlOverride)
+  return pools.get(school.id)!.pool
 }
 
 const MIGRATIONS = path.resolve(path.dirname(fileURLToPath(import.meta.url)), 'migrations')
