@@ -158,12 +158,15 @@ export const visitBookingEndpoint: Endpoint = {
     const status = session.requiresConfirmation ? 'pending' : 'confirmed'
     const token = randomToken()
     const reference = makeReference('KJG')
-    // link (never create) an existing lead with the same contact
+    // link (never create) an existing open lead with the same contact in the SAME admissions cycle as the session
+    // (a session without a cycle only links leads without a cycle)
     const contactOr: Where[] = []
     if (value.email) contactOr.push({ email: { equals: value.email } })
     if (value.phoneNormalized) contactOr.push({ phoneNormalized: { equals: value.phoneNormalized } })
+    const sessionCycle = session.cycle && typeof session.cycle === 'object' ? session.cycle.id : (session.cycle ?? null)
+    const sameCycle: Where = sessionCycle ? { cycle: { equals: sessionCycle } } : { or: [{ cycle: { exists: false } }, { cycle: { equals: null } }] }
     const lead = contactOr.length
-      ? (await p.find({ collection: 'leads', where: { and: [{ or: contactOr }, { status: { not_equals: 'closed' } }] }, sort: '-createdAt', limit: 1, depth: 0, overrideAccess: true })).docs[0]
+      ? (await p.find({ collection: 'leads', where: { and: [{ or: contactOr }, { status: { not_equals: 'closed' } }, sameCycle] }, sort: '-createdAt', limit: 1, depth: 0, overrideAccess: true })).docs[0]
       : undefined
     try {
       const { sessionId, ...rest } = value

@@ -327,3 +327,25 @@ describe('AUD-11 API minat mengikuti aturan "ditutup → hubungi sekolah"', () =
     expect((await interestSubmitEndpoint.handler(epReq(body()))).status).toBe(200)
   })
 })
+
+describe('AUD-12 pemesanan kunjungan hanya menaut minat dari siklus yang sama', () => {
+  it('kontak sama di siklus lain tidak ditautkan; siklus sama ditautkan', async () => {
+    const { visitBookingEndpoint } = await import('@/endpoints/visits')
+    await payload.updateGlobal({ slug: 'feature-flags', overrideAccess: true, data: { schoolVisits: true } })
+    const cyc = async (y: string) => (await payload.create({ collection: 'admissions-cycles', overrideAccess: true, data: { academicYear: y, admissionStatus: 'open', _status: 'published', workflowStatus: 'published' } as never })).id
+    const c1 = await cyc('2095/2096')
+    const c2 = await cyc('2096/2097')
+    const email = `kunjung-${RUN}@contoh.id`
+    const oldLead = await payload.create({ collection: 'leads', overrideAccess: true, data: { parentName: `Wali Siklus ${RUN}`, email, interests: ['kunjungan'], cycle: c1, reference: `MNT-C1-${RUN}`, status: 'contacted' } as never })
+    const mkSession = async (cycle: number) =>
+      (await payload.create({ collection: 'visit-sessions', overrideAccess: true, data: { title: `Sesi siklus ${RUN}`, kind: 'open_house', sessionStatus: 'open', requiresConfirmation: false, startAt: new Date(Date.now() + 5 * 86400_000).toISOString(), capacity: 10, capacityUnit: 'families', cycle } as never })).id
+    const book = async (session: number) => {
+      const res = await visitBookingEndpoint.handler(epReq({ session, parentName: `Wali Siklus ${RUN}`, email, participants: 1, consent: true, idempotencyKey: randomBytes(16).toString('hex') }))
+      const j = await res.json()
+      expect(res.status).toBe(200)
+      return (await payload.find({ collection: 'visit-bookings', where: { reference: { equals: j.reference } }, overrideAccess: true, depth: 0 })).docs[0] as any
+    }
+    expect((await book(await mkSession(c2))).lead ?? null).toBeNull()
+    expect((await book(await mkSession(c1))).lead).toBe(oldLead.id)
+  })
+})
