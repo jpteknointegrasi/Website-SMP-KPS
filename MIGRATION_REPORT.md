@@ -27,4 +27,4 @@ Uji idempotensi: seed dijalankan pada database kosong (migrasi → seed) dan pad
 
 ## Belum dimigrasi
 - Artikel WordPress lain di luar 6 snapshot, halaman kalender, e-buletin, dokumen BOS lama.
-- Redirect per artikel selain 6 artikel di atas — tambahkan setelah inventarisasi.
+- Pengalihan per artikel: inventarisasi `wp-sitemap.xml` (28 Okt 2026) mencatat 109 artikel. Hanya 6 artikel yang isinya dipindahkan, jadi hanya 6 yang dialihkan ke `/berita/<slug>`; 103 artikel lain belum ada di website baru dan sengaja dialihkan ke indeks `/berita` (bukan 404). Bila artikel lama dipindahkan kemudian, ubah tujuannya di CMS → Pengalihan URL.

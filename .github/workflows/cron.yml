@@ -1,0 +1,62 @@
+# Scheduled background jobs for Sekolahku Web and Sekolahku App.
+#
+# Vercel Hobby runs its built-in cron only once a day, but the platform needs:
+#   - Web  GET /api/payload-jobs/run  at least hourly (scheduled publishing, visit holds, App sync: works & interest linking)
+#   - App  GET /portal/api/jobs       every 5–15 minutes (outbox e-mail/notifications, offer & re-enrolment expiry)
+#
+# Set these repository secrets (GitHub → Settings → Secrets and variables → Actions):
+#   WEB_JOBS_URL     e.g. https://<web-project>.vercel.app/api/payload-jobs/run
+#   WEB_CRON_SECRET  the CRON_SECRET of the Vercel Web project
+#   APP_JOBS_URL     e.g. https://www.smpkps.sch.id/portal/api/jobs
+#   APP_CRON_SECRET  the CRON_SECRET of the Vercel App project
+# A job whose URL secret is empty is skipped, so the workflow is harmless until configured.
+#
+# Notes: GitHub may delay scheduled runs by several minutes under load, and pauses schedules in repositories
+# with no activity for 60 days (re-enable under Actions). An external cron (cron-job.org) remains a valid
+# alternative — use one or the other, not both at the same frequency.
+name: Tugas terjadwal
+
+on:
+  schedule:
+    - cron: '*/10 * * * *'
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: tugas-terjadwal
+  cancel-in-progress: false
+
+jobs:
+  app:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Sekolahku App — outbox & tugas terjadwal
+        env:
+          URL: ${{ secrets.APP_JOBS_URL }}
+          SECRET: ${{ secrets.APP_CRON_SECRET }}
+        run: |
+          if [ -z "$URL" ] || [ -z "$SECRET" ]; then echo "APP_JOBS_URL/APP_CRON_SECRET belum diatur — dilewati"; exit 0; fi
+          code=$(curl -sS -o /tmp/out.json -w '%{http_code}' --max-time 240 -H "Authorization: Bearer $SECRET" "$URL")
+          echo "HTTP $code"
+          # Print per-school status only (no data is returned by the endpoint besides counts and errors).
+          head -c 2000 /tmp/out.json; echo
+          [ "$code" = "200" ]
+
+  web:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Sekolahku Web — tugas Payload
+        env:
+          URL: ${{ secrets.WEB_JOBS_URL }}
+          SECRET: ${{ secrets.WEB_CRON_SECRET }}
+        run: |
+          if [ -z "$URL" ] || [ -z "$SECRET" ]; then echo "WEB_JOBS_URL/WEB_CRON_SECRET belum diatur — dilewati"; exit 0; fi
+          # Called every 10 minutes: Payload's own schedules (e.g. App sync at :15 and :25) decide what is due,
+          # so a frequent call only runs work that is actually due and keeps those schedules on time.
+          code=$(curl -sS -o /tmp/out.json -w '%{http_code}' --max-time 240 -H "Authorization: Bearer $SECRET" "$URL")
+          echo "HTTP $code"
+          head -c 2000 /tmp/out.json; echo
+          [ "$code" = "200" ]

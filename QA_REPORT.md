@@ -83,4 +83,4 @@ Lingkungan: lokal (PostgreSQL 16), cabang `fitur-tambahan-p0p1`. Data uji sintet
 
 Produksi (26 Okt 2026): migrasi addendum berjalan di Vercel/Neon; data tambahan terpasang; REST publik menolak data privat (403); konten contoh tersembunyi. Total tes: **85 lulus**.
 
-Keterbatasan: thumbnail YouTube tidak bisa dimuat di lingkungan uji (jaringan dibatasi); Lighthouse belum dijalankan.
+Keterbatasan: thumbnail YouTube tidak bisa dimuat di lingkungan uji (jaringan dibatasi). Lighthouse dijalankan pada build produksi lokal (tabel di atas), belum di produksi; beranda tepat di batas 85, jadi ukur ulang setelah tayang. Pemeriksaan aksesibilitas otomatis memakai aturan axe-core WCAG 2.1 AA; kriteria baru WCAG 2.2 (2.4.11 fokus tidak tertutup, 2.5.7 alternatif seret, 2.5.8 ukuran target, 3.3.7/3.3.8) dan uji pembaca layar masih manual dan belum dilakukan.

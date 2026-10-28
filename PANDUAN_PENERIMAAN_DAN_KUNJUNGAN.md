@@ -14,7 +14,9 @@ Menu **Pendaftaran → Pendaftaran (PPDB/PMB)** → buka tahun ajaran.
    - *Informasi saja*: website hanya menampilkan informasi.
    - *Sistem pendaftaran eksternal*: isi **URL sistem resmi** (https). Tombol "Daftar melalui sistem resmi" muncul hanya bila status *Dibuka* dan URL valid.
    - *Form minat*: menampilkan form "Titipkan minat, bukan pendaftaran resmi".
-   - *Pendaftaran lengkap* belum tersedia (P2), jadi CMS menolaknya.
+   - *Pendaftaran lengkap* tidak dipakai di website (CMS menolaknya). Pendaftaran penuh ada di **Sekolahku App** (Portal Penerimaan).
+
+   **Bila sekolah berlangganan Sekolahku App**, mode di atas diabaikan untuk tombol pendaftaran: website otomatis menyembunyikan tombol sistem eksternal (URL yang diisi tidak dipakai) dan menampilkan **"Daftar di Portal Penerimaan"** saat periode di App dibuka, atau **"Masuk Portal Penerimaan"** di luar itu. Status, tanggal, dan jalur diambil dari periode di App (menu PPDB di portal), jadi atur periode di App, bukan hanya di CMS. Form minat dan kunjungan tetap di website.
 3. **Gelombang**: nama, tanggal, status per gelombang; **kapasitas hanya bila sudah disahkan**.
 4. Alur, persyaratan, biaya (centang *disetujui untuk publik*), dokumen informasi, video profil (dari Video & Media), FAQ.
 5. *Tampilkan form minat* dan *Saat ditutup, tawarkan* (kontak, atau minat untuk siklus berikutnya).
