@@ -30,7 +30,7 @@ export const DEFAULT_BRANDING: Branding = {
   navy: '#0B2356',
 }
 
-/** Modules and their readiness stage (MOD-01). Families only see modules that are "active". */
+/** Modules and their readiness stage (MOD-01). Staff use a module from "configuring"; families from "pilot"/"active". */
 export const MODULES = [
   { code: 'buku_induk', label: 'Data & Buku Induk', stage: 1, desc: 'Data siswa, rombel dan buku induk' },
   { code: 'kartu', label: 'Kartu Siswa QR', stage: 2, desc: 'Template, penerbitan, kartu digital dan verifikasi' },
@@ -68,6 +68,6 @@ export async function putSetting(db: Db, key: string, value: unknown, by: string
 export const getBranding = (db: Db) => getSetting(db, 'branding', DEFAULT_BRANDING)
 export const getModules = (db: Db) => getSetting(db, 'modules', DEFAULT_MODULES)
 
-/** Module usable by staff (anything past "planned") / by families (active only). */
+/** Module usable by staff (anything past "planned") / by families (pilot or active). */
 export const moduleOpen = (m: ModuleMap, code: ModuleCode, who: 'staff' | 'family') =>
   who === 'staff' ? m[code] !== 'planned' : m[code] === 'active' || m[code] === 'pilot'

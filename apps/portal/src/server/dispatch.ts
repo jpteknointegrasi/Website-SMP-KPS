@@ -1,9 +1,9 @@
 /**
  * The form-action dispatcher behind POST /portal/aksi/<name>, separated from the route so it can be tested with a
- * real Ctx: guards (support read-only, Super Admin governance only) → handler → redirect
+ * real Ctx: guards (support read-only, Super Admin governance only, module activation) → handler → redirect
  * (post/redirect/get) with a message.
  */
-import { Form, getAction } from './actions'
+import { actionModuleOpen, Form, getAction } from './actions'
 import type { Ctx } from './context'
 import { UserError } from './errors'
 import { safePath } from './paths'
@@ -42,6 +42,8 @@ export async function dispatchAction(ctx: Ctx, nama: string, data: FormData): Pr
   // enforces the same rule for every write, this answers early with a clear message
   if (ctx.staff?.platform && !PLATFORM_ACTIONS.test(nama))
     return go(withMessage(back, 'galat', 'Super Admin platform hanya dapat mengubah pengaturan sekolah, aktivasi modul, serta staf & peran.'))
+  // a closed module refuses its actions like its pages, also when the form is posted directly
+  if (!(await actionModuleOpen(ctx, nama))) return go('/modul-belum-aktif')
   try {
     const r = await handler(ctx, new Form(data))
     const target = (r && r.redirect && safePath(r.redirect)) || back
