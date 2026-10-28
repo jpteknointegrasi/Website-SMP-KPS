@@ -38,6 +38,7 @@ export const PERMISSIONS = {
   'activities.manage': 'Ekstrakurikuler (semua kegiatan)',
   'activities.coach': 'Pembina ekstrakurikuler (kegiatan yang dibina)',
   'student_affairs': 'Kesiswaan',
+  'student_affairs.coordinate': 'Koordinator Kesiswaan (melihat identitas pelapor yang dirahasiakan)',
   'library.manage': 'Perpustakaan',
   'health.manage': 'UKS',
   'organizations.manage': 'Organisasi & kegiatan siswa',
@@ -50,9 +51,14 @@ export type Permission = keyof typeof PERMISSIONS
 
 const ALL = Object.keys(PERMISSIONS) as Permission[]
 const RESTRICTED: Permission[] = ['counseling', 'counseling.coordinate', 'health.manage', 'roles.restricted']
+/**
+ * Held by the student-affairs coordinator (Waka Kesiswaan) only, not by the App admin: the identity of a reporter who
+ * asked for confidentiality is shown to the coordinator alone (and to the reporter).
+ */
+const COORDINATOR_ONLY: Permission[] = ['student_affairs.coordinate']
 
 export const ROLES: Record<string, { label: string; group: string; perms: Permission[] }> = {
-  school_admin: { label: 'Admin App Sekolah', group: 'Tata kelola', perms: ALL.filter((p) => !RESTRICTED.includes(p)) },
+  school_admin: { label: 'Admin App Sekolah', group: 'Tata kelola', perms: ALL.filter((p) => !RESTRICTED.includes(p) && !COORDINATOR_ONLY.includes(p)) },
   pimpinan: { label: 'Pimpinan (Kepala/Waka)', group: 'Tata kelola', perms: ['dashboard.view', 'students.read', 'reports.review', 'audit.view', 'roles.restricted'] },
   tata_usaha: {
     label: 'Tata Usaha (Administrasi Siswa)',
@@ -63,7 +69,7 @@ export const ROLES: Record<string, { label: string; group: string; perms: Permis
   keuangan: { label: 'Keuangan', group: 'Administrasi', perms: ['finance.manage', 'finance.verify', 'students.read'] },
   kurikulum: { label: 'Waka Kurikulum', group: 'Akademik', perms: ['academic.manage', 'students.read', 'reports.review', 'reports.release', 'dashboard.view'] },
   guru: { label: 'Guru', group: 'Akademik', perms: ['teach'] },
-  kesiswaan: { label: 'Waka Kesiswaan', group: 'Kesiswaan', perms: ['student_affairs', 'activities.manage', 'organizations.manage', 'alumni.manage', 'students.read'] },
+  kesiswaan: { label: 'Waka Kesiswaan', group: 'Kesiswaan', perms: ['student_affairs', 'student_affairs.coordinate', 'activities.manage', 'organizations.manage', 'alumni.manage', 'students.read'] },
   bk: { label: 'Guru BK / Konselor', group: 'Kesiswaan', perms: ['counseling', 'students.read'] },
   koordinator_bk: { label: 'Koordinator BK', group: 'Kesiswaan', perms: ['counseling', 'counseling.coordinate', 'students.read', 'roles.restricted'] },
   pembina: { label: 'Pembina Ekstrakurikuler', group: 'Kesiswaan', perms: ['activities.coach'] },
