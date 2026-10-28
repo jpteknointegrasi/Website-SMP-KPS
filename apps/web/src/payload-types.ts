@@ -483,6 +483,9 @@ export interface Album {
         id?: string | null;
       }[]
     | null;
+  /**
+   * Album hanya tampil publik bila dicentang, walaupun sudah diterbitkan.
+   */
   publicationConsent?: boolean | null;
   /**
    * Kontributor: pilih "Ajukan Review" lalu klik Simpan Draf. Editor menerbitkan setelah review.

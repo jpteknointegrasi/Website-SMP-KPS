@@ -436,6 +436,8 @@ export const Albums = defineContent({
   labels: { singular: 'Album', plural: 'Album Galeri' },
   group: 'Konten',
   defaultSort: '-eventDate',
+  // Photos of children: an album is public only with recorded publication consent (staff always see it).
+  publicWhere: () => ({ publicationConsent: { equals: true } }),
   fields: [
     titleField('Judul album'),
     slugField(),
@@ -451,7 +453,13 @@ export const Albums = defineContent({
         { name: 'caption', type: 'text', label: 'Keterangan' },
       ],
     },
-    { name: 'publicationConsent', type: 'checkbox', label: 'Persetujuan publikasi foto', defaultValue: false, admin: { position: 'sidebar' } },
+    {
+      name: 'publicationConsent',
+      type: 'checkbox',
+      label: 'Persetujuan publikasi foto',
+      defaultValue: false,
+      admin: { position: 'sidebar', description: 'Album hanya tampil publik bila dicentang, walaupun sudah diterbitkan.' },
+    },
   ],
 })
 
