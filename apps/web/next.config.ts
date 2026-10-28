@@ -2,6 +2,7 @@ import { withPayload } from '@payloadcms/next/withPayload'
 import type { NextConfig } from 'next'
 import path from 'path'
 import { fileURLToPath } from 'url'
+import { SECURITY_HEADERS } from './src/lib/security-headers'
 
 const __filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(__filename)
@@ -16,18 +17,9 @@ const nextConfig: NextConfig = {
   outputFileTracingIncludes: {
     '/setup/isi-data': ['./content/**/*'],
   },
-  // Video players may only come from YouTube's privacy-enhanced domain; nobody may frame this site.
+  // CSP (frames, objects, base URI, form targets), HSTS, nosniff, referrer and permissions: src/lib/security-headers.ts
   async headers() {
-    return [
-      {
-        source: '/:path*',
-        headers: [
-          { key: 'Content-Security-Policy', value: "frame-src 'self' https://www.youtube-nocookie.com; frame-ancestors 'self'" },
-          { key: 'X-Content-Type-Options', value: 'nosniff' },
-          { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
-        ],
-      },
-    ]
+    return [{ source: '/:path*', headers: SECURITY_HEADERS }]
   },
   images: {
     localPatterns: [
