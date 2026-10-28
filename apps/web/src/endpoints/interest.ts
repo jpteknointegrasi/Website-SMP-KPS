@@ -1,6 +1,6 @@
 import type { Endpoint, Where } from 'payload'
 import { endpointPayload, noSchool, notifyAddress } from '../tenancy/endpoint'
-import { rateLimited } from './contact'
+import { rateLimited } from '../lib/rate-limit'
 import { readFlags, flagOff } from '../lib/flags'
 import { canExportLeads } from '../access/roles'
 import { auditAction } from '../hooks/audit'
@@ -61,7 +61,7 @@ export const interestSubmitEndpoint: Endpoint = {
     if (!p) return noSchool()
     const flags = await readFlags(p)
     if (!flags.interestForm) return flagOff()
-    if (rateLimited(`interest:${clientIp(req)}`)) return json({ ok: false, error: 'Terlalu banyak pengiriman. Coba lagi beberapa menit lagi.' }, 429)
+    if (await rateLimited(p, `interest:${clientIp(req)}`)) return json({ ok: false, error: 'Terlalu banyak pengiriman. Coba lagi beberapa menit lagi.' }, 429)
     let body: InterestInput = {}
     try {
       body = ((await req.json?.()) ?? {}) as InterestInput

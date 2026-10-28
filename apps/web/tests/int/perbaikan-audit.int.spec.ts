@@ -80,3 +80,58 @@ describe('AUD-01 persetujuan publikasi album', () => {
     expect(staffView.docs).toHaveLength(1)
   })
 })
+
+describe('AUD-04 pembatas laju di database (bersama antar-instance)', () => {
+  const contact = (ip: string) =>
+    import('@/endpoints/contact').then(({ contactSubmitEndpoint }) =>
+      contactSubmitEndpoint.handler(epReq({ name: `Laju ${RUN}`, email: 'laju@contoh.id', category: 'umum', message: 'Pesan uji pembatas laju.', consent: true, startedAt: Date.now() - 10_000, idempotencyKey: randomBytes(12).toString('hex') }, { ip })),
+    )
+  it('5 kiriman per 10 menit per IP + rute; ke-6 → 429; IP lain tidak terpengaruh', async () => {
+    const ip = `198.51.${Math.floor(Math.random() * 250)}.${Math.floor(Math.random() * 250)}`
+    const codes: number[] = []
+    for (let i = 0; i < 6; i++) codes.push((await contact(ip)).status)
+    expect(codes.slice(0, 5)).toEqual([200, 200, 200, 200, 200])
+    expect(codes[5]).toBe(429)
+    expect((await contact(`${ip}9`)).status).toBe(200)
+  })
+  it('hitungan tersimpan di tabel (bukan memori proses) dan kunci di-hash, tanpa IP', async () => {
+    const { countHit } = await import('@/lib/rate-limit')
+    const key = `uji:${RUN}:203.0.113.7`
+    expect(await countHit(raw, key, 600_000)).toBe(1)
+    expect(await countHit(raw, key, 600_000)).toBe(2)
+    // a hit recorded "earlier" (another instance, an earlier minute) counts inside the window, not outside
+    expect(await countHit(raw, key, 600_000, Date.now() - 5 * 60_000)).toBe(3)
+    expect(await countHit(raw, key, 60_000, Date.now() + 3 * 60_000)).toBe(1)
+    const db = raw.db.drizzle as any
+    const { sql } = await import('@payloadcms/db-postgres')
+    const rows = (await db.execute(sql`SELECT "key" FROM rate_limit_hits WHERE "key" LIKE ${'%203.0.113.7%'}`)).rows
+    expect(rows).toHaveLength(0)
+  })
+  it('bila database gagal, memakai cadangan memori (tetap membatasi)', async () => {
+    const { rateLimited } = await import('@/lib/rate-limit')
+    const broken = { db: { name: 'postgres', drizzle: { execute: async () => { throw new Error('putus') } } }, logger: { warn: () => {} } } as never
+    const key = `cadangan:${RUN}`
+    const r: boolean[] = []
+    for (let i = 0; i < 6; i++) r.push(await rateLimited(broken, key))
+    expect(r).toEqual([false, false, false, false, false, true])
+  })
+  it('pendaftaran sekolah publik: 3 per jam per IP; IP lain masih bisa', async () => {
+    const { createApplication, APPLICATIONS_PER_IP_PER_HOUR } = await import('@/platform/service')
+    const { readApplication } = await import('@/platform/validation')
+    const fd = (k: string) => {
+      const f = new FormData()
+      for (const [a, b] of Object.entries({ schoolName: `SMA Laju ${RUN} ${k}`, shortName: '', level: 'sma', npsn: '', city: 'Balikpapan', province: 'Kalimantan Timur', timezone: 'Asia/Makassar', domain: '', wantWeb: 'on', adminName: `Admin ${k}`, adminEmail: `${RUN}-laju-${k}@test.invalid`, consent: 'on' })) f.set(a, b)
+      return readApplication(f).value
+    }
+    const ip = `192.0.2.${Math.floor(Math.random() * 250)}-${RUN}`
+    try {
+      const results = []
+      for (let i = 0; i <= APPLICATIONS_PER_IP_PER_HOUR; i++) results.push(await createApplication(raw, fd(String(i)), { ip }))
+      expect(results.slice(0, APPLICATIONS_PER_IP_PER_HOUR).every((r) => r.ok)).toBe(true)
+      expect(results[APPLICATIONS_PER_IP_PER_HOUR]).toMatchObject({ ok: false })
+      expect(await createApplication(raw, fd('lain'), { ip: `${ip}-b` })).toMatchObject({ ok: true })
+    } finally {
+      await raw.delete({ collection: 'school-applications', where: { adminEmail: { like: `${RUN}-laju` } }, overrideAccess: true })
+    }
+  })
+})

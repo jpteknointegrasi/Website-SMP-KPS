@@ -11,6 +11,7 @@ import { randomBytes, randomInt } from 'crypto'
 import { commitTransaction, createLocalReq, initTransaction, killTransaction, type Payload } from 'payload'
 import { isSuperAdmin } from '@/access/roles'
 import { clearTenantCache } from '@/tenancy/resolve'
+import { rateLimited } from '@/lib/rate-limit'
 import type { User } from '@/payload-types'
 import { applicationReference, type ApplicationInput, type ApprovalInput } from './validation'
 
@@ -28,15 +29,20 @@ async function mail(payload: Payload, to: string, subject: string, html: string,
     })
 }
 
-/** Rate guard for the public form: at most this many new applications per hour on the whole platform. */
-export const APPLICATIONS_PER_HOUR = 30
+/** Rate guards for the public form: per sender (IP) and, as a backstop, for the whole platform. */
+export const APPLICATIONS_PER_IP_PER_HOUR = 3
+export const APPLICATIONS_PER_HOUR = 60
 
 export type SubmitResult = { ok: true; reference: string; duplicate: boolean } | { ok: false; message: string }
 
-export async function createApplication(payload: Payload, value: ApplicationInput): Promise<SubmitResult> {
+const TOO_MANY = 'Terlalu banyak pendaftaran dalam satu jam terakhir. Silakan coba lagi nanti.'
+
+/** `ip`: the sender's address (server action: first hop of x-forwarded-for). Omitted only by internal callers. */
+export async function createApplication(payload: Payload, value: ApplicationInput, opts: { ip?: string } = {}): Promise<SubmitResult> {
+  if (opts.ip && (await rateLimited(payload, `daftar-sekolah:${opts.ip}`, { max: APPLICATIONS_PER_IP_PER_HOUR, windowMs: 3_600_000 }))) return { ok: false, message: TOO_MANY }
   const hourAgo = new Date(Date.now() - 3_600_000).toISOString()
   const recent = await payload.count({ collection: 'school-applications', where: { createdAt: { greater_than: hourAgo } }, overrideAccess: true })
-  if (recent.totalDocs >= APPLICATIONS_PER_HOUR) return { ok: false, message: 'Terlalu banyak pendaftaran dalam satu jam terakhir. Silakan coba lagi nanti.' }
+  if (recent.totalDocs >= APPLICATIONS_PER_HOUR) return { ok: false, message: TOO_MANY }
   // one open application per e-mail / school name: a repeat submit gets the same answer, without a duplicate
   const dup = await payload.find({
     collection: 'school-applications',

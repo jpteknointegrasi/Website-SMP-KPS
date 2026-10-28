@@ -2,7 +2,7 @@ import type { Endpoint, Where } from 'payload'
 import { endpointPayload, noSchool } from '../tenancy/endpoint'
 import type { TenantPayload } from '../tenancy/scoped'
 import { createHash } from 'crypto'
-import { rateLimited } from './contact'
+import { rateLimited } from '../lib/rate-limit'
 import { readFlags, flagOff } from '../lib/flags'
 import { canSeeLeads } from '../access/roles'
 import { recordEvent } from '../lib/analytics'
@@ -130,7 +130,7 @@ export const visitBookingEndpoint: Endpoint = {
     if (!p) return noSchool()
     const flags = await readFlags(p)
     if (!flags.schoolVisits) return flagOff()
-    if (rateLimited(`visit:${clientIp(req)}`)) return json({ ok: false, error: 'Terlalu banyak pengiriman. Coba lagi beberapa menit lagi.' }, 429)
+    if (await rateLimited(p, `visit:${clientIp(req)}`)) return json({ ok: false, error: 'Terlalu banyak pengiriman. Coba lagi beberapa menit lagi.' }, 429)
     let body: Record<string, unknown> = {}
     try {
       body = ((await req.json?.()) ?? {}) as Record<string, unknown>
@@ -209,7 +209,7 @@ export const visitCancelEndpoint: Endpoint = {
     const p = await endpointPayload(req)
     if (!p) return noSchool()
     if (!(await readFlags(p)).schoolVisits) return flagOff()
-    if (rateLimited(`cancel:${clientIp(req)}`)) return json({ ok: false, error: 'Terlalu banyak percobaan. Coba lagi nanti.' }, 429)
+    if (await rateLimited(p, `cancel:${clientIp(req)}`)) return json({ ok: false, error: 'Terlalu banyak percobaan. Coba lagi nanti.' }, 429)
     let body: Record<string, unknown> = {}
     try {
       body = ((await req.json?.()) ?? {}) as Record<string, unknown>

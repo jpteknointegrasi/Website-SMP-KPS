@@ -1,18 +1,7 @@
 import type { Endpoint } from 'payload'
 import { endpointPayload, noSchool, notifyAddress } from '../tenancy/endpoint'
 import { randomBytes } from 'crypto'
-
-const WINDOW_MS = 10 * 60 * 1000
-const MAX_PER_WINDOW = 5
-const hits = new Map<string, number[]>()
-
-export const rateLimited = (key: string, now = Date.now()) => {
-  const arr = (hits.get(key) ?? []).filter((t) => now - t < WINDOW_MS)
-  arr.push(now)
-  hits.set(key, arr)
-  if (hits.size > 5000) hits.clear()
-  return arr.length > MAX_PER_WINDOW
-}
+import { ipFromHeaders, rateLimited } from '../lib/rate-limit'
 
 const CATEGORIES = ['umum', 'pendaftaran', 'akademik', 'saran', 'alumni', 'kegiatan', 'kunjungan'] as const
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/
@@ -60,9 +49,8 @@ export const contactSubmitEndpoint: Endpoint = {
   handler: async (req) => {
     const p = await endpointPayload(req)
     if (!p) return noSchool()
-    const ip =
-      req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || req.headers.get('x-real-ip') || 'local'
-    if (rateLimited(ip)) {
+    // shared across server instances (database); 5 per 10 minutes per IP
+    if (await rateLimited(p, `contact:${ipFromHeaders(req.headers)}`)) {
       return Response.json({ ok: false, error: 'Terlalu banyak pengiriman. Coba lagi beberapa menit lagi.' }, { status: 429 })
     }
     let body: ContactInput = {}

@@ -9,6 +9,7 @@ import * as migration_20261027_011036_app_karya from './20261027_011036_app_kary
 import * as migration_20261027_085548_alumni_ika_agenda from './20261027_085548_alumni_ika_agenda';
 import * as migration_20261027_180348_platform_school_applications from './20261027_180348_platform_school_applications';
 import * as migration_20261028_054340_tautan_minat_portal from './20261028_054340_tautan_minat_portal';
+import * as migration_20261028_155027_rate_limit_hits from './20261028_155027_rate_limit_hits';
 
 export const migrations = [
   {
@@ -64,6 +65,11 @@ export const migrations = [
   {
     up: migration_20261028_054340_tautan_minat_portal.up,
     down: migration_20261028_054340_tautan_minat_portal.down,
-    name: '20261028_054340_tautan_minat_portal'
+    name: '20261028_054340_tautan_minat_portal',
+  },
+  {
+    up: migration_20261028_155027_rate_limit_hits.up,
+    down: migration_20261028_155027_rate_limit_hits.down,
+    name: '20261028_155027_rate_limit_hits'
   },
 ];
