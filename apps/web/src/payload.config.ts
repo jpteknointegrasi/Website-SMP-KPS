@@ -53,6 +53,7 @@ import { AnalyticsDaily } from './collections/analytics'
 import { isSuperAdmin } from './access/roles'
 import { readFlags } from './lib/flags'
 import { releaseExpiredHolds } from './lib/capacity'
+import { healthEndpoint } from './endpoints/health'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
@@ -228,6 +229,8 @@ export default buildConfig({
         ]),
   ],
   graphQL: { disable: true },
+  // GET /api/kesehatan: uptime monitoring (database ping only)
+  endpoints: [healthEndpoint],
   jobs: {
     // runs every school's queued jobs: platform operator or the scheduler only
     access: { run: ({ req }) => isSuperAdmin(req.user) || (Boolean(process.env.CRON_SECRET) && req.headers.get('authorization') === `Bearer ${process.env.CRON_SECRET}`) },

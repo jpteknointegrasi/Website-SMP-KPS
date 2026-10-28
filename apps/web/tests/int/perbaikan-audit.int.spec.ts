@@ -202,3 +202,29 @@ describe('AUD-06 REST publik: batas limit & foto staf tanpa persetujuan', () => 
     expect(staffView.photo).toBe(m.id)
   })
 })
+
+describe('AUD-08 endpoint kesehatan /api/kesehatan', () => {
+  it('200 {ok, db, time} lewat route REST asli, tanpa data sekolah, no-store; juga di alamat tak dikenal', async () => {
+    for (const host of [school.domain, `asing-${RUN}.contoh.test`]) {
+      const url = `http://${host}/api/kesehatan`
+      const res = await restGet(new Request(url, { headers: { host } }), { params: Promise.resolve({ slug: ['kesehatan'] }) })
+      expect(res.status).toBe(200)
+      expect(res.headers.get('cache-control')).toBe('no-store')
+      const j = await res.json()
+      expect(Object.keys(j).sort()).toEqual(['db', 'ok', 'time'])
+      expect(j).toMatchObject({ ok: true, db: true })
+      expect(Number.isNaN(Date.parse(j.time))).toBe(false)
+    }
+  })
+  it('tidak dibatasi laju (banyak pemanggilan berturut-turut tetap 200)', async () => {
+    const { healthEndpoint } = await import('@/endpoints/health')
+    for (let i = 0; i < 12; i++) expect((await healthEndpoint.handler(epReq(undefined, { ip: '203.0.113.50' }))).status).toBe(200)
+  })
+  it('database gagal → 503 {ok:false, db:false}', async () => {
+    const { healthEndpoint } = await import('@/endpoints/health')
+    const req = { payload: { db: { drizzle: { execute: async () => { throw new Error('putus') } } } }, headers: new Headers() } as unknown as PayloadRequest
+    const res = await healthEndpoint.handler(req)
+    expect(res.status).toBe(503)
+    expect(await res.json()).toMatchObject({ ok: false, db: false })
+  })
+})
