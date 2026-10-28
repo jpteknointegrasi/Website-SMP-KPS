@@ -22,8 +22,9 @@ export const portalEnabled = cache(async () => hasProduct(await portalSchool(), 
 
 /**
  * Staff member of THIS school signed in on the school's website CMS (same domain → same cookie), as confirmed by the
- * website. The platform Super Admin is not let in automatically (Blueprint §25, addendum v2.1): support access to a
- * school's App data needs its own time-limited, audited grant (to be built with the first data module).
+ * website. The platform Super Admin is never returned here: it enters through portalOperator() in governance mode
+ * (server/context.ts loadPlatformAdmin — settings, modules, staff & roles, audit, aggregates; audited), and reads the
+ * student register only under a time-limited "data siswa" support grant issued by the school.
  */
 export const portalStaff = cache(async (): Promise<StaffMember | null> => {
   const school = await portalSchool()
@@ -35,7 +36,7 @@ export const portalStaff = cache(async (): Promise<StaffMember | null> => {
   return m && m.role !== 'superadmin' && m.schoolId === school.id ? m : null
 })
 
-/** Platform Super Admin signed in on the CMS (only used together with a support grant issued by the school). */
+/** Platform Super Admin signed in on the CMS: governance mode in every school's App (loadPlatformAdmin). */
 export const portalOperator = cache(async (): Promise<StaffMember | null> => {
   const school = await portalSchool()
   if (!school) return null

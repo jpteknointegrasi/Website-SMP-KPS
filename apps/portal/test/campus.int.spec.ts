@@ -1,6 +1,7 @@
 /**
  * CMP-01..06: library circulation rules, UKS restricted content, organisation proposals → calendar, alumni consent,
  * leadership dashboard & purpose-bound exports, support access (read-only, time-limited, audited).
+ * PLT-APP-01..02: the platform Super Admin in a school's App (governance only; grants read-only; no files; writes audited).
  */
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { and, eq } from 'drizzle-orm'
@@ -15,8 +16,11 @@ import { grantSupport, revokeSupport, setModuleState } from '@/modules/admin/ser
 import { signIn, signUp, verifyEmail } from '@/modules/identity/service'
 import { processOutbox } from '@/server/outbox'
 import { loadPlatformAdmin, loadSupport, makeCtx } from '@/server/context'
-import { academicEvents, auditEvents, consents, mailLog, notifications, students, supportGrants } from '@/db/schema'
-import { accountFromToken, ctxAccount, ctxAnon, ctxStaff, harness, staff, type School } from './helpers'
+import { academicEvents, auditEvents, consents, files, mailLog, notifications, students, supportGrants } from '@/db/schema'
+import { canReadFile } from '@/server/files'
+import { dispatchAction } from '@/server/dispatch'
+import '@/modules/register'
+import { accountFromToken, ctxAccount, ctxAnon, ctxStaff, harness, pdf, png, staff, type School } from './helpers'
 import type { AccountActor, StaffActor } from '@/server/context'
 
 const h = harness('t5')
@@ -151,25 +155,56 @@ describe('CMP-05 dashboard & ekspor', () => {
 })
 
 describe('CMP-06 akses bantuan teknis', () => {
-  it('hanya dengan izin sekolah, terbatas waktu, hanya melihat, tercatat; dapat dicabut', async () => {
+  it('hanya dengan izin sekolah, terbatas waktu, hanya melihat, tercatat; dapat dicabut (jalur produksi: loadPlatformAdmin)', async () => {
     const op = { id: 99, email: 'operator@platform.test', name: 'Operator', role: 'superadmin', schoolId: null } as never
     expect(await loadSupport(A.db, op, now)).toBeNull()
+    // the production path (requestCtx) loads the Super Admin with loadPlatformAdmin: governance only, no student data
+    expect((await loadPlatformAdmin(A.db, op, now))!.perms.has('students.read')).toBe(false)
     await grantSupport(ctxStaff(A, admin, now), { email: 'operator@platform.test', reason: 'Membantu impor data siswa', hours: 2, scope: 'data_siswa' })
     const sup = await loadSupport(A.db, op, now)
     expect(sup?.support).toBeTruthy()
-    expect(sup!.perms.has('counseling')).toBe(false)
-    expect(sup!.perms.has('students.read')).toBe(true)
+    const pa = (await loadPlatformAdmin(A.db, op, now))!
+    expect(pa.platform).toBe(true)
+    expect(pa.perms.has('counseling')).toBe(false)
+    expect(pa.perms.has('students.read')).toBe(true)
+    expect([...pa.grantPerms!]).toEqual(['students.read'])
+    const pctx = makeCtx({ school: A.school, db: A.db, staff: pa, now })
+    // reading works, every write outside governance is refused — even with the grant
+    await expect(S.getStudent(pctx, alya)).resolves.toBeTruthy()
+    await expect(S.updateStudent(pctx, alya, { fullName: 'Diubah Platform' }, null)).rejects.toMatchObject({ code: 'forbidden' })
+    await expect(L.saveBook(pctx, { code: 'Z', isbn: null, title: 'Z', author: null, publisher: null, year: null, category: null, location: null, copies: 1, active: true })).rejects.toMatchObject({ code: 'forbidden' })
+    // the support actor alone (older path) stays read-only too
     const sctx = makeCtx({ school: A.school, db: A.db, staff: sup, now })
     await expect(L.saveBook(sctx, { code: 'Z', isbn: null, title: 'Z', author: null, publisher: null, year: null, category: null, location: null, copies: 1, active: true })).rejects.toMatchObject({ code: 'forbidden' })
     expect((await A.db.select().from(auditEvents).where(eq(auditEvents.action, 'support.access'))).length).toBe(1)
     expect(await loadSupport(A.db, op, new Date(now.getTime() + 3 * 3600_000))).toBeNull()
+    expect((await loadPlatformAdmin(A.db, op, new Date(now.getTime() + 3 * 3600_000)))!.perms.has('students.read')).toBe(false)
     const [g] = await A.db.select().from(supportGrants)
     await revokeSupport(ctxStaff(A, admin, now), g!.id)
     expect(await loadSupport(A.db, op, now)).toBeNull()
+    expect((await loadPlatformAdmin(A.db, op, now))!.perms.has('students.read')).toBe(false)
+  })
+
+  it('Super Admin dengan izin "data siswa" tidak pernah mengunduh berkas siswa; Buku Induk tetap terbaca', async () => {
+    const op = { id: 97, email: 'berkas@platform.test', name: 'Operator Berkas', role: 'superadmin', schoolId: null } as never
+    const t = ctxStaff(A, admin, now)
+    await S.addStudentDocument(t, alya, 'akta', pdf(), null)
+    await S.addStudentDocument(t, alya, 'pasfoto', png(), null)
+    const docFile = (await A.db.select().from(files).where(eq(files.contextType, 'student_document')))[0]!
+    const photoFile = (await A.db.select().from(files).where(eq(files.contextType, 'person_photo')))[0]!
+    expect(await canReadFile(t, docFile)).toBe(true) // the school's own staff can
+    await grantSupport(t, { email: 'berkas@platform.test', reason: 'Membantu memeriksa Buku Induk', hours: 2, scope: 'data_siswa' })
+    const pctx = makeCtx({ school: A.school, db: A.db, staff: await loadPlatformAdmin(A.db, op, now), now })
+    await expect(S.listStudents(pctx, {})).resolves.toBeTruthy()
+    await expect(S.getStudent(pctx, alya)).resolves.toBeTruthy()
+    expect(await canReadFile(pctx, docFile)).toBe(false)
+    expect(await canReadFile(pctx, photoFile)).toBe(false)
+    // public files (e.g. the school's logo) stay public
+    expect(await canReadFile(pctx, { ...docFile, classification: 'public' })).toBe(true)
   })
 })
 
-describe('PLT-01 Super Admin platform di App sekolah (tata kelola)', () => {
+describe('PLT-APP-01 Super Admin platform di App sekolah (tata kelola)', () => {
   it('mengatur modul & melihat agregat, tanpa data pribadi/BK/UKS; tidak bisa memberi akses bantuan ke dirinya; tercatat', async () => {
     const sa = { id: 98, email: 'super@platform.test', name: 'Super', role: 'superadmin', schoolId: null } as never
     expect(await loadPlatformAdmin(A.db, { ...(sa as object), role: 'admin' } as never, now)).toBeNull()
@@ -183,11 +218,36 @@ describe('PLT-01 Super Admin platform di App sekolah (tata kelola)', () => {
     await expect(setModuleState(pctx, 'perpustakaan', 'pilot')).resolves.toBeUndefined()
     await expect(S.listStudents(pctx, {})).rejects.toMatchObject({ code: 'forbidden' })
     await expect(grantSupport(pctx, { email: 'super@platform.test', reason: 'Membuka data siswa sendiri', hours: 2, scope: 'data_siswa' })).rejects.toMatchObject({ code: 'forbidden' })
-    expect((await A.db.select().from(auditEvents).where(eq(auditEvents.action, 'platform.access'))).length).toBe(1)
+    expect((await A.db.select().from(auditEvents).where(and(eq(auditEvents.action, 'platform.access'), eq(auditEvents.actorId, pa!.id)))).length).toBe(1)
     // the school's own "data siswa" grant adds the student register (read) — still nothing restricted
     await grantSupport(ctxStaff(A, admin, now), { email: 'super@platform.test', reason: 'Membantu impor data siswa', hours: 2, scope: 'data_siswa' })
     const withGrant = await loadPlatformAdmin(A.db, sa, now)
     expect(withGrant!.perms.has('students.read')).toBe(true)
     expect(withGrant!.perms.has('counseling')).toBe(false)
+  })
+})
+
+describe('PLT-APP-02 setiap perubahan oleh Super Admin tercatat', () => {
+  it('kunjungan halaman dibatasi 15 menit, tetapi setiap tulis diaudit dengan email operator; aksi data lewat dispatcher ditolak', async () => {
+    const sa = { id: 96, email: 'audit@platform.test', name: 'Audit', role: 'superadmin', schoolId: null } as never
+    const pa = (await loadPlatformAdmin(A.db, sa, now))!
+    const pctx = makeCtx({ school: A.school, db: A.db, staff: pa, now })
+    const before = (await A.db.select().from(auditEvents).where(eq(auditEvents.actorId, pa.id))).length
+    await setModuleState(pctx, 'organisasi', 'pilot')
+    await setModuleState(pctx, 'organisasi', 'active')
+    const mine = await A.db.select().from(auditEvents).where(and(eq(auditEvents.actorId, pa.id), eq(auditEvents.action, 'settings.module')))
+    expect(mine).toHaveLength(2)
+    for (const e of mine) expect(e.meta).toMatchObject({ platform: true, operator: 'audit@platform.test' })
+    // a second visit within 15 minutes adds no platform.access, writes still do
+    await loadPlatformAdmin(A.db, sa, new Date(now.getTime() + 60_000))
+    expect((await A.db.select().from(auditEvents).where(eq(auditEvents.actorId, pa.id))).length).toBe(before + 2)
+    // a data action posted directly is refused before the handler runs
+    const fd = new FormData()
+    fd.set('_kembali', '/staf/siswa')
+    fd.set('id', alya)
+    fd.set('nama_lengkap', 'X')
+    const res = await dispatchAction(pctx, 'siswa.ubah', fd)
+    expect(res.status).toBe(303)
+    expect(new URL(res.headers.get('location')!, 'http://x').searchParams.get('galat')).toMatch(/^Super Admin platform hanya/)
   })
 })

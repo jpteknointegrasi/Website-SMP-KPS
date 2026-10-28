@@ -1,5 +1,5 @@
 /**
- * LIFE-01..06: grade book & results submission, report cards (approve ≠ submitter, release, versions), BK
+ * LIFE-01..05: grade book & results submission, report cards (approve ≠ submitter, release, versions), BK
  * restricted notes & shared summaries, extracurricular consent & capacity, achievements & reports, promotion.
  */
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'

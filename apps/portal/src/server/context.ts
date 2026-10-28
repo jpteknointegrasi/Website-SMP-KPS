@@ -23,6 +23,11 @@ export type StaffActor = {
   support?: { grantId: string; expiresAt: Date }
   /** Platform Super Admin in governance mode (settings, modules, staff & roles, audit, aggregates; no personal data). */
   platform?: true
+  /**
+   * Permissions that come from a school's support grant (e.g. students.read with scope "data siswa"). They open read
+   * screens only: command() refuses every write outside governance for the platform, and files stay closed.
+   */
+  grantPerms?: Set<Permission>
 }
 export type AccountActor = {
   kind: 'account'
@@ -149,8 +154,9 @@ export const PLATFORM_ADMIN_PERMS: Permission[] = ['settings.manage', 'staff.man
 
 /**
  * The platform Super Admin (CMS role superadmin) inside this school's App. Governance only; while the school has
- * also issued a "data siswa" support grant, the student register becomes readable too. Visits are audited
- * (at most every 15 minutes).
+ * also issued a "data siswa" support grant, the student register becomes readable too (read-only: grantPerms).
+ * Page visits are audited at most every 15 minutes (platform.access); every write goes through command(), which
+ * refuses anything outside governance and audits each write with the operator's e-mail.
  */
 export async function loadPlatformAdmin(db: SchoolDb, m: StaffMember, now = new Date()): Promise<StaffActor | null> {
   if (m.role !== 'superadmin') return null
@@ -169,8 +175,10 @@ export async function loadPlatformAdmin(db: SchoolDb, m: StaffMember, now = new 
     .limit(1)
   if (!last || now.getTime() - last.at.getTime() > 900_000) await db.insert(auditEvents).values({ actorType: 'staff', actorId: row.id, action: 'platform.access', objectType: 'school', objectId: null, meta: { operator: email } })
   const perms = new Set<Permission>(PLATFORM_ADMIN_PERMS)
-  if (support?.perms.has('students.read')) perms.add('students.read')
-  return { kind: 'staff', id: row.id, webUserId: String(m.id), name: `Super Admin platform (${m.name})`, email, webRole: 'superadmin', roles: new Set(['platform_admin']), perms, platform: true }
+  const grantPerms = new Set<Permission>()
+  if (support?.perms.has('students.read')) grantPerms.add('students.read')
+  for (const p of grantPerms) perms.add(p)
+  return { kind: 'staff', id: row.id, webUserId: String(m.id), name: `Super Admin platform (${m.name})`, email, webRole: 'superadmin', roles: new Set(['platform_admin']), perms, platform: true, grantPerms }
 }
 
 /** The family/student account of a session cookie value (unexpired session, active account). */
