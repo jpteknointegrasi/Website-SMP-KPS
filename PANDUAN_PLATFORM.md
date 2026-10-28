@@ -14,6 +14,7 @@ Untuk pemilik platform (Super Admin). Arsitekturnya dijelaskan di `SAAS_ARCHITEC
 | `PLATFORM_ROOT_DOMAIN` | mis. `sekolahku.id` (opsional) | Subdomain otomatis `<kode>.sekolahku.id`; perlu DNS wildcard `*.sekolahku.id` → Vercel |
 | `DEFAULT_TENANT_SLUG` | kosong (atau `kps` selama transisi) | Sekolah untuk alamat yang tak dikenal, mis. `*.vercel.app` |
 | `PLATFORM_NAME` | mis. `Sekolahku` | Judul CMS |
+| `PLATFORM_HOSTS` | bawaan `satusekolah.my.id,www.satusekolah.my.id` | Domain platform yang berandanya landing page SatuSekolah (`/` → `/satusekolah`). Tombol *Masuk ke App* membuka `/masuk-app` (daftar sekolah dengan App aktif → `https://<domain sekolah>/portal`) |
 | `SMTP_HOST` | opsional | Penerima email diatur per sekolah di Pengaturan Sekolah → Notifikasi |
 
 ## B. Memindahkan produksi SMP Nasional KPS ke platform

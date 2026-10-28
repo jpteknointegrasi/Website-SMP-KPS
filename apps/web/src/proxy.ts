@@ -3,7 +3,14 @@ import { PORTAL_BASE_PATH, PORTAL_HOST_HEADER, PORTAL_SYNC_HEADER, PORTAL_PROXY_
 
 const SAFE = new Set(['GET', 'HEAD', 'OPTIONS'])
 /** Platform console, school sign-up and the CMS stay reachable on the platform (*.vercel.app) address. */
-const PLATFORM_PATHS = ['/platform', '/daftar-sekolah', '/admin']
+const PLATFORM_PATHS = ['/platform', '/daftar-sekolah', '/admin', '/masuk-app', '/satusekolah']
+/** Platform domains whose home page is the SatuSekolah landing page (comma-separated env, no scheme). */
+const PLATFORM_HOSTS = new Set(
+  (process.env.PLATFORM_HOSTS || 'satusekolah.my.id,www.satusekolah.my.id')
+    .split(',')
+    .map((h) => h.trim().toLowerCase())
+    .filter(Boolean),
+)
 
 /**
  * Runs before every request.
@@ -20,6 +27,11 @@ const PLATFORM_PATHS = ['/platform', '/daftar-sekolah', '/admin']
 export function proxy(request: NextRequest) {
   const host = request.headers.get('host') ?? ''
   const path = request.nextUrl.pathname
+
+  // Platform domain: the home page is the SatuSekolah landing page (served by /satusekolah).
+  if (path === '/' && PLATFORM_HOSTS.has(host.toLowerCase().replace(/:\d+$/, ''))) {
+    return NextResponse.rewrite(new URL('/satusekolah', request.url))
+  }
 
   // 0. Sekolahku App lives on every school domain under /portal ("one portal"). The portal is its own deployment
   //    (PORTAL_ORIGIN); requests are passed through with the school's host and a shared secret so the portal can
