@@ -10,7 +10,8 @@ import { RichText } from '@/components/ui/RichText'
 import { Icon } from '@/components/ui/Icon'
 import { STATUS_LABEL } from '@/components/sections/home'
 import { formatDate } from '@/lib/format'
-import { interestOpenFor } from '@/lib/admissions'
+import { admissionsCta, displayedAdmissionStatus, interestOpenFor } from '@/lib/admissions'
+import { portalAdmissions } from '@/lib/portal'
 import { DocumentList } from '@/components/content/DocumentList'
 import { MediaEmbed } from '@/components/media/MediaCard'
 import { FaqList } from '@/components/content/FaqList'
@@ -29,15 +30,22 @@ export default async function Page() {
   const { name, city } = await getSchoolNames()
   const [cycle, { settings }, flags, linkFlags, faqs] = await Promise.all([getCurrentAdmissions(), getGlobals(), getFlags(), getLinkFlags(), listFaqs({ category: 'pendaftaran', limit: 12 })])
   const visitsOn = linkFlags.schoolVisits // only when an open visit slot exists
-  const mode = cycle?.mode === 'full_admissions' ? 'information_only' : (cycle?.mode ?? 'information_only') // P2 not available
-  const status = cycle?.admissionStatus ?? 'unconfirmed'
-  const externalOk = Boolean(cycle?.registrationUrl?.startsWith('https://'))
-  // one official process only: the external system button appears when open AND a valid URL exists
-  // (unchanged from before the addendum, so existing settings keep working)
-  // Sekolahku App subscribed → admissions run in the portal; that is then the one official process
+  // one official process only (lib/admissions.ts admissionsCta): with Sekolahku App the portal, its open/closed state
+  // read from the App itself; otherwise the external system, when open AND a valid https URL exists
   const viaPortal = admissionsMode(await currentTenant()) === 'app'
-  const openExternal = !viaPortal && status === 'open' && externalOk
-  const openPortal = viaPortal && status === 'open'
+  const appCycles = viaPortal ? ((await portalAdmissions())?.cycles ?? []) : []
+  const cta = admissionsCta({ mode: viaPortal ? 'app' : 'web', portalPath: PORTAL_BASE_PATH, cycle, appCycles })
+  const status = displayedAdmissionStatus(viaPortal ? 'app' : 'web', cycle?.admissionStatus, appCycles)
+  const openExternal = cta?.kind === 'external'
+  const openPortal = cta?.kind === 'portal' && cta.open
+  const portalButton =
+    cta?.kind === 'portal' ? (
+      <div>
+        <a className={`btn ${cta.open ? 'btn--gold btn--lg' : 'btn--ghost'}`} href={cta.href} data-cta="daftar-portal">
+          {cta.label}
+        </a>
+      </div>
+    ) : null
   // same rule as /pendaftaran/minat and POST /api/leads/submit
   const interestOn = flags.interestForm && interestOpenFor(cycle)
   const docs = (cycle?.infoDocuments ?? []).filter((d): d is Document => typeof d === 'object' && d !== null)
@@ -50,28 +58,32 @@ export default async function Page() {
         <Container className="layout-2">
           <div>
             {!cycle ? (
-              <EmptyState title="Informasi pendaftaran belum diterbitkan" text="Silakan hubungi sekolah untuk informasi penerimaan siswa baru." action={{ label: 'Hubungi sekolah', href: '/kontak?kategori=pendaftaran' }} />
+              <>
+                {/* with Sekolahku App the portal is reachable even before the website publishes a cycle */}
+                {portalButton ? (
+                  <div className={`status-panel ${openPortal ? 'status-panel--open' : ''}`} role="status">
+                    <strong>{openPortal ? 'Penerimaan sedang dibuka di Portal Penerimaan.' : 'Informasi penerimaan ada di Portal Penerimaan.'}</strong>
+                    {portalButton}
+                  </div>
+                ) : null}
+                {viaPortal ? <AppAdmissionPaths /> : null}
+                <EmptyState title="Informasi pendaftaran belum diterbitkan" text="Silakan hubungi sekolah untuk informasi penerimaan siswa baru." action={{ label: 'Hubungi sekolah', href: '/kontak?kategori=pendaftaran' }} />
+              </>
             ) : (
               <>
                 <div className={`status-panel ${openExternal || openPortal ? 'status-panel--open' : ''}`} role="status">
                   <span className="muted">Tahun ajaran {cycle.academicYear}{cycle.levels ? ` · ${cycle.levels}` : ''}</span>
                   <strong>Status: {STATUS_LABEL[status]}</strong>
                   <span>{cycle.intro || STATUS_TEXT[status]}</span>
-                  {openExternal ? (
+                  {cta?.kind === 'external' ? (
                     <div>
-                      <a className="btn btn--gold btn--lg" href={cycle.registrationUrl!} target="_blank" rel="noopener noreferrer" data-cta="daftar-sistem-resmi">
-                        Daftar melalui sistem resmi <Icon name="external" size={18} />
+                      <a className="btn btn--gold btn--lg" href={cta.href} target="_blank" rel="noopener noreferrer" data-cta="daftar-sistem-resmi">
+                        {cta.label} <Icon name="external" size={18} />
                         <span className="sr-only"> (membuka tab baru)</span>
                       </a>
                     </div>
                   ) : null}
-                  {viaPortal ? (
-                    <div>
-                      <a className={`btn ${openPortal ? 'btn--gold btn--lg' : 'btn--ghost'}`} href={`${PORTAL_BASE_PATH}/penerimaan`} data-cta="daftar-portal">
-                        {openPortal ? 'Daftar di Portal Penerimaan' : 'Masuk Portal Penerimaan (cek status pendaftaran)'}
-                      </a>
-                    </div>
-                  ) : null}
+                  {portalButton}
                 </div>
 
                 {viaPortal ? <AppAdmissionPaths /> : null}
