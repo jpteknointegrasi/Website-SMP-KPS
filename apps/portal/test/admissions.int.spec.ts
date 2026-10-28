@@ -2,6 +2,7 @@
  * PPDB-01..07: the full admission chain on a real database — cycle approval by someone else, application with
  * documents and fee, verification, selection with locked scores, decision approval within quota (concurrent
  * approvals cannot overbook), release visibility, offer, re-enrolment with verified payment, idempotent conversion.
+ * PPDB-09: deterministic order of the public admissions summary (open → upcoming → closed).
  * PPDB-08: separation of duties (creator/proposer ≠ approver, also for the App admin) and audited refused attempts.
  */
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
@@ -323,5 +324,29 @@ describe('PPDB-08 pemisahan tugas & percobaan yang ditolak tercatat (P2-03)', ()
     // a validation error (not a refusal of authority) is not recorded as denied
     await expect(dec.releaseBatch(ctxStaff(A, publisher), '00000000-0000-0000-0000-000000000000', null)).rejects.toThrow(/sudah disetujui/)
     expect((await A.db.select().from(auditEvents).where(eq(auditEvents.action, 'admissions.batch_release_denied'))).filter((d) => d.actorId === publisher.id)).toHaveLength(0)
+  })
+})
+
+describe('PPDB-09 ringkasan publik penerimaan', () => {
+  it('urutan tetap: dibuka dulu, lalu akan dibuka, lalu ditutup; terbaru dulu di tiap kelompok', async () => {
+    const m = ctxStaff(A, manager)
+    const old = await cfg.createCycle(m, { code: 'PPDB25', name: 'PPDB 2025/2026', targetYear: '2025/2026', targetGrade: 'VII' })
+    await A.db.execute(`UPDATE admission_cycles SET status = 'closed', open_at = now() - interval '400 days', close_at = now() - interval '300 days' WHERE id = '${old}'`)
+    const later = await cfg.createCycle(m, { code: 'PPDB29', name: 'PPDB 2029/2030', targetYear: '2029/2030', targetGrade: 'VII' })
+    await A.db.execute(`UPDATE admission_cycles SET status = 'approved', open_at = now() + interval '200 days', close_at = now() + interval '230 days' WHERE id = '${later}'`)
+    const list = await cfg.publicSummary(A.db, new Date())
+    expect(list[0]!.id).toBe(cycleId)
+    expect(list[0]!.status).toBe('open')
+    const rank = { open: 0, upcoming: 1, closed: 2 }
+    for (let i = 1; i < list.length; i++) {
+      const a = list[i - 1]!, b = list[i]!
+      expect(rank[a.status] <= rank[b.status]).toBe(true)
+      if (a.status === b.status) expect((a.openAt?.getTime() ?? 0) >= (b.openAt?.getTime() ?? 0)).toBe(true)
+    }
+    const upcoming = list.filter((c) => c.status === 'upcoming')
+    expect(upcoming[0]!.id).toBe(later)
+    expect(list.at(-1)!.id).toBe(old)
+    // the same query twice gives the same order
+    expect((await cfg.publicSummary(A.db, new Date())).map((c) => c.id)).toEqual(list.map((c) => c.id))
   })
 })

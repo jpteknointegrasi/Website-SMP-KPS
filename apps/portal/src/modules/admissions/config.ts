@@ -3,7 +3,7 @@
  * checklist) → form. Status: draft → ready_for_review → approved → open → closed → archived. Opening, early closing,
  * extension and reopening need the right permission and a reason; set-up is frozen once approved.
  */
-import { and, asc, count, eq, inArray, ne } from 'drizzle-orm'
+import { and, asc, count, desc, eq, inArray, ne } from 'drizzle-orm'
 import { admissionCycles, admissionPaths, admissionWaves, applications, type ChecklistItemDef, type DocumentReq, type FormFieldDef, type SelectionComponent } from '@/db/schema'
 import { auditDenied, requireStaff, type Ctx } from '@/server/context'
 import { command, expectVersion, type Db } from '@/server/command'
@@ -210,7 +210,7 @@ export async function cycleDetail(db: Db, id: string) {
 
 /** Public summary for the website and the public admissions page (no applicant data). */
 export async function publicSummary(db: Db, now: Date) {
-  const cycles = await db.select().from(admissionCycles).where(inArray(admissionCycles.status, ['approved', 'open', 'closed']))
+  const cycles = await db.select().from(admissionCycles).where(inArray(admissionCycles.status, ['approved', 'open', 'closed'])).orderBy(desc(admissionCycles.openAt), asc(admissionCycles.code))
   const out = []
   for (const c of cycles) {
     const d = (await cycleDetail(db, c.id))!
@@ -220,7 +220,7 @@ export async function publicSummary(db: Db, now: Date) {
       name: c.name,
       targetYear: c.targetYear,
       targetGrade: c.targetGrade,
-      status: acc.ok ? 'open' : c.status === 'closed' || (c.closeAt && now > c.closeAt) ? 'closed' : 'upcoming',
+      status: (acc.ok ? 'open' : c.status === 'closed' || (c.closeAt && now > c.closeAt) ? 'closed' : 'upcoming') as 'open' | 'closed' | 'upcoming',
       openAt: c.openAt,
       closeAt: c.closeAt,
       info: c.info,
@@ -229,5 +229,7 @@ export async function publicSummary(db: Db, now: Date) {
       paths: d.paths.filter((p) => p.active).map((p) => ({ name: p.name, description: p.description, registrationFee: p.registrationFee, documents: p.documents.map((x) => ({ label: x.label, required: x.required })) })),
     })
   }
-  return out
+  // the relevant cycle first: open, then upcoming, then closed; newest opening first within each (deterministic)
+  const rank = { open: 0, upcoming: 1, closed: 2 } as const
+  return out.sort((a, b) => rank[a.status] - rank[b.status] || (b.openAt?.getTime() ?? 0) - (a.openAt?.getTime() ?? 0) || a.name.localeCompare(b.name))
 }
