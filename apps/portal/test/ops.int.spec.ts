@@ -1,6 +1,7 @@
 /**
- * OPS-01..02: operational safeguards — the cron endpoint compares CRON_SECRET in constant time and refuses an empty
- * secret; production refuses the local-disk file driver unless explicitly allowed.
+ * OPS-01..03: operational safeguards — the cron endpoint compares CRON_SECRET in constant time and refuses an empty
+ * secret; production refuses the local-disk file driver unless explicitly allowed. OPS-03: family sign-out clears the
+ * device cache like the staff sign-out.
  */
 import { afterEach, describe, expect, it } from 'vitest'
 import { bearerMatches } from '@/server/secrets'
@@ -50,5 +51,20 @@ describe('OPS-02 penyimpanan berkas produksi', () => {
     expect(() => getStorage()).toThrow(/ALLOW_LOCAL_STORAGE_IN_PRODUCTION/)
     process.env.ALLOW_LOCAL_STORAGE_IN_PRODUCTION = 'true'
     expect(getStorage()).toBeTruthy()
+  })
+})
+
+describe('OPS-03 keluar dari akun keluarga membersihkan cache perangkat', () => {
+  it('pesan "clear" dikirim ke service worker (sama seperti keluar staf); aman bila tidak ada service worker', async () => {
+    const { clearDeviceCache, AccountSignOut } = await import('@/ui/signout')
+    const sent: unknown[] = []
+    expect(clearDeviceCache({ serviceWorker: { controller: { postMessage: (m) => sent.push(m) } } })).toBe(true)
+    expect(sent).toEqual([{ type: 'clear' }])
+    expect(clearDeviceCache({ serviceWorker: { controller: null } })).toBe(false)
+    expect(clearDeviceCache(undefined)).toBe(false)
+    // the family shell's sign-out form wires the same clean-up to its submit
+    const el = AccountSignOut({ action: '/portal/aksi/akun.keluar', children: null }) as unknown as { props: { action: string; onSubmit: () => void } }
+    expect(el.props.action).toBe('/portal/aksi/akun.keluar')
+    expect(typeof el.props.onSubmit).toBe('function')
   })
 })
