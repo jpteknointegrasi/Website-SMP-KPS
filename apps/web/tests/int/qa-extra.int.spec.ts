@@ -137,7 +137,8 @@ describe('SEC-04 berkas privat', () => {
 })
 
 describe('FORM-01 formulir kontak', () => {
-  const call = async (body: Record<string, unknown>) => {
+  const call = async (input: Record<string, unknown>) => {
+    const body = { idempotencyKey: randomBytes(16).toString('hex'), ...input }
     const req = { payload, headers: new Headers({ host: school.domain, 'x-forwarded-for': `10.77.${Math.floor(Math.random() * 250)}.${Math.floor(Math.random() * 250)}` }), json: async () => body } as unknown as PayloadRequest
     const res = await contactSubmitEndpoint.handler(req)
     return { status: res.status, json: await res.json() }

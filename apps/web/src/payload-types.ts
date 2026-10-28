@@ -2307,6 +2307,7 @@ export interface ContactMessage {
    */
   linkedLead?: (number | null) | Lead;
   emailNotified?: boolean | null;
+  idempotencyKey?: string | null;
   /**
    * Hanya Super Admin platform. Staf sekolah selalu bekerja di sekolahnya sendiri.
    */
@@ -3902,6 +3903,7 @@ export interface ContactMessagesSelect<T extends boolean = true> {
   internalNote?: T;
   linkedLead?: T;
   emailNotified?: T;
+  idempotencyKey?: T;
   tenant?: T;
   updatedAt?: T;
   createdAt?: T;

@@ -186,6 +186,8 @@ export const ContactMessages: CollectionConfig = {
       admin: { condition: (d) => d?.category === 'pendaftaran', description: 'Opsional dan manual. Hanya pesan pendaftaran yang relevan.' },
     },
     { name: 'emailNotified', type: 'checkbox', label: 'Notifikasi email terkirim', admin: { readOnly: true } },
+    // one per form instance: a retry or double click stores the message once (same approach as leads)
+    { name: 'idempotencyKey', type: 'text', unique: true, index: true, admin: { hidden: true } },
   ],
 }
 

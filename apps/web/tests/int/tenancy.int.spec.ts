@@ -198,7 +198,7 @@ describe('TEN-06 Payload ber-tenant (dipakai halaman, endpoint, job)', () => {
 
 describe('TEN-07 endpoint publik mengikuti alamat', () => {
   it('pesan kontak dari alamat B tersimpan di sekolah B saja', async () => {
-    const body = { name: `Penanya ${RUN}`, email: 'a@contoh.id', category: 'umum', message: 'Halo, saya ingin bertanya.', consent: true, startedAt: Date.now() - 10_000 }
+    const body = { name: `Penanya ${RUN}`, email: 'a@contoh.id', category: 'umum', message: 'Halo, saya ingin bertanya.', consent: true, startedAt: Date.now() - 10_000, idempotencyKey: randomBytes(16).toString('hex') }
     const req = { payload: raw, headers: new Headers({ host: B.domain, 'x-forwarded-for': '10.200.1.1' }), json: async () => body } as unknown as PayloadRequest
     const res = await contactSubmitEndpoint.handler(req)
     expect(res.status).toBe(200)
@@ -303,7 +303,7 @@ describe('TEN-12 langganan per produk (Web / App dijual terpisah)', () => {
     await raw.update({ collection: 'tenants', id: B.id, overrideAccess: true, data: { web: { plan: 'none', status: 'active' } } as never })
     clearTenantCache()
     expect(Object.values(await readFlags(B.payload)).some(Boolean)).toBe(false)
-    const body = { name: `Penanya ${RUN}`, email: 'a@contoh.id', category: 'umum', message: 'Halo, saya ingin bertanya.', consent: true, startedAt: Date.now() - 10_000 }
+    const body = { name: `Penanya ${RUN}`, email: 'a@contoh.id', category: 'umum', message: 'Halo, saya ingin bertanya.', consent: true, startedAt: Date.now() - 10_000, idempotencyKey: randomBytes(16).toString('hex') }
     const req = { payload: raw, headers: new Headers({ host: B.domain, 'x-forwarded-for': '10.202.1.1' }), json: async () => body } as unknown as PayloadRequest
     expect((await contactSubmitEndpoint.handler(req)).status).toBe(404)
     await raw.update({ collection: 'tenants', id: B.id, overrideAccess: true, data: { web: { plan: 'basic', status: 'active' } } as never })

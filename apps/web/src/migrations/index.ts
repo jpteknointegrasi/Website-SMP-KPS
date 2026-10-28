@@ -10,6 +10,7 @@ import * as migration_20261027_085548_alumni_ika_agenda from './20261027_085548_
 import * as migration_20261027_180348_platform_school_applications from './20261027_180348_platform_school_applications';
 import * as migration_20261028_054340_tautan_minat_portal from './20261028_054340_tautan_minat_portal';
 import * as migration_20261028_155027_rate_limit_hits from './20261028_155027_rate_limit_hits';
+import * as migration_20261028_155432_contact_idempotency from './20261028_155432_contact_idempotency';
 
 export const migrations = [
   {
@@ -70,6 +71,11 @@ export const migrations = [
   {
     up: migration_20261028_155027_rate_limit_hits.up,
     down: migration_20261028_155027_rate_limit_hits.down,
-    name: '20261028_155027_rate_limit_hits'
+    name: '20261028_155027_rate_limit_hits',
+  },
+  {
+    up: migration_20261028_155432_contact_idempotency.up,
+    down: migration_20261028_155432_contact_idempotency.down,
+    name: '20261028_155432_contact_idempotency'
   },
 ];

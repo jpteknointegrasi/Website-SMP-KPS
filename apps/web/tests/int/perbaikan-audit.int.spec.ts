@@ -135,3 +135,35 @@ describe('AUD-04 pembatas laju di database (bersama antar-instance)', () => {
     }
   })
 })
+
+describe('AUD-05 formulir kontak idempoten', () => {
+  const send = async (body: Record<string, unknown>) => {
+    const { contactSubmitEndpoint } = await import('@/endpoints/contact')
+    const res = await contactSubmitEndpoint.handler(epReq(body))
+    return { status: res.status, json: await res.json() }
+  }
+  const msg = (key?: string) => ({ name: `Idem ${RUN}`, email: 'idem@contoh.id', category: 'umum', message: 'Pesan yang dikirim dua kali.', consent: true, startedAt: Date.now() - 10_000, ...(key ? { idempotencyKey: key } : {}) })
+  it('kunci sama → satu pesan, referensi sama; tanpa kunci valid → 400', async () => {
+    const key = randomBytes(16).toString('hex')
+    const a = await send(msg(key))
+    const b = await send(msg(key))
+    expect(a.status).toBe(200)
+    expect(b.json).toMatchObject({ ok: true, reference: a.json.reference, repeated: true })
+    expect((await send(msg())).status).toBe(400)
+    expect((await send(msg('pendek'))).status).toBe(400)
+    expect((await payload.count({ collection: 'contact-messages', where: { idempotencyKey: { equals: key } }, overrideAccess: true })).totalDocs).toBe(1)
+  })
+  it('kiriman ganda bersamaan dengan kunci sama → satu pesan, referensi sama', async () => {
+    const key = randomBytes(16).toString('hex')
+    const [a, b] = await Promise.all([send(msg(key)), send(msg(key))])
+    expect(a.status).toBe(200)
+    expect(b.status).toBe(200)
+    expect(a.json.reference).toBe(b.json.reference)
+    expect((await payload.count({ collection: 'contact-messages', where: { idempotencyKey: { equals: key } }, overrideAccess: true })).totalDocs).toBe(1)
+  })
+  it('kunci dijaga indeks unik di database (seperti minat), bukan hanya pengecekan aplikasi', async () => {
+    const key = randomBytes(16).toString('hex')
+    await payload.create({ collection: 'contact-messages', overrideAccess: true, data: { name: `Idem ${RUN}`, category: 'umum', message: 'pesan pertama', reference: `PSN-${RUN}-1`, idempotencyKey: key } as never })
+    await expect(payload.create({ collection: 'contact-messages', overrideAccess: true, data: { name: `Idem ${RUN}`, category: 'umum', message: 'pesan kedua', reference: `PSN-${RUN}-2`, idempotencyKey: key } as never })).rejects.toThrow()
+  })
+})

@@ -9,14 +9,19 @@ export const ContactForm = ({ defaultCategory = 'umum', topic }: { defaultCatego
   const [state, setState] = useState<'idle' | 'sending' | 'ok'>('idle')
   const [ref, setRef] = useState('')
   const started = useRef(Date.now())
+  // one key per form instance: a retry or double click re-sends the same key, the server stores the message once
+  const key = useRef('')
+  if (!key.current) key.current = typeof crypto !== 'undefined' && 'randomUUID' in crypto ? crypto.randomUUID() : `${Date.now().toString(16)}-${Math.random().toString(16).slice(2)}-k`
   const formRef = useRef<HTMLFormElement>(null)
 
   const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
+    if (state === 'sending') return
     const fd = new FormData(e.currentTarget)
     const body = Object.fromEntries(fd.entries()) as Record<string, unknown>
     body.consent = fd.get('consent') === 'on'
     body.startedAt = started.current
+    body.idempotencyKey = key.current
     if (topic) body.topic = topic
     setState('sending')
     setErrors({})

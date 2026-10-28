@@ -2,6 +2,7 @@ import type { Endpoint } from 'payload'
 import { endpointPayload, noSchool, notifyAddress } from '../tenancy/endpoint'
 import { randomBytes } from 'crypto'
 import { ipFromHeaders, rateLimited } from '../lib/rate-limit'
+import { idempotencyKeyOf, waitForKey } from '../lib/forms'
 
 const CATEGORIES = ['umum', 'pendaftaran', 'akademik', 'saran', 'alumni', 'kegiatan', 'kunjungan'] as const
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/
@@ -17,6 +18,7 @@ export type ContactInput = {
   website?: unknown // honeypot
   startedAt?: unknown
   topic?: unknown
+  idempotencyKey?: unknown
 }
 
 export const validateContact = (b: ContactInput) => {
@@ -67,12 +69,28 @@ export const contactSubmitEndpoint: Endpoint = {
     const { errors, value } = validateContact(body)
     if (Object.keys(errors).length) return Response.json({ ok: false, errors }, { status: 400 })
 
+    const idempotencyKey = idempotencyKeyOf(body.idempotencyKey)
+    if (!idempotencyKey) return Response.json({ ok: false, error: 'Muat ulang halaman lalu kirim lagi.' }, { status: 400 })
+    const byKey = async () =>
+      (await p.find({ collection: 'contact-messages', where: { idempotencyKey: { equals: idempotencyKey } }, limit: 1, depth: 0, overrideAccess: true })).docs[0]
+    const prior = await byKey()
+    if (prior) return Response.json({ ok: true, reference: prior.reference, repeated: true })
+
     const reference = makeRef()
-    const doc = await p.create({
-      collection: 'contact-messages',
-      overrideAccess: true,
-      data: { ...value, category: value.category as 'umum', reference, consent: true, status: 'new' },
-    })
+    let doc: { id: number }
+    try {
+      doc = await p.create({
+        collection: 'contact-messages',
+        overrideAccess: true,
+        data: { ...value, category: value.category as 'umum', reference, consent: true, status: 'new', idempotencyKey },
+      })
+    } catch (e) {
+      // a concurrent duplicate submit with the same key won the race → answer with its reference
+      const again = await waitForKey(byKey)
+      if (again) return Response.json({ ok: true, reference: again.reference, repeated: true })
+      p.logger.error(`Gagal menyimpan pesan: ${(e as Error).message}`)
+      return Response.json({ ok: false, error: 'Maaf, pesan belum tersimpan. Coba lagi beberapa saat lagi.' }, { status: 500 })
+    }
 
     // Optional email notification — failure never loses the stored message.
     const { to, schoolName } = await notifyAddress(p, 'contact')
