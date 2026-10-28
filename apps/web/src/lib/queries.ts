@@ -12,6 +12,7 @@ import type {
 } from '@/payload-types'
 import { cache } from 'react'
 import { readFlags, type Flags } from './flags'
+import { demoAllowed } from '@/access/roles'
 
 /**
  * Public data access. Every query runs with overrideAccess:false and no user,
@@ -166,6 +167,33 @@ export async function findBySlug<T>(collection: string, slug: string, depth = 2)
   const payload = await payloadClient()
   const res = await payload.find({ collection: collection as 'posts', where: { slug: { equals: slug } }, limit: 1, depth, ...pub })
   return (res.docs[0] as T) ?? null
+}
+
+/**
+ * An ARCHIVED announcement, for its own detail page only (brief §7.2: old links keep working with an "Diarsipkan"
+ * badge). Archived records stay non-public everywhere else: collection access (REST, lists, search, sitemap) is
+ * unchanged. This server-side read is limited to one slug, published, non-demo, archived announcements of this
+ * school, and selects only the fields the page shows (no staff-only fields).
+ */
+export async function findArchivedAnnouncement(slug: string): Promise<Announcement | null> {
+  const payload = await payloadClient()
+  const and: Where[] = [{ slug: { equals: slug } }, { _status: { equals: 'published' } }, { archivedAt: { exists: true } }, { archivedAt: { not_equals: null } }]
+  if (!demoAllowed()) and.push({ isDemo: { not_equals: true } })
+  const res = await payload.find({
+    collection: 'announcements',
+    where: { and },
+    limit: 1,
+    depth: 0,
+    draft: false,
+    overrideAccess: true,
+    select: { title: true, slug: true, excerpt: true, content: true, audience: true, category: true, displayStart: true, displayEnd: true, attachments: true, contact: true, archivedAt: true, isDemo: true, seo: true },
+  })
+  const a = res.docs[0] as Announcement | undefined
+  if (!a) return null
+  // attachments through PUBLIC access, like any page: a non-public document never appears
+  const ids = (a.attachments ?? []).map((d) => (typeof d === 'object' ? d.id : d))
+  const docs = ids.length ? (await payload.find({ collection: 'documents', where: { id: { in: ids } }, limit: ids.length, depth: 0, ...pub })).docs : []
+  return { ...a, attachments: docs }
 }
 
 export async function listCollection(collection: string, opts: { where?: Where; sort?: string; limit?: number; page?: number; depth?: number } = {}) {

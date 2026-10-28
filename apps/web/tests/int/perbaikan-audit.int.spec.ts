@@ -431,3 +431,32 @@ describe('AUD-15 duplikat konten tidak menyalin slug/tanggal terbit/sequence/sta
     expect(dup.slug).toBe(`acara-${RUN}-salinan`)
   })
 })
+
+describe('AUD-19 pengumuman diarsipkan: URL detail tetap ada, tempat lain tetap tertutup', () => {
+  it('detail by slug menemukan arsip (tanpa field staf, lampiran lewat akses publik); REST/daftar/pencarian tidak', async () => {
+    const { findArchivedAnnouncement, findBySlug, search } = await import('@/lib/queries')
+    const word = `Arsipuji${RUN}`
+    // a document that is not public (draft); written straight to the database (the upload itself is not under test)
+    const privDoc = (await raw.db.create({ collection: 'documents', data: { title: `Draf dok ${RUN}`, category: 'umum', filename: `${RUN}.pdf`, mimeType: 'application/pdf', _status: 'draft', workflowStatus: 'draft', tenant: school.id } })) as { id: number }
+    const a = await payload.create({ collection: 'announcements', overrideAccess: true, data: { title: `Pengumuman ${word}`, slug: `arsip-${RUN}`, displayStart: new Date(Date.now() - 86400_000).toISOString(), reviewNote: 'rahasia staf', attachments: [privDoc.id], _status: 'published', workflowStatus: 'published' } as never })
+    await payload.update({ collection: 'announcements', id: a.id, overrideAccess: true, data: { workflowStatus: 'archived', _status: 'published' } as never })
+    const live = await runAsTenant(school.id, () => findBySlug('announcements', `arsip-${RUN}`))
+    expect(live).toBeNull()
+    const arch = (await runAsTenant(school.id, () => findArchivedAnnouncement(`arsip-${RUN}`))) as any
+    expect(arch).toMatchObject({ id: a.id, title: `Pengumuman ${word}` })
+    expect(arch.archivedAt).toBeTruthy()
+    expect(arch.reviewNote).toBeUndefined()
+    expect(arch.createdBy).toBeUndefined()
+    expect(arch.attachments).toEqual([])
+    // not public anywhere else
+    expect((await api(`announcements?where[slug][equals]=arsip-${RUN}`)).json.docs).toHaveLength(0)
+    expect((await api(`announcements/${a.id}`)).status).toBe(404)
+    expect((await runAsTenant(school.id, () => search(word))).results).toHaveLength(0)
+    // drafts are never found, archived or not
+    const d = await payload.create({ collection: 'announcements', overrideAccess: true, draft: true, data: { title: `Draf ${word}`, slug: `draf-arsip-${RUN}`, displayStart: new Date().toISOString(), workflowStatus: 'archived', _status: 'draft' } as never })
+    expect(d.id).toBeTruthy()
+    expect(await runAsTenant(school.id, () => findArchivedAnnouncement(`draf-arsip-${RUN}`))).toBeNull()
+    // another school's archived announcement with the same slug is not reachable here
+    expect(await runAsTenant(school.id, () => findArchivedAnnouncement(`tidak-ada-${RUN}`))).toBeNull()
+  })
+})
