@@ -28,10 +28,26 @@ export const memoryStorage: Storage = {
   },
 }
 
+/**
+ * A pool whose idle clients may be terminated by the server (DROP DATABASE … WITH FORCE in cleanup) without raising an
+ * unhandled error.
+ */
+export function quietPool(connectionString: string | undefined) {
+  const p = new pg.Pool({ connectionString })
+  p.on('error', () => {})
+  return p
+}
+
+/** Drops a test database after every App pool is closed (nothing left for FORCE to terminate). */
+export async function dropDatabase(admin: pg.Pool, name: string) {
+  await closeSchoolDbs()
+  await admin.query(`DROP DATABASE IF EXISTS ${name} WITH (FORCE)`)
+}
+
 export function harness(prefix: string) {
   const RUN = `${prefix}${Date.now().toString(36)}${randomBytes(2).toString('hex')}`
-  const platform = new pg.Pool({ connectionString: process.env.PLATFORM_DATABASE_URL })
-  const admin = new pg.Pool({ connectionString: process.env.TEST_PG_ADMIN_URL })
+  const platform = quietPool(process.env.PLATFORM_DATABASE_URL)
+  const admin = quietPool(process.env.TEST_PG_ADMIN_URL)
   const dbUrl = (name: string) => process.env.TEST_PG_ADMIN_URL!.replace(/\/[^/]+$/, `/${name}`)
   const made: { id: number; db: string }[] = []
 
@@ -57,7 +73,7 @@ export function harness(prefix: string) {
     await closeSchoolDbs()
     for (const m of made) {
       await platform.query('DELETE FROM tenants WHERE id = $1', [m.id])
-      await admin.query(`DROP DATABASE IF EXISTS ${m.db} WITH (FORCE)`)
+      await dropDatabase(admin, m.db)
     }
     await platform.end()
     await admin.end()
