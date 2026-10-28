@@ -16,6 +16,9 @@ type Feed = {
   withdrawn: string[]
 }
 
+/** Editorial note of media created by the import (identifies them when consent is withdrawn). */
+const importNote = (ref: string) => `Dari Sekolahku App (karya ${ref}).`
+
 const CATEGORIES = new Set(['tulisan', 'seni', 'sains', 'teknologi', 'video', 'proyek_sosial'])
 const EXT: Record<string, string> = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp' }
 
@@ -71,7 +74,7 @@ export async function syncAppWorks(payload: Payload, school: SchoolInfo, fetcher
         collection: 'media',
         overrideAccess: true,
         file: { data, mimetype: mime, name: `karya-${w.ref.slice(0, 8)}-${media.length + 1}.${EXT[mime]}`, size: data.length },
-        data: { alt: `Karya siswa: ${w.title}`.slice(0, 200), sha256: sha, consent: 'approved', reviewStatus: 'pending', license: 'Izin publikasi dari orang tua/wali, tercatat di Sekolahku App.', editorialNote: `Dari Sekolahku App (karya ${w.ref}).` },
+        data: { alt: `Karya siswa: ${w.title}`.slice(0, 200), sha256: sha, consent: 'approved', reviewStatus: 'pending', license: 'Izin publikasi dari orang tua/wali, tercatat di Sekolahku App.', editorialNote: importNote(w.ref) },
       } as never)
       media.push((doc as { id: number }).id)
     }
@@ -101,9 +104,25 @@ export async function syncAppWorks(payload: Payload, school: SchoolInfo, fetcher
   for (const ref of feed.withdrawn) {
     const r = await p.find({ collection: 'student-works', where: { and: [{ appRef: { equals: ref } }, { consentStatus: { not_equals: 'withdrawn' } }] }, limit: 5, depth: 0, overrideAccess: true, trash: true })
     for (const d of r.docs) {
-      await p.update({ collection: 'student-works', id: d.id, overrideAccess: true, draft: (d as { _status?: string })._status !== 'published', data: { consentStatus: 'withdrawn' } } as never)
+      // unpublish (the published version goes back to draft) and mark consent withdrawn
+      await p.update({
+        collection: 'student-works',
+        id: d.id,
+        overrideAccess: true,
+        context: { systemActor: 'Sekolahku App (izin ditarik)' },
+        data: { consentStatus: 'withdrawn', _status: 'draft', workflowStatus: 'draft' },
+      } as never)
       hidden++
     }
+    // images imported for this work become "do not publish": they can no longer be picked for other content.
+    // Only files this import created (editorial note names the work), never an existing school photo it reused.
+    await p.update({
+      collection: 'media',
+      where: { and: [{ editorialNote: { equals: importNote(ref) } }, { reviewStatus: { not_equals: 'blocked' } }] },
+      overrideAccess: true,
+      context: { systemActor: 'Sekolahku App (izin ditarik)' },
+      data: { reviewStatus: 'blocked', consent: 'unknown', editorialNote: `${importNote(ref)} Izin publikasi ditarik di App — jangan dipakai.` },
+    } as never)
   }
   if (imported.length) await fetcher(base, { method: 'POST', headers: { ...headers, 'content-type': 'application/json' }, body: JSON.stringify({ imported }), signal: AbortSignal.timeout(10_000) })
   return { created, hidden }

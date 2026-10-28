@@ -2438,7 +2438,7 @@ export interface SiteSetting {
    */
   retensiKunjunganBulan?: number | null;
   /**
-   * Kosong = tombol Portal Sekolah disembunyikan.
+   * Kosong = tombol Portal Sekolah disembunyikan. Bila sekolah berlangganan Sekolahku App, tombol selalu "Masuk Portal" ke /portal dan isian ini tidak dipakai.
    */
   portalUrl?: string | null;
   /**
