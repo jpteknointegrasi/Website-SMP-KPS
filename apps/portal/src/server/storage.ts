@@ -2,7 +2,9 @@
  * Private object storage for uploaded files. Drivers:
  *  - `s3`    any S3-compatible bucket (Cloudflare R2, AWS S3, Supabase Storage S3, MinIO): S3_ENDPOINT, S3_BUCKET,
  *            S3_ACCESS_KEY_ID, S3_SECRET_ACCESS_KEY, S3_REGION (default "auto"). The bucket must NOT be public.
- *  - `local` a directory on disk (development/tests): STORAGE_DIR (default ./.storage).
+ *  - `local` a directory on disk (development/tests): STORAGE_DIR (default ./.storage). Refused in production unless
+ *            ALLOW_LOCAL_STORAGE_IN_PRODUCTION=true (e.g. a single self-hosted server with a backed-up disk): serverless
+ *            disks are temporary and uploads would be lost.
  * Files are never served from the bucket directly: every download goes through the portal's access check.
  */
 import { promises as fs } from 'fs'
@@ -64,6 +66,12 @@ class S3Storage implements Storage {
   }
 }
 
+/** The local disk driver is for development and tests; production needs S3/R2 unless explicitly allowed. */
+export function assertLocalStorageAllowed(env: Record<string, string | undefined> = process.env) {
+  if (env.NODE_ENV === 'production' && env.NEXT_PHASE !== 'phase-production-build' && env.ALLOW_LOCAL_STORAGE_IN_PRODUCTION !== 'true')
+    throw new Error('Penyimpanan berkas produksi harus memakai S3/R2 (STORAGE_DRIVER=s3 dan S3_*). Disk lokal hanya bila ALLOW_LOCAL_STORAGE_IN_PRODUCTION=true.')
+}
+
 let storage: Storage | null = null
 export function getStorage(): Storage {
   if (storage) return storage
@@ -73,7 +81,7 @@ export function getStorage(): Storage {
     if (need.length) throw new Error(`Penyimpanan berkas belum diatur: ${need.join(', ')}`)
     storage = new S3Storage(process.env.S3_ENDPOINT!, process.env.S3_BUCKET!, process.env.S3_ACCESS_KEY_ID!, process.env.S3_SECRET_ACCESS_KEY!, process.env.S3_REGION || 'auto')
   } else {
-    if (process.env.NODE_ENV === 'production' && !process.env.STORAGE_DIR) throw new Error('Penyimpanan berkas produksi harus memakai S3/R2 (STORAGE_DRIVER=s3).')
+    assertLocalStorageAllowed()
     storage = new LocalStorage(process.env.STORAGE_DIR || path.resolve(process.cwd(), '.storage'))
   }
   return storage

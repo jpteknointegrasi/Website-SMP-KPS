@@ -39,3 +39,14 @@ export function passwordProblem(pw: string, login?: string) {
   if (login && pw.toLowerCase().includes(login.toLowerCase().split('@')[0]!) && login.length > 3) return 'Kata sandi tidak boleh memuat nama login.'
   return null
 }
+
+/**
+ * Constant-time check of an "Authorization: Bearer <secret>" header (cron jobs). An empty or missing secret never
+ * matches; lengths are compared on SHA-256 digests so the timing reveals neither the secret nor its length.
+ */
+export function bearerMatches(header: string | null | undefined, secret: string | null | undefined) {
+  if (!secret || !header || !header.startsWith('Bearer ')) return false
+  const given = createHash('sha256').update(header.slice(7)).digest()
+  const want = createHash('sha256').update(secret).digest()
+  return timingSafeEqual(given, want) && header.length - 7 === secret.length
+}
