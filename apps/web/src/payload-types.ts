@@ -492,6 +492,9 @@ export interface Album {
    * Kontributor: pilih "Ajukan Review" lalu klik Simpan Draf. Editor menerbitkan setelah review.
    */
   workflowStatus: 'draft' | 'in_review' | 'published' | 'archived';
+  /**
+   * Wajib diisi editor saat mengembalikan konten dari "Ajukan Review" ke Draf.
+   */
   reviewNote?: string | null;
   /**
    * Data contoh hanya tampil bila SHOW_DEMO_CONTENT=true. Produksi wajib false.
@@ -875,6 +878,9 @@ export interface Page {
    * Kontributor: pilih "Ajukan Review" lalu klik Simpan Draf. Editor menerbitkan setelah review.
    */
   workflowStatus: 'draft' | 'in_review' | 'published' | 'archived';
+  /**
+   * Wajib diisi editor saat mengembalikan konten dari "Ajukan Review" ke Draf.
+   */
   reviewNote?: string | null;
   /**
    * Data contoh hanya tampil bila SHOW_DEMO_CONTENT=true. Produksi wajib false.
@@ -947,6 +953,9 @@ export interface Post {
    * Kontributor: pilih "Ajukan Review" lalu klik Simpan Draf. Editor menerbitkan setelah review.
    */
   workflowStatus: 'draft' | 'in_review' | 'published' | 'archived';
+  /**
+   * Wajib diisi editor saat mengembalikan konten dari "Ajukan Review" ke Draf.
+   */
   reviewNote?: string | null;
   /**
    * Data contoh hanya tampil bila SHOW_DEMO_CONTENT=true. Produksi wajib false.
@@ -1042,6 +1051,9 @@ export interface MediaItem {
    * Kontributor: pilih "Ajukan Review" lalu klik Simpan Draf. Editor menerbitkan setelah review.
    */
   workflowStatus: 'draft' | 'in_review' | 'published' | 'archived';
+  /**
+   * Wajib diisi editor saat mengembalikan konten dari "Ajukan Review" ke Draf.
+   */
   reviewNote?: string | null;
   /**
    * Data contoh hanya tampil bila SHOW_DEMO_CONTENT=true. Produksi wajib false.
@@ -1184,6 +1196,9 @@ export interface Event {
    * Kontributor: pilih "Ajukan Review" lalu klik Simpan Draf. Editor menerbitkan setelah review.
    */
   workflowStatus: 'draft' | 'in_review' | 'published' | 'archived';
+  /**
+   * Wajib diisi editor saat mengembalikan konten dari "Ajukan Review" ke Draf.
+   */
   reviewNote?: string | null;
   /**
    * Data contoh hanya tampil bila SHOW_DEMO_CONTENT=true. Produksi wajib false.
@@ -1250,6 +1265,9 @@ export interface Document {
    * Kontributor: pilih "Ajukan Review" lalu klik Simpan Draf. Editor menerbitkan setelah review.
    */
   workflowStatus: 'draft' | 'in_review' | 'published' | 'archived';
+  /**
+   * Wajib diisi editor saat mengembalikan konten dari "Ajukan Review" ke Draf.
+   */
   reviewNote?: string | null;
   /**
    * Data contoh hanya tampil bila SHOW_DEMO_CONTENT=true. Produksi wajib false.
@@ -1336,6 +1354,9 @@ export interface Faq {
    * Kontributor: pilih "Ajukan Review" lalu klik Simpan Draf. Editor menerbitkan setelah review.
    */
   workflowStatus: 'draft' | 'in_review' | 'published' | 'archived';
+  /**
+   * Wajib diisi editor saat mengembalikan konten dari "Ajukan Review" ke Draf.
+   */
   reviewNote?: string | null;
   /**
    * Data contoh hanya tampil bila SHOW_DEMO_CONTENT=true. Produksi wajib false.
@@ -1409,6 +1430,9 @@ export interface StudentWork {
    * Kontributor: pilih "Ajukan Review" lalu klik Simpan Draf. Editor menerbitkan setelah review.
    */
   workflowStatus: 'draft' | 'in_review' | 'published' | 'archived';
+  /**
+   * Wajib diisi editor saat mengembalikan konten dari "Ajukan Review" ke Draf.
+   */
   reviewNote?: string | null;
   /**
    * Data contoh hanya tampil bila SHOW_DEMO_CONTENT=true. Produksi wajib false.
@@ -1499,6 +1523,9 @@ export interface Guide {
    * Kontributor: pilih "Ajukan Review" lalu klik Simpan Draf. Editor menerbitkan setelah review.
    */
   workflowStatus: 'draft' | 'in_review' | 'published' | 'archived';
+  /**
+   * Wajib diisi editor saat mengembalikan konten dari "Ajukan Review" ke Draf.
+   */
   reviewNote?: string | null;
   /**
    * Data contoh hanya tampil bila SHOW_DEMO_CONTENT=true. Produksi wajib false.
@@ -1574,6 +1601,9 @@ export interface Announcement {
    * Kontributor: pilih "Ajukan Review" lalu klik Simpan Draf. Editor menerbitkan setelah review.
    */
   workflowStatus: 'draft' | 'in_review' | 'published' | 'archived';
+  /**
+   * Wajib diisi editor saat mengembalikan konten dari "Ajukan Review" ke Draf.
+   */
   reviewNote?: string | null;
   /**
    * Data contoh hanya tampil bila SHOW_DEMO_CONTENT=true. Produksi wajib false.
@@ -1624,6 +1654,9 @@ export interface Service {
    * Kontributor: pilih "Ajukan Review" lalu klik Simpan Draf. Editor menerbitkan setelah review.
    */
   workflowStatus: 'draft' | 'in_review' | 'published' | 'archived';
+  /**
+   * Wajib diisi editor saat mengembalikan konten dari "Ajukan Review" ke Draf.
+   */
   reviewNote?: string | null;
   /**
    * Data contoh hanya tampil bila SHOW_DEMO_CONTENT=true. Produksi wajib false.
@@ -1676,6 +1709,9 @@ export interface Staff {
    * Kontributor: pilih "Ajukan Review" lalu klik Simpan Draf. Editor menerbitkan setelah review.
    */
   workflowStatus: 'draft' | 'in_review' | 'published' | 'archived';
+  /**
+   * Wajib diisi editor saat mengembalikan konten dari "Ajukan Review" ke Draf.
+   */
   reviewNote?: string | null;
   /**
    * Data contoh hanya tampil bila SHOW_DEMO_CONTENT=true. Produksi wajib false.
@@ -1751,6 +1787,9 @@ export interface Program {
    * Kontributor: pilih "Ajukan Review" lalu klik Simpan Draf. Editor menerbitkan setelah review.
    */
   workflowStatus: 'draft' | 'in_review' | 'published' | 'archived';
+  /**
+   * Wajib diisi editor saat mengembalikan konten dari "Ajukan Review" ke Draf.
+   */
   reviewNote?: string | null;
   /**
    * Data contoh hanya tampil bila SHOW_DEMO_CONTENT=true. Produksi wajib false.
@@ -1823,6 +1862,9 @@ export interface Extracurricular {
    * Kontributor: pilih "Ajukan Review" lalu klik Simpan Draf. Editor menerbitkan setelah review.
    */
   workflowStatus: 'draft' | 'in_review' | 'published' | 'archived';
+  /**
+   * Wajib diisi editor saat mengembalikan konten dari "Ajukan Review" ke Draf.
+   */
   reviewNote?: string | null;
   /**
    * Data contoh hanya tampil bila SHOW_DEMO_CONTENT=true. Produksi wajib false.
@@ -1894,6 +1936,9 @@ export interface Facility {
    * Kontributor: pilih "Ajukan Review" lalu klik Simpan Draf. Editor menerbitkan setelah review.
    */
   workflowStatus: 'draft' | 'in_review' | 'published' | 'archived';
+  /**
+   * Wajib diisi editor saat mengembalikan konten dari "Ajukan Review" ke Draf.
+   */
   reviewNote?: string | null;
   /**
    * Data contoh hanya tampil bila SHOW_DEMO_CONTENT=true. Produksi wajib false.
@@ -1967,6 +2012,9 @@ export interface Achievement {
    * Kontributor: pilih "Ajukan Review" lalu klik Simpan Draf. Editor menerbitkan setelah review.
    */
   workflowStatus: 'draft' | 'in_review' | 'published' | 'archived';
+  /**
+   * Wajib diisi editor saat mengembalikan konten dari "Ajukan Review" ke Draf.
+   */
   reviewNote?: string | null;
   /**
    * Data contoh hanya tampil bila SHOW_DEMO_CONTENT=true. Produksi wajib false.
@@ -2007,6 +2055,9 @@ export interface Testimonial {
    * Kontributor: pilih "Ajukan Review" lalu klik Simpan Draf. Editor menerbitkan setelah review.
    */
   workflowStatus: 'draft' | 'in_review' | 'published' | 'archived';
+  /**
+   * Wajib diisi editor saat mengembalikan konten dari "Ajukan Review" ke Draf.
+   */
   reviewNote?: string | null;
   /**
    * Data contoh hanya tampil bila SHOW_DEMO_CONTENT=true. Produksi wajib false.
@@ -2110,6 +2161,9 @@ export interface AdmissionsCycle {
    * Kontributor: pilih "Ajukan Review" lalu klik Simpan Draf. Editor menerbitkan setelah review.
    */
   workflowStatus: 'draft' | 'in_review' | 'published' | 'archived';
+  /**
+   * Wajib diisi editor saat mengembalikan konten dari "Ajukan Review" ke Draf.
+   */
   reviewNote?: string | null;
   /**
    * Data contoh hanya tampil bila SHOW_DEMO_CONTENT=true. Produksi wajib false.

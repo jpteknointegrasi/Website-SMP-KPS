@@ -56,7 +56,7 @@ export const workflowFields: Field[] = [
     type: 'textarea',
     label: 'Catatan reviewer (alasan dikembalikan)',
     access: { read: fieldStaffOnly },
-    admin: { position: 'sidebar' },
+    admin: { position: 'sidebar', description: 'Wajib diisi editor saat mengembalikan konten dari "Ajukan Review" ke Draf.' },
   },
   {
     name: 'isDemo',
@@ -80,6 +80,9 @@ export const workflowFields: Field[] = [
     name: 'createdBy',
     type: 'relationship',
     relationTo: 'users',
+    // stamped from the session by enforceWorkflow (never client input). No option validation: it would look the
+    // account up with the editor's own access (editors only read themselves) and block publishing others' work.
+    validate: () => true as const,
     label: 'Dibuat oleh',
     index: true,
     access: { read: fieldStaffOnly, update: () => false },
@@ -89,6 +92,9 @@ export const workflowFields: Field[] = [
     name: 'updatedBy',
     type: 'relationship',
     relationTo: 'users',
+    // stamped from the session by enforceWorkflow (never client input). No option validation: it would look the
+    // account up with the editor's own access (editors only read themselves) and block publishing others' work.
+    validate: () => true as const,
     label: 'Diubah oleh',
     access: { read: fieldStaffOnly, update: () => false },
     admin: { position: 'sidebar', readOnly: true },

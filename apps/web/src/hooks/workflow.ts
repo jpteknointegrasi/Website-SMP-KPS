@@ -8,7 +8,7 @@ type Opts = {
 
 /**
  * Server-side editorial workflow:
- * draft → in_review → (scheduled/)published → archived
+ * draft → in_review → (scheduled/)published → archived; in_review → draft by a reviewer requires a reviewNote
  * - Contributors (and admissions officers without explicit right) can never publish, even via API.
  * - createdBy / updatedBy are stamped from the session, never from client input.
  */
@@ -34,6 +34,13 @@ export const enforceWorkflow =
       }
       if (!canPublish && data.workflowStatus && !['draft', 'in_review'].includes(data.workflowStatus)) {
         data.workflowStatus = 'in_review'
+      }
+      // A reviewer sending work back (in review → draft) must say why; the author reads it in "Catatan reviewer".
+      if (canPublish && operation === 'update' && originalDoc?.workflowStatus === 'in_review' && data.workflowStatus === 'draft' && data._status !== 'published') {
+        const note = data.reviewNote !== undefined ? data.reviewNote : originalDoc?.reviewNote
+        if (typeof note !== 'string' || !note.trim()) {
+          throw new APIError('Isi "Catatan reviewer" dengan alasan sebelum mengembalikan konten ke Draf.', 400, null, true)
+        }
       }
 
       if (operation === 'create') data.createdBy = user.id

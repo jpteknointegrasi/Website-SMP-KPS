@@ -375,3 +375,24 @@ describe('AUD-13 ekspor CSV yang terpotong diberi tanda', () => {
     }
   })
 })
+
+describe('AUD-14 reviewer mengembalikan ke Draf wajib memberi alasan', () => {
+  it('editor in_review → draft tanpa catatan ditolak; dengan catatan diterima; kontributor sendiri boleh menarik', async () => {
+    const d = await payload.create({ collection: 'posts', user: users.contributor, overrideAccess: false, draft: true, data: { title: `Review ${RUN}`, slug: `review-${RUN}`, workflowStatus: 'in_review', _status: 'draft' } as never })
+    const back = (data: Record<string, unknown>, user = users.editor) => payload.update({ collection: 'posts', id: d.id, user, overrideAccess: false, draft: true, data: { workflowStatus: 'draft', _status: 'draft', ...data } as never })
+    await expect(back({})).rejects.toThrow(/Catatan reviewer/)
+    await expect(back({ reviewNote: '   ' })).rejects.toThrow(/Catatan reviewer/)
+    const ok = (await back({ reviewNote: 'Tambahkan foto dan sumber.' })) as any
+    expect(ok.workflowStatus).toBe('draft')
+    expect(ok.reviewNote).toBe('Tambahkan foto dan sumber.')
+    // the author moving their own submission back is not a review decision
+    const d2 = await payload.create({ collection: 'posts', user: users.contributor, overrideAccess: false, draft: true, data: { title: `Tarik ${RUN}`, slug: `tarik-${RUN}`, workflowStatus: 'in_review', _status: 'draft' } as never })
+    const pulled = (await payload.update({ collection: 'posts', id: d2.id, user: users.contributor, overrideAccess: false, draft: true, data: { workflowStatus: 'draft', _status: 'draft' } as never })) as any
+    expect(pulled.workflowStatus).toBe('draft')
+    // publishing from review needs no note
+    const pub = (await payload.update({ collection: 'posts', id: d2.id, user: users.editor, overrideAccess: false, data: { workflowStatus: 'in_review', _status: 'draft' } as never, draft: true }).then(() =>
+      payload.update({ collection: 'posts', id: d2.id, user: users.editor, overrideAccess: false, data: { _status: 'published' } as never }),
+    )) as any
+    expect(pub.workflowStatus).toBe('published')
+  })
+})
