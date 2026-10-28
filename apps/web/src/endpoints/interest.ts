@@ -138,7 +138,16 @@ export const interestSubmitEndpoint: Endpoint = {
   },
 }
 
-/** GET /api/leads/export — CSV for authorised staff only; formula-injection safe; audited. */
+/** Most rows one CSV export returns (newest first). Overridable for tests only. */
+export let EXPORT_MAX_ROWS = 5000
+export const setExportMaxRows = (n: number) => {
+  EXPORT_MAX_ROWS = n
+}
+
+/**
+ * GET /api/leads/export — CSV for authorised staff only; formula-injection safe; audited. When more rows exist than
+ * EXPORT_MAX_ROWS, the newest are returned with `X-Ekspor-Terpotong: 1` + total in `X-Ekspor-Total` (and in the audit).
+ */
 export const leadsExportEndpoint: Endpoint = {
   path: '/export',
   method: 'get',
@@ -150,7 +159,9 @@ export const leadsExportEndpoint: Endpoint = {
     const and: Where[] = [{ isTest: { not_equals: true } }]
     const status = url.searchParams.get('status')
     if (status && /^[a-z_]{2,20}$/.test(status)) and.push({ status: { equals: status } })
-    const res = await p.find({ collection: 'leads', where: { and }, limit: 5000, depth: 1, sort: '-createdAt', overrideAccess: false, user: req.user })
+    const res = await p.find({ collection: 'leads', where: { and }, limit: EXPORT_MAX_ROWS, depth: 1, sort: '-createdAt', overrideAccess: false, user: req.user })
+    // never silently partial: the response and the audit entry say so when more rows exist
+    const truncated = res.totalDocs > res.docs.length
     const header = ['Referensi', 'Masuk', 'Status', 'Nama wali', 'Email', 'Telepon', 'Tahun ajaran', 'Minat', 'Petugas', 'Tindak lanjut', 'Sumber']
     const rows = res.docs.map((l) => [
       l.reference,
@@ -165,10 +176,22 @@ export const leadsExportEndpoint: Endpoint = {
       l.nextFollowUpAt,
       l.source,
     ])
-    await auditAction(req, 'export', 'leads', `Ekspor CSV ${res.docs.length} baris${status ? ` (status ${status})` : ''}`)
+    await auditAction(
+      req,
+      'export',
+      'leads',
+      `Ekspor CSV ${res.docs.length} baris${truncated ? ` dari ${res.totalDocs} (TERPOTONG, batas ${EXPORT_MAX_ROWS})` : ''}${status ? ` (status ${status})` : ''}`,
+    )
     const csv = '﻿' + [header, ...rows].map((r) => r.map(csvCell).join(',')).join('\r\n')
     return new Response(csv, {
-      headers: { 'content-type': 'text/csv; charset=utf-8', 'content-disposition': `attachment; filename="minat-${new Date().toISOString().slice(0, 10)}.csv"`, 'cache-control': 'no-store' },
+      headers: {
+        'content-type': 'text/csv; charset=utf-8',
+        'content-disposition': `attachment; filename="minat-${new Date().toISOString().slice(0, 10)}${truncated ? '-terpotong' : ''}.csv"`,
+        'cache-control': 'no-store',
+        'x-ekspor-total': String(res.totalDocs),
+        'x-ekspor-baris': String(res.docs.length),
+        ...(truncated ? { 'x-ekspor-terpotong': '1' } : {}),
+      },
     })
   },
 }

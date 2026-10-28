@@ -349,3 +349,29 @@ describe('AUD-12 pemesanan kunjungan hanya menaut minat dari siklus yang sama', 
     expect((await book(await mkSession(c1))).lead).toBe(oldLead.id)
   })
 })
+
+describe('AUD-13 ekspor CSV yang terpotong diberi tanda', () => {
+  it('lebih dari batas → X-Ekspor-Terpotong: 1 + total; audit mencatat; di bawah batas → tanpa tanda', async () => {
+    const { leadsExportEndpoint, setExportMaxRows, EXPORT_MAX_ROWS } = await import('@/endpoints/interest')
+    const before = EXPORT_MAX_ROWS
+    for (let i = 0; i < 3; i++) await payload.create({ collection: 'leads', overrideAccess: true, data: { parentName: `Ekspor ${i} ${RUN}`, phone: '081234567890', interests: ['info'], reference: `MNT-EKS${i}-${RUN}`, status: 'new' } as never })
+    const total = (await payload.count({ collection: 'leads', where: { isTest: { not_equals: true } }, overrideAccess: true })).totalDocs
+    try {
+      setExportMaxRows(2)
+      const res = await leadsExportEndpoint.handler(epReq(undefined, { user: users.admissions, url: 'http://localhost/api/leads/export' }))
+      expect(res.status).toBe(200)
+      expect(res.headers.get('x-ekspor-terpotong')).toBe('1')
+      expect(res.headers.get('x-ekspor-total')).toBe(String(total))
+      expect(res.headers.get('x-ekspor-baris')).toBe('2')
+      expect((await res.text()).trim().split('\r\n')).toHaveLength(3) // header + 2 rows
+      const audit = await payload.find({ collection: 'audit-logs', where: { and: [{ action: { equals: 'export' } }, { collectionSlug: { equals: 'leads' } }] }, sort: '-createdAt', limit: 1, overrideAccess: true })
+      expect(audit.docs[0]!.docTitle).toContain(`2 baris dari ${total} (TERPOTONG`)
+      setExportMaxRows(5000)
+      const full = await leadsExportEndpoint.handler(epReq(undefined, { user: users.admissions, url: 'http://localhost/api/leads/export' }))
+      expect(full.headers.get('x-ekspor-terpotong')).toBeNull()
+      expect(full.headers.get('x-ekspor-total')).toBe(String(total))
+    } finally {
+      setExportMaxRows(before)
+    }
+  })
+})
