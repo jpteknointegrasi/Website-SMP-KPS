@@ -1,4 +1,4 @@
-import type { CollectionBeforeChangeHook, CollectionBeforeValidateHook, CollectionConfig, Field, FilterOptions, Where } from 'payload'
+import type { CollectionBeforeChangeHook, CollectionBeforeOperationHook, CollectionBeforeValidateHook, CollectionConfig, Field, FilterOptions, Where } from 'payload'
 import { isSuperAdmin } from '../access/roles'
 import { PLATFORM_COLLECTIONS } from './config'
 import { andAccess, contextTenant, requestTenantId, tenantOfUser, withTenantAccess } from './access'
@@ -102,6 +102,20 @@ const perTenantUnique = (fields: Field[], out: string[]): Field[] =>
     return f
   })
 
+/** Largest page an anonymous REST visitor may request (brief §11). */
+export const PUBLIC_MAX_LIMIT = 50
+
+/**
+ * Anonymous REST reads cannot dump a collection: `limit` is clamped to PUBLIC_MAX_LIMIT (also `limit=0`) and
+ * `pagination=false` is ignored. Staff sessions and server code (Local API: pages, sitemap, jobs) are unaffected.
+ */
+export const capPublicRead: CollectionBeforeOperationHook = ({ args, operation, req }) => {
+  if (req.user || req.payloadAPI !== 'REST' || (operation !== 'read' && operation !== 'readDistinct')) return args
+  const a = args as { limit?: number; pagination?: boolean }
+  const limit = Number(a.limit)
+  return { ...args, pagination: true, limit: Number.isFinite(limit) && limit > 0 ? Math.min(limit, PUBLIC_MAX_LIMIT) : a.limit === undefined ? undefined : PUBLIC_MAX_LIMIT }
+}
+
 /**
  * Makes a collection belong to a school: adds the `tenant` field, isolates every access rule,
  * assigns/locks the school in hooks, scopes relationship pickers and turns unique fields into
@@ -129,6 +143,7 @@ export function withTenancy(c: CollectionConfig, opts: { optional?: boolean } = 
     },
     hooks: {
       ...c.hooks,
+      beforeOperation: [capPublicRead, ...(c.hooks?.beforeOperation ?? [])],
       beforeValidate: [assignTenant, ...(c.hooks?.beforeValidate ?? [])],
       beforeChange: [lockTenant, ...(c.hooks?.beforeChange ?? [])],
     },

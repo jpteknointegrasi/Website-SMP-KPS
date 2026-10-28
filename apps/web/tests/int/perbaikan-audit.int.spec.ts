@@ -167,3 +167,38 @@ describe('AUD-05 formulir kontak idempoten', () => {
     await expect(payload.create({ collection: 'contact-messages', overrideAccess: true, data: { name: `Idem ${RUN}`, category: 'umum', message: 'pesan kedua', reference: `PSN-${RUN}-2`, idempotencyKey: key } as never })).rejects.toThrow()
   })
 })
+
+describe('AUD-06 REST publik: batas limit & foto staf tanpa persetujuan', () => {
+  beforeAll(async () => {
+    for (let i = 0; i < 53; i++) await payload.create({ collection: 'categories', overrideAccess: true, context: { skipAudit: true }, data: { title: `Kat ${i} ${RUN}`, slug: `kat-${i}-${RUN}` } })
+  })
+  it.each([['limit=1000'], ['limit=0'], ['pagination=false'], ['pagination=false&limit=0']])('anonim %s → maksimal 50 baris, tetap berhalaman', async (q) => {
+    const r = await api(`categories?${q}`)
+    expect(r.status).toBe(200)
+    expect(r.json.docs.length).toBeLessThanOrEqual(50)
+    expect(r.json.totalDocs).toBe(53)
+    expect(r.json.hasNextPage).toBe(true)
+  })
+  it('limit kecil tetap dihormati; staf & kode server tidak dibatasi', async () => {
+    expect((await api('categories?limit=5')).json.docs).toHaveLength(5)
+    const staffRead = await payload.find({ collection: 'categories', limit: 0, pagination: false, user: users.editor, overrideAccess: false })
+    expect(staffRead.docs.length).toBe(53)
+    const server = await payload.find({ collection: 'categories', pagination: false, overrideAccess: false })
+    expect(server.docs.length).toBe(53)
+  })
+  it('foto staf (relasi media) hanya keluar bila ada persetujuan publikasi; staf tetap melihat', async () => {
+    const m = await media('guru')
+    const base = { position: 'Guru', photo: m.id, _status: 'published', workflowStatus: 'published' }
+    const no = await payload.create({ collection: 'staff', overrideAccess: true, data: { name: `Tanpa Izin ${RUN}`, slug: `guru-a-${RUN}`, ...base } as never })
+    const yes = await payload.create({ collection: 'staff', overrideAccess: true, data: { name: `Dengan Izin ${RUN}`, slug: `guru-b-${RUN}`, publicationConsent: true, ...base } as never })
+    const list = (await api(`staff?limit=50&depth=0`)).json.docs
+    expect(list.find((d: any) => d.id === no.id)).toBeTruthy()
+    expect(list.find((d: any) => d.id === no.id).photo).toBeUndefined()
+    expect(list.find((d: any) => d.id === yes.id).photo).toBe(m.id)
+    expect((await api(`staff/${no.id}?depth=1`)).json.photo).toBeUndefined()
+    // select cannot be used to drop the consent flag and get the photo
+    expect((await api(`staff/${no.id}?select[photo]=true`)).json.photo).toBeUndefined()
+    const staffView = await payload.findByID({ collection: 'staff', id: no.id, user: users.editor, overrideAccess: false, depth: 0 })
+    expect(staffView.photo).toBe(m.id)
+  })
+})
