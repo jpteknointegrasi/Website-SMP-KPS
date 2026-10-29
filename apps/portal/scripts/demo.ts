@@ -51,7 +51,7 @@ const foto = arg('--foto')
 const cur = await getBranding(db)
 await saveBranding(
   ctx,
-  { shortName: cur.shortName || 'SMP Nasional KPS', city: cur.city || 'Balikpapan', address: cur.address || '[Alamat sekolah]', phone: cur.phone || '[Kontak sekolah]' },
+  { shortName: cur.shortName || school.name, city: cur.city || 'Balikpapan', address: cur.address || '[Alamat sekolah]', phone: cur.phone || '[Kontak sekolah]' },
   { logo: logo ? { name: logo, buffer: readFileSync(logo) } : null, hero: foto ? { name: foto, buffer: readFileSync(foto) } : null },
 )
 await putSetting(db, 'modules', { ...DEFAULT_MODULES, buku_induk: 'active', kartu: 'active', penerimaan: 'pilot', akademik: 'pilot', nilai_rapor: 'pilot', pengumuman: 'pilot', layanan: 'pilot', keuangan: 'pilot', bk: 'pilot', ekskul: 'pilot', kesiswaan: 'pilot', perpustakaan: 'pilot', uks: 'pilot', organisasi: 'pilot', alumni: 'pilot' }, sysId)
@@ -328,6 +328,51 @@ if (!(await db.select().from(admissionCycles).where(eq(admissionCycles.code, 'PP
     }
   }
 }
-console.log(`✓ Data contoh untuk ${school.name} siap (${NAMES.length} siswa contoh, 4 rombel, ${SUBJ.length} mapel).`)
+// ---------- P5: keuangan & alumni (synthetic) ----------
+{
+  const { invoices: invT, students: stT, alumniProfiles: alT } = await import('../src/db/schema')
+  if (!(await db.select({ id: invT.id }).from(invT).limit(1)).length) {
+    const F = await import('../src/modules/finance/service')
+    const active = await db.select({ id: stT.id, nis: stT.nis }).from(stT).where(eq(stT.status, 'active'))
+    const ids = active.map((s) => s.id)
+    if (ids.length) {
+      await F.createStudentInvoice(ctx, { studentIds: ids, category: 'spp', title: 'SPP Oktober 2026', amount: 350000, dueDate: '2026-10-10' })
+      await F.createStudentInvoice(ctx, { studentIds: ids, category: 'spp', title: 'SPP November 2026', amount: 350000, dueDate: '2026-11-10' })
+      await F.createStudentInvoice(ctx, { studentIds: ids.slice(0, 5), category: 'kegiatan', title: 'Kunjungan edukasi museum (contoh)', amount: 175000, dueDate: '2026-11-20' })
+      const inv = async (nis: string, title: string) => {
+        const st = active.find((s) => s.nis === nis)
+        if (!st) return null
+        return (await db.select().from(invT).where(and(eq(invT.studentId, st.id), eq(invT.title, title))))[0] ?? null
+      }
+      const proof = Buffer.from('89504e470d0a1a0a0000000d4948445200000001000000010806000000', 'hex')
+      // lunas (transfer terverifikasi), sebagian (tunai), dan satu bukti transfer menunggu verifikasi
+      const a = await inv('26001', 'SPP Oktober 2026')
+      if (a) await F.verifyPayment(ctx, await F.submitPayment(ctx, a.id, { amount: 350000, method: 'transfer', paidOn: '2026-10-08', payerName: 'Ibu Alya (contoh)', proof: { name: 'bukti.png', buffer: proof } }), 'TRF-CONTOH-001')
+      const b = await inv('26002', 'SPP Oktober 2026')
+      if (b) await F.verifyPayment(ctx, await F.submitPayment(ctx, b.id, { amount: 200000, method: 'tunai', paidOn: '2026-10-09', payerName: 'Ibu Bima (contoh)', proof: null }), null)
+      const c = await inv('26003', 'SPP Oktober 2026')
+      if (c) await F.submitPayment(ctx, c.id, { amount: 350000, method: 'transfer', paidOn: '2026-10-12', payerName: 'Ibu Citra (contoh)', proof: { name: 'bukti.png', buffer: proof } })
+      const e = await inv('26005', 'SPP Oktober 2026')
+      if (e) await F.closeInvoice(ctx, e.id, 'waived', 'Beasiswa yayasan (contoh)')
+    }
+  }
+  if (!(await db.select({ id: alT.studentId }).from(alT).limit(1)).length) {
+    const AL = await import('../src/modules/alumni/service')
+    const ALUMNI: [string, string, string, string | null][] = [
+      ['Rizky Firmansyah (contoh)', '23001', 'SMA Negeri 1 Balikpapan', 'Sekarang aktif di klub robotik SMA. Ekskul Informatika di SMP jadi awalnya.'],
+      ['Salsabila Putri (contoh)', '23002', 'SMK Negeri 2 Balikpapan', 'Terima kasih untuk guru-guru yang sabar membimbing persiapan lomba.'],
+      ['Tegar Wicaksono (contoh)', '23003', 'MAN Balikpapan', null],
+      ['Nadia Kusuma (contoh)', '23004', 'SMA Swasta Contoh', null],
+    ]
+    const haveA = await db.select({ nis: stT.nis }).from(stT)
+    for (const [i, [name, nis, next, story]] of ALUMNI.entries()) {
+      if (haveA.some((h) => h.nis === nis)) continue
+      const sid = await S.createStudent(ctx, { fullName: name, nis, nisn: `00${String(11223340 + i).padStart(8, '0')}`, gender: i % 2 ? 'P' : 'L', birthPlace: 'Balikpapan', birthDate: `2010-0${i + 2}-15`, religion: 'Islam', address: '[Alamat contoh]', entryYear: '2023' })
+      await S.setStudentStatus(ctx, sid, 'graduated', { date: '2026-06-20', reason: 'Lulus tahun ajaran 2025/2026 (contoh)' })
+      await AL.saveProfile(ctx, sid, { graduationYear: '2026', continuingTo: next, contactEmail: i < 2 ? `alumni${i + 1}@contoh.invalid` : null, contactPhone: null, story, consentContact: i < 2, consentPublic: Boolean(story) })
+    }
+  }
+}
+console.log(`✓ Data contoh untuk ${school.name} siap (${NAMES.length} siswa contoh, 4 rombel, ${SUBJ.length} mapel, tagihan & alumni).`)
 await closeSchoolDbs()
 process.exit(0)

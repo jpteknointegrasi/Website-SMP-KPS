@@ -4,6 +4,7 @@
  * Guard (same as Sekolahku Web): a Preview build touches databases only when the Preview environment states that its
  * platform database is a COPY (PREVIEW_DATABASE_IS_COPY=true). Synthetic demo data is loaded only on Preview, only
  * with PREVIEW_DEMO_ADMIN=<CMS e-mail> set, into schools whose App database is configured (idempotent).
+ * On Production, only schools listed in DEMO_SCHOOL_SLUGS (e.g. `demo`) get sample data; DEMO_SCHOOL_ADMIN = CMS e-mail.
  */
 import { spawnSync } from 'node:child_process'
 import pg from 'pg'
@@ -38,6 +39,19 @@ if (schools.length) {
     for (const slug of schools) {
       console.log(`▶ Data contoh (Preview) untuk ${slug}`)
       run(`npx tsx scripts/demo.ts --sekolah ${slug} --admin ${JSON.stringify(demoAdmin)} --saya-paham-ini-data-contoh`, { allowFail: true })
+    }
+  }
+  // Production: sample data ONLY for schools explicitly listed as demo schools (DEMO_SCHOOL_SLUGS=demo), never others.
+  const demoSlugs = (process.env.DEMO_SCHOOL_SLUGS || '').split(',').map((x) => x.trim()).filter(Boolean)
+  if (env === 'production' && demoSlugs.length) {
+    for (const slug of demoSlugs) {
+      if (!schools.includes(slug)) {
+        console.log(`▶ Sekolah demo "${slug}" belum punya database App — dilewati.`)
+        continue
+      }
+      const adm = process.env.DEMO_SCHOOL_ADMIN ? ` --admin ${JSON.stringify(process.env.DEMO_SCHOOL_ADMIN)}` : ''
+      console.log(`▶ Data contoh (sekolah demo) untuk ${slug}`)
+      run(`npx tsx scripts/demo.ts --sekolah ${slug}${adm} --saya-paham-ini-data-contoh`, { allowFail: true })
     }
   }
 } else if (!platformUrl) {
