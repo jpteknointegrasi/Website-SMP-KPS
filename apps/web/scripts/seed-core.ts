@@ -7,6 +7,7 @@
  *   SEED_ADMIN_EMAIL=… SEED_ADMIN_PASSWORD=… npm run seed   # also creates the first admin account
  */
 import fs from 'fs'
+import { LEGACY_PAGES, LEGACY_POST_SLUGS } from './legacy-wordpress'
 import path from 'path'
 import type { TenantPayload as Payload } from '../src/tenancy/scoped'
 import { importMedia } from './import-media'
@@ -355,7 +356,10 @@ export async function runSeed(payload: Payload, log: (m: string) => void = (m) =
     ['/home/calendar', '/agenda'],
     ['/home/e-buletin', '/unduhan'],
     ...articles.map((a) => [`/home/${a.slug}`, `/berita/${a.slug}`] as [string, string]),
+    ...LEGACY_PAGES,
   ]
+  // old posts that were not migrated → news index (better than a dead link)
+  for (const slug of LEGACY_POST_SLUGS) if (!redirects.some(([o]) => o === `/home/${slug}`)) redirects.push([`/home/${slug}`, '/berita'])
   for (const [oldPath, newPath] of redirects) {
     const f = await payload.find({ collection: 'redirects', where: { oldPath: { equals: oldPath } }, limit: 1, overrideAccess: true })
     if (!f.docs[0]) await payload.create({ collection: 'redirects', data: { oldPath, newPath, active: true }, overrideAccess: true, context: ctx })

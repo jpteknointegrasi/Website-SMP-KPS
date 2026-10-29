@@ -2,7 +2,8 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { accountPage } from '@/server/request'
 import { applicationView, progressOf } from '@/modules/admissions/apply'
-import { BillsPanel, DocsPanel, ReenrollPanel, ResultPanel, RevisionNotice, SelectionPanel, StatusSummary, StepForm, SubmitPanel } from '@/ui/application'
+import { hasProduct } from '@sekolahku/core'
+import { BillsPanel, DocsPanel, LeadLinkPanel, ReenrollPanel, ResultPanel, RevisionNotice, SelectionPanel, StatusSummary, StepForm, SubmitPanel } from '@/ui/application'
 import { ActionForm, Card, Field, Flash, LinkBtn, PageHead, sp1, Steps, Submit, Tabs, type SP } from '@/ui/kit'
 
 export const metadata = { title: 'Pendaftaran' }
@@ -21,6 +22,7 @@ export default async function ApplicationPage({ params, searchParams }: { params
   const editing = v.editable !== null
   const step = (sp1(sp, 'langkah') as 'anak' | 'keluarga' | 'berkas' | 'kirim' | undefined) ?? (editing ? 'anak' : undefined)
   const prog = progressOf(v)
+  const web = hasProduct(ctx.school, 'web')
   return (
     <>
       <PageHead
@@ -65,6 +67,7 @@ export default async function ApplicationPage({ params, searchParams }: { params
               <SubmitPanel v={v} back={`${base}?langkah=kirim`} />
             </Card>
           ) : null}
+          {web && step === 'kirim' ? <LeadLinkPanel v={v} back={`${base}?langkah=kirim`} tz={ctx.tz} /> : null}
         </>
       ) : (
         <div className="grid grid--side">
@@ -82,6 +85,7 @@ export default async function ApplicationPage({ params, searchParams }: { params
               {v.app.status === 'rejected' && v.app.rejectReason ? <p className="small" style={{ marginTop: 10 }}>Keterangan: {v.app.rejectReason}</p> : null}
             </Card>
             <BillsPanel v={v} back={base} canPay />
+            {web ? <LeadLinkPanel v={v} back={base} tz={ctx.tz} /> : null}
             {v.cycle.helpContact ? (
               <Card title="Bantuan">
                 <p className="small">{v.cycle.helpContact}</p>

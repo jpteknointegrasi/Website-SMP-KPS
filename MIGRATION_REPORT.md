@@ -9,7 +9,7 @@ Tanggal: 25 Oktober 2026. Sumber: snapshot `content/sources/` (11 halaman) dan `
 | Berita resmi | 6 artikel | 6, tanggal publikasi asli dipertahankan, `source_url` tercatat | 0 | 0 |
 | Halaman (Tentang, Visi-Misi, Kebijakan Privasi) | profil.txt | 3 | — | 0 |
 | Pengaturan & kontak | kontak.txt | 1 (berstatus belum terverifikasi) | — | 0 |
-| Pengalihan URL | REDIRECT_MAP.csv | 21 | — | 0 |
+| Pengalihan URL | REDIRECT_MAP.csv (dari wp-sitemap.xml, 28 Okt 2026) | 142 | — | 0 |
 
 Uji idempotensi: seed dijalankan pada database kosong (migrasi → seed) dan pada database berisi; hasil jumlah record sama (6 berita, 31 media saat itu), tidak ada duplikat. Foto hero (KPS-H01–H04) ditambahkan kemudian lewat manifest yang sama.
 

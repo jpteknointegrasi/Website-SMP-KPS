@@ -13,7 +13,7 @@ echo.
 findstr /b /c:"DATABASE_URI=postgres" .env.vercel >nul 2>nul
 if errorlevel 1 (
   echo [!] DATABASE_URI di .env.vercel belum diisi.
-  echo     Salin dari Vercel: Storage, Neon, tab .env.local, nilai DATABASE_URL.
+  echo     Salin dari Supabase: proyek Sekolahku, tombol Connect, Session pooler (database postgres).
   pause
   exit /b 1
 )

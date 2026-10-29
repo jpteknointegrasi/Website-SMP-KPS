@@ -1,6 +1,8 @@
 # Backlog P2 — Pendaftaran & Seleksi Lengkap (F14)
 
-Status: **belum dibangun, flag `fullAdmissions` terkunci mati.** Mode "Pendaftaran lengkap" ditolak di CMS. Tidak ada pengumpulan dokumen siswa atau keputusan seleksi di website saat ini.
+> **Digantikan (Oktober 2026):** pendaftaran & seleksi lengkap dibangun di **Sekolahku App** (modul M14, `/portal/penerimaan`), bukan di website. Lihat `docs/BLUEPRINT_ADDENDUM_v2.1.md` bagian C. Dokumen ini disimpan sebagai catatan prasyarat kebijakan; flag website `fullAdmissions` tetap mati.
+
+Status di website: **tidak dibangun, flag `fullAdmissions` terkunci mati.** Mode "Pendaftaran lengkap" ditolak di CMS. Tidak ada pengumpulan dokumen siswa atau keputusan seleksi di website saat ini.
 
 ## Prasyarat kebijakan dari sekolah (wajib sebelum mulai)
 1. Apakah sekolah sudah memakai sistem resmi lain (mis. `kps.sch.id/ppdb`)? Bila ya, P2 **tidak dibangun**. Website cukup menautkan sistem itu (mode *Sistem eksternal*) agar tidak terjadi pencatatan ganda.

@@ -57,6 +57,8 @@ const leadTimeline: CollectionBeforeChangeHook = ({ data, originalDoc, operation
       hist.push({ at: now, actor, event: data.assignee ? 'Petugas ditetapkan/diganti' : 'Petugas dilepas' })
       if (data.assignee && (data.status ?? prev.status) === 'new') data.status = 'assigned'
     }
+    if (data.appLinkRef && data.appLinkRef !== prev.appLinkRef)
+      hist.push({ at: now, actor, event: `Tertaut ke Portal Penerimaan atas persetujuan keluarga${data.appApplicationNo ? ` (no. ${data.appApplicationNo})` : ''}` })
     if (data.status && data.status !== prev.status) hist.push({ at: now, actor, event: `Status: ${label(LEAD_STATUS, prev.status)} → ${label(LEAD_STATUS, data.status)}` })
     if (data.nextFollowUpAt !== undefined && (data.nextFollowUpAt ?? null) !== (prev.nextFollowUpAt ?? null))
       hist.push({ at: now, actor, event: data.nextFollowUpAt ? 'Jadwal tindak lanjut diatur' : 'Jadwal tindak lanjut dihapus' })
@@ -157,6 +159,9 @@ export const Leads: CollectionConfig = {
     ] },
     { name: 'possibleDuplicateOf', type: 'relationship', relationTo: 'leads', label: 'Mungkin sama dengan', admin: { position: 'sidebar', readOnly: true, description: 'Kontak sama pada siklus sama. Bisa jadi saudara kandung — tinjau, jangan langsung tutup.' } },
     { name: 'duplicateReviewed', type: 'checkbox', label: 'Duplikat sudah ditinjau', defaultValue: false, admin: { position: 'sidebar' } },
+    { name: 'appLinkRef', type: 'text', index: true, admin: { hidden: true } },
+    { name: 'appApplicationNo', type: 'text', label: 'No. pendaftaran di Portal', admin: { readOnly: true, position: 'sidebar', description: 'Diisi otomatis saat keluarga menautkan pendaftarannya di Sekolahku App (dengan persetujuan).' } },
+    { name: 'appLinkedAt', type: 'date', label: 'Tertaut ke Portal', admin: { readOnly: true, position: 'sidebar', date: { pickerAppearance: 'dayAndTime' } } },
     { name: 'isTest', type: 'checkbox', label: 'Data uji (tidak dihitung)', defaultValue: false, index: true, admin: { position: 'sidebar' } },
     { name: 'marketingOptIn', type: 'checkbox', label: 'Bersedia menerima info berikutnya', admin: { readOnly: true, position: 'sidebar' } },
     { name: 'consentVersion', type: 'text', label: 'Versi persetujuan', admin: { readOnly: true, position: 'sidebar' } },

@@ -63,6 +63,16 @@ menarik karya berizin sebagai **draf "Ajukan Review"** (media menunggu tinjauan)
 karya disembunyikan dari website pada sinkron berikutnya. Syarat: sekolah berlangganan App, fitur "Karya siswa" aktif di CMS,
 `PORTAL_ORIGIN` dan `PORTAL_PROXY_SECRET` sama di Web dan App.
 
+### Formulir minat ke pendaftaran
+Keluarga yang pernah mengisi formulir minat di website dapat menautkannya ke pendaftaran di App: di halaman pendaftaran
+(langkah **Cek & kirim**, atau kolom samping setelah dikirim) centang persetujuan lalu **Tautkan formulir minat**. Hanya akun
+pemilik pendaftaran yang bisa melakukannya, dan hanya bila email akunnya terverifikasi lewat email. Tiap jam website mencari
+formulir minat sekolah itu dengan email yang sama (tidak termasuk data uji atau yang ditutup sebagai duplikat/spam), menandainya
+**Masuk proses resmi** dengan nomor pendaftaran dan catatan riwayat, lalu mengirim balik nomor & tanggal minat ke App. Panitia
+melihatnya di **Ringkasan** pendaftaran; petugas website melihatnya di kolom samping minat. Bila tidak ditemukan, keluarga dapat
+meminta lagi atau menghubungi panitia. Syarat: sekolah berlangganan Web dan App, `PORTAL_ORIGIN` dan `PORTAL_PROXY_SECRET`
+sama di Web dan App, cron Web berjalan.
+
 ## 4. Sebelum dipakai sekolah nyata
 
 1. Uji di Preview `platform-produk` pada branch database terpisah (bukan database sekolah).

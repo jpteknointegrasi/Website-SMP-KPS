@@ -11,6 +11,7 @@ import * as dec from './decisions'
 import * as re from './reenroll'
 import { APP_FIELDS } from './fields'
 import { createAccountFor } from './assist'
+import { cancelLeadLink, requestLeadLink } from './lead-link'
 import { onceCookie } from '@/server/once'
 
 const when = (f: Form, name: string, tz: string, required?: string) => {
@@ -138,6 +139,14 @@ defineAction('ppdb.kirim', async (ctx, f) => {
 defineAction('ppdb.tarik', async (ctx, f) => {
   await apply.withdrawApplication(ctx, f.uuid('id', 'Pendaftaran tidak dikenal.')!, f.str('alasan'))
   return { message: 'Pendaftaran ditarik.' }
+})
+defineAction('ppdb.tautkan_minat', async (ctx, f) => {
+  await requestLeadLink(ctx, f.uuid('id', 'Pendaftaran tidak dikenal.')!, f.bool('setuju'))
+  return { message: 'Permintaan penautan dicatat. Sekolah akan mencocokkannya dengan formulir minat di website.' }
+})
+defineAction('ppdb.batal_tautkan_minat', async (ctx, f) => {
+  await cancelLeadLink(ctx, f.uuid('id', 'Pendaftaran tidak dikenal.')!)
+  return { message: 'Permintaan penautan dibatalkan.' }
 })
 defineAction('ppdb.jawab_penawaran', async (ctx, f) => {
   const accept = f.str('jawaban') === 'terima'

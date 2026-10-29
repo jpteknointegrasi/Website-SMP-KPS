@@ -176,6 +176,7 @@ export interface Config {
     tasks: {
       releaseVisitHolds: TaskReleaseVisitHolds;
       syncAppWorks: TaskSyncAppWorks;
+      syncAppLeads: TaskSyncAppLeads;
       schedulePublish: TaskSchedulePublish;
       inline: {
         input: unknown;
@@ -2169,6 +2170,12 @@ export interface Lead {
    */
   possibleDuplicateOf?: (number | null) | Lead;
   duplicateReviewed?: boolean | null;
+  appLinkRef?: string | null;
+  /**
+   * Diisi otomatis saat keluarga menautkan pendaftarannya di Sekolahku App (dengan persetujuan).
+   */
+  appApplicationNo?: string | null;
+  appLinkedAt?: string | null;
   isTest?: boolean | null;
   marketingOptIn?: boolean | null;
   consentVersion?: string | null;
@@ -2586,7 +2593,7 @@ export interface PayloadJob {
     | {
         executedAt: string;
         completedAt: string;
-        taskSlug: 'inline' | 'releaseVisitHolds' | 'syncAppWorks' | 'schedulePublish';
+        taskSlug: 'inline' | 'releaseVisitHolds' | 'syncAppWorks' | 'syncAppLeads' | 'schedulePublish';
         taskID: string;
         input?:
           | {
@@ -2619,7 +2626,7 @@ export interface PayloadJob {
         id?: string | null;
       }[]
     | null;
-  taskSlug?: ('inline' | 'releaseVisitHolds' | 'syncAppWorks' | 'schedulePublish') | null;
+  taskSlug?: ('inline' | 'releaseVisitHolds' | 'syncAppWorks' | 'syncAppLeads' | 'schedulePublish') | null;
   queue?: string | null;
   waitUntil?: string | null;
   processing?: boolean | null;
@@ -3791,6 +3798,9 @@ export interface LeadsSelect<T extends boolean = true> {
   source?: T;
   possibleDuplicateOf?: T;
   duplicateReviewed?: T;
+  appLinkRef?: T;
+  appApplicationNo?: T;
+  appLinkedAt?: T;
   isTest?: T;
   marketingOptIn?: T;
   consentVersion?: T;
@@ -4241,6 +4251,16 @@ export interface TaskSyncAppWorks {
   output: {
     created?: number | null;
     hidden?: number | null;
+  };
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "TaskSyncAppLeads".
+ */
+export interface TaskSyncAppLeads {
+  input?: unknown;
+  output: {
+    linked?: number | null;
   };
 }
 /**

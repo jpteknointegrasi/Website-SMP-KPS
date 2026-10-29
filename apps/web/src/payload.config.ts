@@ -18,6 +18,7 @@ import { asSingleton } from './tenancy/singleton'
 import { PLATFORM_NAME } from './tenancy/config'
 import { scopePayload } from './tenancy/scoped'
 import { toInfo } from './tenancy/resolve'
+import { syncAppLeads } from './lib/app-leads'
 import { syncAppWorks } from './lib/app-works'
 import { Media } from './collections/Media'
 import { PrivateFiles } from './collections/PrivateFiles'
@@ -280,6 +281,25 @@ export default buildConfig({
           { name: 'created', type: 'number' },
           { name: 'hidden', type: 'number' },
         ],
+      },
+      {
+        // Minat ↔ Portal Penerimaan: interest forms the family asked (with consent, in the App) to link to their application.
+        slug: 'syncAppLeads',
+        schedule: [{ cron: '25 * * * *', queue: 'default' }],
+        handler: async ({ req }) => {
+          let linked = 0
+          const schools = await req.payload.find({ collection: 'tenants', where: { status: { not_equals: 'suspended' } }, limit: 1000, depth: 0, overrideAccess: true, pagination: false })
+          for (const t of schools.docs) {
+            try {
+              const r = await syncAppLeads(req.payload, toInfo(t as never))
+              linked += 'linked' in r ? (r.linked ?? 0) : 0
+            } catch (e) {
+              req.payload.logger.error({ err: e, school: t.id }, 'sinkron penautan minat gagal')
+            }
+          }
+          return { output: { linked } }
+        },
+        outputSchema: [{ name: 'linked', type: 'number' }],
       },
     ],
     // Serverless (Vercel) has no long-running process: jobs are triggered by cron → /api/payload-jobs/run
