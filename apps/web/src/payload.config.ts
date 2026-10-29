@@ -100,7 +100,10 @@ const email = process.env.SMTP_HOST
 export default buildConfig({
   ...(email ? { email } : {}),
   // Empty for a multi-school deployment: every school is served on its own domain (relative URLs).
-  serverURL: process.env.NEXT_PUBLIC_SERVER_URL || '',
+  // Multi-school: no fixed serverURL. Payload adds serverURL to its CSRF allowlist, which made every other domain
+  // (satusekolah.my.id, other schools) lose the CMS session on save. Same-host Origin checks live in proxy.ts;
+  // reset e-mails and media URLs build their own absolute addresses.
+  serverURL: '',
   admin: {
     user: Users.slug,
     importMap: { baseDir: path.resolve(dirname) },
