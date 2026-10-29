@@ -1,5 +1,6 @@
 import { schoolMeta } from '@/lib/meta'
 import Link from 'next/link'
+import { notFound } from 'next/navigation'
 import { listEvents, listEventCategories, listEventsInRange, getFlags } from '@/lib/queries'
 import { PageHeader, Container, EmptyState, Pagination, DemoBadge } from '@/components/ui/bits'
 import { AUDIENCE, EVENT_AUDIENCE, EVENT_STATUS, dayParts, formatEventWhen, formatTime } from '@/lib/format'
@@ -13,6 +14,10 @@ type SP = { searchParams: Promise<{ waktu?: string; status?: string; page?: stri
 
 const monthLabel = (iso: string) => new Intl.DateTimeFormat('id-ID', { timeZone: requestTimezone(), month: 'long', year: 'numeric' }).format(new Date(iso))
 const longDay = (key: string) => new Intl.DateTimeFormat('id-ID', { timeZone: 'UTC', weekday: 'long', day: 'numeric', month: 'long' }).format(new Date(key + 'T00:00:00Z'))
+/** Calendar navigation is limited to ±12 months around today so crawlers can't page forever (crawler trap). */
+const MONTH_WINDOW = 12
+const monthOffset = (a: { y: number; m: number }, b: { y: number; m: number }) => (a.y - b.y) * 12 + (a.m - b.m)
+
 const WEEKDAYS = ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min']
 
 const catOf = (e: Event) => (e.category && typeof e.category === 'object' ? (e.category as EventCategory) : null)
@@ -47,6 +52,8 @@ export default async function Page({ searchParams }: SP) {
   const cat = categories.find((c) => c.slug === sp.kategori)
   const audience = sp.sasaran && (EVENT_AUDIENCE as readonly string[]).includes(sp.sasaran) ? sp.sasaran : undefined
   const month = parseMonth(sp.bulan)
+  const thisMonth = parseMonth(undefined)
+  if (Math.abs(monthOffset(month, thisMonth)) > MONTH_WINDOW) notFound()
   const page = Math.max(1, Number(sp.page) || 1)
 
   // shareable URLs: every filter lives in the query string; old `waktu`/`status` keep working
@@ -60,22 +67,22 @@ export default async function Page({ searchParams }: SP) {
     <>
       {flags.calendarMonthView ? (
         <nav className="tabs" aria-label="Tampilan agenda">
-          <Link className="tabs__item" href={q({ tampilan: undefined, bulan: undefined })} aria-current={!calendar ? 'page' : undefined}>Daftar</Link>
-          <Link className="tabs__item" href={q({ tampilan: 'kalender', waktu: undefined, bulan: ymKey(month.y, month.m) })} aria-current={calendar ? 'page' : undefined}>Kalender</Link>
+          <Link rel="nofollow" className="tabs__item" href={q({ tampilan: undefined, bulan: undefined })} aria-current={!calendar ? 'page' : undefined}>Daftar</Link>
+          <Link rel="nofollow" className="tabs__item" href={q({ tampilan: 'kalender', waktu: undefined, bulan: ymKey(month.y, month.m) })} aria-current={calendar ? 'page' : undefined}>Kalender</Link>
         </nav>
       ) : null}
       {categories.length ? (
         <nav className="filters" aria-label="Kategori">
-          <Link className="chip" href={q({ kategori: undefined, page: undefined })} aria-current={!cat ? 'true' : undefined}>Semua kategori</Link>
+          <Link rel="nofollow" className="chip" href={q({ kategori: undefined, page: undefined })} aria-current={!cat ? 'true' : undefined}>Semua kategori</Link>
           {categories.map((c) => (
-            <Link key={c.id} className={`chip chip--${c.color ?? 'teal'}`} href={q({ kategori: c.slug, page: undefined })} aria-current={cat?.id === c.id ? 'true' : undefined}>{c.title}</Link>
+            <Link key={c.id} rel="nofollow" className={`chip chip--${c.color ?? 'teal'}`} href={q({ kategori: c.slug, page: undefined })} aria-current={cat?.id === c.id ? 'true' : undefined}>{c.title}</Link>
           ))}
         </nav>
       ) : null}
       <nav className="filters" aria-label="Sasaran">
-        <Link className="chip" href={q({ sasaran: undefined, page: undefined })} aria-current={!audience ? 'true' : undefined}>Semua sasaran</Link>
+        <Link rel="nofollow" className="chip" href={q({ sasaran: undefined, page: undefined })} aria-current={!audience ? 'true' : undefined}>Semua sasaran</Link>
         {EVENT_AUDIENCE.map((a) => (
-          <Link key={a} className="chip" href={q({ sasaran: a, page: undefined })} aria-current={audience === a ? 'true' : undefined}>{AUDIENCE[a]}</Link>
+          <Link key={a} rel="nofollow" className="chip" href={q({ sasaran: a, page: undefined })} aria-current={audience === a ? 'true' : undefined}>{AUDIENCE[a]}</Link>
         ))}
       </nav>
     </>
@@ -98,10 +105,10 @@ export default async function Page({ searchParams }: SP) {
           <Container>
             {filters}
             <div className="cal-nav">
-              <Link className="btn btn--ghost btn--sm" href={q({ bulan: ymKey(prev.y, prev.m) })} aria-label="Bulan sebelumnya">‹ <span className="hide-sm">Sebelumnya</span></Link>
+              {monthOffset(prev, thisMonth) >= -MONTH_WINDOW ? <Link rel="nofollow" className="btn btn--ghost btn--sm" href={q({ bulan: ymKey(prev.y, prev.m) })} aria-label="Bulan sebelumnya">‹ <span className="hide-sm">Sebelumnya</span></Link> : <span />}
               <h2 className="cal-nav__title" aria-live="polite">{title}</h2>
-              <Link className="btn btn--ghost btn--sm" href={q({ bulan: ymKey(next.y, next.m) })} aria-label="Bulan berikutnya"><span className="hide-sm">Berikutnya</span> ›</Link>
-              <Link className="btn btn--teal btn--sm" href={q({ bulan: undefined })}>Hari ini</Link>
+              {monthOffset(next, thisMonth) <= MONTH_WINDOW ? <Link rel="nofollow" className="btn btn--ghost btn--sm" href={q({ bulan: ymKey(next.y, next.m) })} aria-label="Bulan berikutnya"><span className="hide-sm">Berikutnya</span> ›</Link> : <span />}
+              <Link rel="nofollow" className="btn btn--teal btn--sm" href={q({ bulan: undefined })}>Hari ini</Link>
             </div>
             <table className="cal" aria-label={`Kalender ${title}`}>
               <thead>
@@ -170,13 +177,13 @@ export default async function Page({ searchParams }: SP) {
         <Container>
           {filters}
           <nav className="filters" aria-label="Rentang waktu">
-            <Link className="chip" href={q({ waktu: undefined, page: undefined })} aria-current={!past ? 'true' : undefined}>Mendatang</Link>
-            <Link className="chip" href={q({ waktu: 'lalu', page: undefined })} aria-current={past ? 'true' : undefined}>Sudah lewat</Link>
+            <Link rel="nofollow" className="chip" href={q({ waktu: undefined, page: undefined })} aria-current={!past ? 'true' : undefined}>Mendatang</Link>
+            <Link rel="nofollow" className="chip" href={q({ waktu: 'lalu', page: undefined })} aria-current={past ? 'true' : undefined}>Sudah lewat</Link>
           </nav>
           <nav className="filters" aria-label="Status kegiatan">
-            <Link className="chip" href={q({ status: undefined, page: undefined })} aria-current={!status ? 'true' : undefined}>Semua status</Link>
+            <Link rel="nofollow" className="chip" href={q({ status: undefined, page: undefined })} aria-current={!status ? 'true' : undefined}>Semua status</Link>
             {Object.entries(EVENT_STATUS).map(([k, v]) => (
-              <Link key={k} className="chip" href={q({ status: k, page: undefined })} aria-current={status === k ? 'true' : undefined}>{v}</Link>
+              <Link key={k} rel="nofollow" className="chip" href={q({ status: k, page: undefined })} aria-current={status === k ? 'true' : undefined}>{v}</Link>
             ))}
           </nav>
           {!past ? <AppCalendar /> : null}
