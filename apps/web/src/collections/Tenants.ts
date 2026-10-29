@@ -174,7 +174,9 @@ export const Tenants: CollectionConfig = {
               label: 'Database App sekolah ini (URL PostgreSQL)',
               virtual: true,
               access: { create: fieldSuperAdminOnly, update: fieldSuperAdminOnly },
+              // Payload marks virtual fields read-only in the admin unless readOnly is explicitly false
               admin: {
+                readOnly: false,
                 description:
                   'Satu database per sekolah. Tempel URL koneksi (postgres://…) untuk mengatur atau mengganti; disimpan terenkripsi dan tidak pernah ditampilkan lagi. Kosongkan untuk tidak mengubah. Setelah itu jalankan: npm run portal:migrate -- --sekolah <kode>.',
               },
@@ -185,7 +187,7 @@ export const Tenants: CollectionConfig = {
               label: 'Hapus pengaturan database App',
               virtual: true,
               access: { create: fieldSuperAdminOnly, update: fieldSuperAdminOnly },
-              admin: { description: 'Hanya memutus portal dari database itu; database dan isinya tidak dihapus.' },
+              admin: { readOnly: false, description: 'Hanya memutus portal dari database itu; database dan isinya tidak dihapus.' },
             },
             {
               name: 'databaseConfigured',
