@@ -423,7 +423,7 @@ export interface Tenant {
     plan: 'none' | 'basic' | 'pro';
     status: 'active' | 'trial' | 'paused';
     /**
-     * Diisi otomatis 30 hari sejak sekolah dibuat. Setelah lewat, website tetap tayang tetapi staf tidak bisa masuk CMS. Perpanjang tanggal ini, atau ubah paket ke "Website + CMS".
+     * Diisi otomatis 30 hari sejak sekolah dibuat. Setelah lewat, website tetap tayang tetapi staf tidak bisa masuk CMS. Perpanjang tanggal ini, atau ubah paket ke "Website + CMS". Menurunkan sekolah ke Website Gratis tanpa tanggal ini langsung menutup CMS-nya; isi tanggal bila ingin memberi tenggang.
      */
     cmsUntil?: string | null;
   };

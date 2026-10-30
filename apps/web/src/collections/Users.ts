@@ -1,8 +1,8 @@
 import { APIError, type Access, type CollectionConfig, type Where } from 'payload'
-import { hasCms } from '@sekolahku/core'
+import { hasCms, hasProduct } from '@sekolahku/core'
 import { ROLE_OPTIONS, fieldAdminOnly, isAdmin, isSuperAdmin } from '../access/roles'
 import { auditAfterChange, auditAfterDelete } from '../hooks/audit'
-import { tenantOfUser } from '../tenancy/access'
+import { staffMayEdit, tenantOfUser } from '../tenancy/access'
 import { idOf, isLive, tenantByHost, tenantById } from '../tenancy/resolve'
 
 /** Super Admin: every account. School Admin Teknis: accounts of their own school. Others: themselves. */
@@ -40,11 +40,12 @@ export const Users: CollectionConfig = {
   },
   access: {
     read: manageUsers(true),
-    create: ({ req: { user } }) => isSuperAdmin(user) || (isAdmin(user) && Boolean(tenantOfUser(user))),
-    update: manageUsers(true),
-    delete: manageUsers(false),
+    // Changing accounts needs the school's CMS (Website Gratis after its first month: no changes, see hasCms).
+    create: async (a) => (await staffMayEdit(a.req)) && (isSuperAdmin(a.req.user) || (isAdmin(a.req.user) && Boolean(tenantOfUser(a.req.user)))),
+    update: async (a) => ((await staffMayEdit(a.req)) ? manageUsers(true)(a) : false),
+    delete: async (a) => ((await staffMayEdit(a.req)) ? manageUsers(false)(a) : false),
     // Unlocking a locked-out account: only the account's own school admin (or the Super Admin).
-    unlock: manageUsers(false),
+    unlock: async (a) => ((await staffMayEdit(a.req)) ? manageUsers(false)(a) : false),
     // CMS panel: active accounts; school staff only while their school's package includes the CMS (see hasCms).
     admin: async ({ req }) => {
       const user = req.user
@@ -66,8 +67,9 @@ export const Users: CollectionConfig = {
         const here = host ? await tenantByHost(req.payload, host) : null
         // only on the school's own address (an address that belongs to no school is the platform's, for the Super Admin)
         if (!here || here.id !== own.id) throw new APIError('Akun ini milik sekolah lain. Masuk lewat alamat website sekolah Anda.', 403, null, true)
-        // Website Gratis after its first month: the website stays online, the CMS is closed.
-        if (!hasCms(own))
+        // Website Gratis after its first month: the website stays online, the CMS is closed. Paket Lengkap staff still
+        // sign in here for the portal even while Web is paused (the CMS panel and content edits stay closed then).
+        if (!hasCms(own) && !hasProduct(own, 'app'))
           throw new APIError(
             'Masa akses CMS sekolah ini sudah berakhir. Website tetap tayang. Untuk mengelola konten lagi, berlangganan paket Website + CMS melalui pengelola SatuSekolah.',
             403,

@@ -164,7 +164,7 @@ export const Tenants: CollectionConfig = {
               admin: {
                 date: { pickerAppearance: 'dayAndTime' },
                 condition: (_d, sibling) => (sibling as { plan?: string })?.plan === 'basic',
-                description: `Diisi otomatis ${FREE_CMS_DAYS} hari sejak sekolah dibuat. Setelah lewat, website tetap tayang tetapi staf tidak bisa masuk CMS. Perpanjang tanggal ini, atau ubah paket ke "Website + CMS".`,
+                description: `Diisi otomatis ${FREE_CMS_DAYS} hari sejak sekolah dibuat. Setelah lewat, website tetap tayang tetapi staf tidak bisa masuk CMS. Perpanjang tanggal ini, atau ubah paket ke "Website + CMS". Menurunkan sekolah ke Website Gratis tanpa tanggal ini langsung menutup CMS-nya; isi tanggal bila ingin memberi tenggang.`,
               },
             },
           ],

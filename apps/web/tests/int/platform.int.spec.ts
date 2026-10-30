@@ -166,6 +166,9 @@ describe('PLT-03 paket SatuSekolah & akses CMS', () => {
     expect(await panel(admin)).toBe(false)
     await expect(raw.create({ collection: 'posts', user: asUser(admin), overrideAccess: false, draft: true, data: { title: `Lagi ${RUN}`, slug: `lagi-${RUN}`, _status: 'draft' } as never })).rejects.toThrow()
     await expect(raw.update({ collection: 'posts', id: post.id, user: asUser(admin), overrideAccess: false, draft: true, data: { title: 'Ubah' } as never })).rejects.toThrow()
+    // nor manage staff accounts (an old session must not keep running the school)
+    await expect(raw.create({ collection: 'users', user: asUser(admin), overrideAccess: false, data: { name: 'Baru', email: `${RUN}-baru@test.invalid`, password: pw(), role: 'editor' } as never })).rejects.toThrow()
+    await expect(raw.update({ collection: 'users', id: admin.id, user: asUser(admin), overrideAccess: false, data: { name: 'Ganti' } as never })).rejects.toThrow()
     // the Super Admin still can (e.g. to help the school)
     await raw.update({ collection: 'posts', id: post.id, user: asUser(operator), overrideAccess: false, draft: true, data: { title: 'Dibantu platform' } as never })
 
@@ -173,6 +176,19 @@ describe('PLT-03 paket SatuSekolah & akses CMS', () => {
     await raw.update({ collection: 'tenants', id: res.tenantId, overrideAccess: true, data: { web: { plan: 'pro', status: 'active' } } as never })
     clearTenantCache()
     expect(await panel(admin)).toBe(true)
+  })
+
+  it('Paket Lengkap dengan Web dijeda: staf tetap bisa masuk (untuk portal), tetapi CMS tertutup', async () => {
+    const tid = tenants[0]!
+    await raw.update({ collection: 'tenants', id: tid, overrideAccess: true, data: { web: { plan: 'pro', status: 'paused' }, app: { plan: 'pilot', status: 'active' } } as never })
+    clearTenantCache()
+    const admin = (await raw.find({ collection: 'users', where: { tenant: { equals: tid } }, overrideAccess: true, depth: 0, limit: 1 })).docs[0] as User
+    const hook = Users.hooks!.beforeLogin![0]!
+    const req = { payload: raw, headers: new Headers({ host: `${RUN}b.sekolah.test` }) }
+    await expect((hook as (a: unknown) => Promise<unknown>)({ req, user: admin })).resolves.toBeTruthy()
+    expect(await panel(admin)).toBe(false)
+    await raw.update({ collection: 'tenants', id: tid, overrideAccess: true, data: { web: { plan: 'pro', status: 'trial' }, app: { plan: 'pilot', status: 'trial' } } as never })
+    clearTenantCache()
   })
 
   it('tidak ada paket App saja: App menjadikan Web "Website + CMS"', async () => {

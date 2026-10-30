@@ -8,8 +8,8 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   ALTER TABLE "school_applications" ADD COLUMN "package" "enum_school_applications_package";`)
   // Paket Lengkap: a school with SatuSekolah App always has Website + CMS (there is no App-only package).
   await db.execute(sql`UPDATE "tenants" SET "web_plan" = 'pro' WHERE "app_plan" <> 'none' AND "web_plan" <> 'pro';`)
-  // Earlier applications: derive the package from the products they asked for.
-  await db.execute(sql`UPDATE "school_applications" SET "package" = CASE WHEN "want_app" THEN 'lengkap' ELSE 'cms' END::"enum_school_applications_package" WHERE "package" IS NULL;`)
+  // Earlier applications: derive the package from the products they asked for (Web only → Website Gratis).
+  await db.execute(sql`UPDATE "school_applications" SET "package" = CASE WHEN "want_app" THEN 'lengkap' ELSE 'gratis' END::"enum_school_applications_package" WHERE "package" IS NULL;`)
 }
 
 export async function down({ db, payload, req }: MigrateDownArgs): Promise<void> {
