@@ -1,7 +1,7 @@
 import type { Access, AccessArgs, PayloadRequest, Where } from 'payload'
 import { isStaff, isSuperAdmin } from '../access/roles'
-import { idOf, tenantByHost } from './resolve'
-import { hasProduct } from '@sekolahku/core'
+import { idOf, tenantById, tenantByHost } from './resolve'
+import { hasCms, hasProduct } from '@sekolahku/core'
 
 type MaybeUser = PayloadRequest['user'] | null | undefined
 
@@ -52,6 +52,12 @@ export const andAccess = (a: Where | boolean, b: Where | boolean): Where | boole
   return { and: [a, b] }
 }
 
+/** Server code and the Super Admin always; school staff only while their school's package includes the CMS. */
+export async function staffMayEdit(req: PayloadRequest) {
+  if (!isStaff(req.user) || isSuperAdmin(req.user)) return true
+  return hasCms(await tenantById(req.payload, tenantOfUser(req.user)))
+}
+
 const defaultAccess: Access = ({ req }) => Boolean(req.user)
 
 export type AccessKind = 'read' | 'readVersions' | 'create' | 'update' | 'delete'
@@ -65,6 +71,8 @@ export const withTenantAccess =
   async (args: AccessArgs) => {
     const scope = await tenantScope(args.req, kind === 'readVersions' ? 'version.tenant' : 'tenant')
     if (scope === false) return false
+    // Staff of a school whose package has no CMS (Website Gratis after its first month) can no longer change content.
+    if (kind !== 'read' && kind !== 'readVersions' && !(await staffMayEdit(args.req))) return false
     const base = await (orig ?? defaultAccess)(args)
     // create returns a boolean; the tenant of new documents is enforced by the assignTenant hook
     if (kind === 'create') return Boolean(base)

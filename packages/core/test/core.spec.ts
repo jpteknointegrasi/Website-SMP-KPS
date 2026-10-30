@@ -5,8 +5,10 @@ import {
   admissionsMode,
   cookieValue,
   fetchStaff,
+  hasCms,
   hasProduct,
   normalizeHost,
+  packageOf,
   openSecret,
   portalRequestHost,
   redactUrl,
@@ -50,6 +52,21 @@ describe('produk dijual terpisah', () => {
     expect(admissionsMode(school())).toBe('web')
     expect(admissionsMode(school({ app: { plan: 'standard', status: 'active' } }))).toBe('app')
     expect(admissionsMode(school({ app: { plan: 'standard', status: 'paused' } }))).toBe('web')
+  })
+  it('paket SatuSekolah dari dua langganan', () => {
+    expect(packageOf(school({ web: { plan: 'basic', status: 'active' } }))).toBe('gratis')
+    expect(packageOf(school())).toBe('cms')
+    expect(packageOf(school({ app: { plan: 'pilot', status: 'trial' } }))).toBe('lengkap')
+    expect(packageOf(school({ web: { plan: 'none', status: 'active' } }))).toBe('none')
+  })
+  it('CMS: Website + CMS & Paket Lengkap selalu; Website Gratis hanya selama masa awal', () => {
+    const now = new Date('2026-11-15T00:00:00Z')
+    expect(hasCms(school(), now)).toBe(true)
+    expect(hasCms(school({ web: { plan: 'basic', status: 'active', cmsUntil: '2026-12-01T00:00:00Z' } }), now)).toBe(true)
+    expect(hasCms(school({ web: { plan: 'basic', status: 'active', cmsUntil: '2026-11-01T00:00:00Z' } }), now)).toBe(false)
+    expect(hasCms(school({ web: { plan: 'basic', status: 'active' } }), now)).toBe(false)
+    expect(hasCms(school({ web: { plan: 'pro', status: 'paused' } }), now)).toBe(false)
+    expect(hasCms(school({ status: 'suspended' }), now)).toBe(false)
   })
   it('host yang diteruskan website hanya dipercaya dengan rahasia yang benar', () => {
     const h = (o: Record<string, string>) => new Headers(o)

@@ -127,6 +127,14 @@ textarea { min-height: 84px; resize: vertical; }
 input[aria-invalid='true'] { border-color: var(--bad); }
 .check { display: flex; gap: 8px; align-items: flex-start; font-size: 0.92rem; }
 .check input { margin-top: 4px; }
+.pkgs { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 10px; }
+.pkg { display: flex; gap: 10px; align-items: flex-start; border: 1px solid var(--line); border-radius: 12px; padding: 12px; cursor: pointer; background: #fff; }
+.pkg.is-on { border-color: var(--action); box-shadow: 0 0 0 1px var(--action) inset; background: var(--soft); }
+.pkg input { margin-top: 4px; }
+.pkg > span { display: flex; flex-direction: column; gap: 2px; }
+.pkg b { color: var(--navy); }
+.pkg strong { font-size: 0.9rem; color: var(--action); }
+.pkg small { color: var(--muted); font-size: 0.83rem; line-height: 1.4; }
 .btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; background: var(--action); color: #fff; border: 0; border-radius: 10px; padding: 10px 18px; font: inherit; font-weight: 600; cursor: pointer; text-decoration: none; }
 .btn:hover { background: var(--navy); color: #fff; }
 .btn:disabled { opacity: 0.6; cursor: default; }

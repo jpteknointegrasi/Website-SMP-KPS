@@ -2,7 +2,7 @@
 import { useActionState, useState } from 'react'
 import { approveApplication, type ApproveState } from '@/platform/actions'
 
-type Defaults = { applicationId: number; slug: string; name: string; timezone: string; domain: string; webPlan: string; appPlan: string }
+type Defaults = { applicationId: number; slug: string; name: string; timezone: string; domain: string; package: string }
 
 const ZONES = [
   ['Asia/Jakarta', 'WIB'],
@@ -32,6 +32,7 @@ function CopyLink({ url }: { url: string }) {
 /** Approval form; on success shows the invitation link ONCE plus the remaining manual steps. */
 export function ApproveForm({ d, rootDomain }: { d: Defaults; rootDomain: string }) {
   const [state, action, pending] = useActionState<ApproveState, FormData>(approveApplication, null)
+  const [pkg, setPkg] = useState(d.package)
   if (state?.ok) {
     return (
       <div className="note note--ok" role="status">
@@ -47,7 +48,7 @@ export function ApproveForm({ d, rootDomain }: { d: Defaults; rootDomain: string
           </li>
           {state.app ? (
             <li>
-              Sekolahku App: buat database App sekolah, tempel URL-nya di CMS → Sekolah ({state.slug}) → Database App, lalu jalankan <span className="mono">npm run portal:migrate -- --sekolah {state.slug}</span>.
+              SatuSekolah App: buat database App sekolah, tempel URL-nya di CMS → Sekolah ({state.slug}) → Database App, lalu jalankan <span className="mono">npm run portal:migrate -- --sekolah {state.slug}</span>.
             </li>
           ) : null}
           <li>Ubah status sekolah dari Uji coba ke Aktif setelah langganan berjalan (CMS → Sekolah).</li>
@@ -99,21 +100,22 @@ export function ApproveForm({ d, rootDomain }: { d: Defaults; rootDomain: string
       </div>
       <div className="row">
         <label className="fld">
-          <span>Paket Sekolahku Web</span>
-          <select name="webPlan" defaultValue={d.webPlan}>
-            <option value="none">Tidak berlangganan</option>
-            <option value="basic">Basic</option>
-            <option value="pro">Pro</option>
+          <span>Paket</span>
+          <select name="package" value={pkg} onChange={(e) => setPkg(e.currentTarget.value)}>
+            <option value="gratis">Website Gratis (CMS 30 hari pertama)</option>
+            <option value="cms">Website + CMS</option>
+            <option value="lengkap">Paket Lengkap (Website + CMS + App)</option>
           </select>
         </label>
-        <label className="fld">
-          <span>Paket Sekolahku App</span>
-          <select name="appPlan" defaultValue={d.appPlan}>
-            <option value="none">Tidak berlangganan</option>
-            <option value="pilot">Pilot</option>
-            <option value="standard">Standar</option>
-          </select>
-        </label>
+        {pkg === 'lengkap' ? (
+          <label className="fld">
+            <span>Tingkat App</span>
+            <select name="appPlan" defaultValue="pilot">
+              <option value="pilot">Pilot</option>
+              <option value="standard">Standar</option>
+            </select>
+          </label>
+        ) : null}
       </div>
       <label className="fld">
         <span>Catatan keputusan (internal)</span>

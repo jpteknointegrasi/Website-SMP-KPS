@@ -5,7 +5,7 @@ import './platform.css'
 export const dynamic = 'force-dynamic'
 
 export const metadata: Metadata = {
-  title: { default: 'Sekolahku', template: '%s · Sekolahku' },
+  title: { default: 'SatuSekolah', template: '%s · SatuSekolah' },
   robots: { index: false, follow: false },
 }
 

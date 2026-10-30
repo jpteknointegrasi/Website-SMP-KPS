@@ -25,6 +25,9 @@ export const platformEnv = () => ({
   name: process.env.PLATFORM_NAME || 'Platform Website Sekolah',
 })
 
+/** Public address of the SatuSekolah landing page (footer "Didukung oleh SatuSekolah" on every school website). */
+export const platformPublicUrl = () => (process.env.PLATFORM_PUBLIC_URL || 'https://www.satusekolah.my.id').replace(/\/+$/, '')
+
 /** Host header → bare lowercase host name (no port, no trailing dot). */
 export const normalizeHost = (h?: string | null) =>
   (h ?? '').split(',')[0]!.trim().toLowerCase().replace(/:\d+$/, '').replace(/\.$/, '')
@@ -36,7 +39,12 @@ export const subdomainSlug = (host: string, rootDomain: string) => {
   return sub && !sub.includes('.') ? sub : null
 }
 
-export type ProductPlan = { plan: string; status: 'active' | 'trial' | 'paused' }
+export type ProductPlan = {
+  plan: string
+  status: 'active' | 'trial' | 'paused'
+  /** Web only: end of the CMS access period of a Website Gratis school (ISO date), if any. */
+  cmsUntil?: string | null
+}
 
 /** What both products need to know about the school serving a request. */
 export type SchoolInfo = {
@@ -49,6 +57,19 @@ export type SchoolInfo = {
   web: ProductPlan
   app: ProductPlan
 }
+
+/**
+ * Demo schools (sample data for presentations, e.g. demo.satusekolah.my.id) are left out of public school lists such
+ * as "Masuk ke App". Codes from PLATFORM_DEMO_SLUGS (comma-separated), default "demo".
+ */
+export const demoSlugs = () =>
+  new Set(
+    (process.env.PLATFORM_DEMO_SLUGS ?? 'demo')
+      .split(',')
+      .map((x) => x.trim().toLowerCase())
+      .filter(Boolean),
+  )
+export const isDemoSchool = (t: Pick<SchoolInfo, 'slug'> | null | undefined) => Boolean(t && demoSlugs().has(t.slug))
 
 /** A suspended school is invisible to the public in both products and its staff cannot sign in. */
 export const isLive = (t: SchoolInfo | null | undefined): t is SchoolInfo => Boolean(t && t.status !== 'suspended')

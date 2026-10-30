@@ -68,7 +68,7 @@ export default async function VerifyCard({ params }: { params: Promise<{ token: 
           </p>
         ) : null}
       </section>
-      <p className="footnote">Didukung Sekolahku</p>
+      <p className="footnote">Didukung SatuSekolah</p>
     </main>
   )
 }

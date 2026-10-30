@@ -28,7 +28,7 @@ export default async function Sekolah() {
                 <tr>
                   <th scope="col">Sekolah</th>
                   <th scope="col">Status</th>
-                  <th scope="col">Web</th>
+                  <th scope="col">Web (paket)</th>
                   <th scope="col">App</th>
                   <th scope="col">Akun staf</th>
                   <th scope="col">
@@ -49,7 +49,17 @@ export default async function Sekolah() {
                     <td>
                       <span className={`pill pill--${SCHOOL_STATUS[s.status]?.tone}`}>{SCHOOL_STATUS[s.status]?.label}</span>
                     </td>
-                    <td>{product(s.web)}</td>
+                    <td>
+                      {product(s.web)}
+                      {s.web.plan === 'basic' ? (
+                        <>
+                          <br />
+                          <span className="small" style={s.web.cms ? undefined : { color: 'var(--warn)' }}>
+                            {s.web.cms ? `CMS sampai ${fmtDate(s.web.cmsUntil)}` : 'CMS ditutup'}
+                          </span>
+                        </>
+                      ) : null}
+                    </td>
                     <td>
                       {product(s.app)}
                       {s.app.plan !== 'none' ? (

@@ -123,7 +123,7 @@ export default async function PublicAdmissions() {
           ) : (
             <p className="muted">Belum ada periode penerimaan yang diumumkan.</p>
           )}
-          <p className="footnote">Hasil seleksi hanya dapat dilihat melalui akun pendaftar. Didukung Sekolahku.</p>
+          <p className="footnote">Hasil seleksi hanya dapat dilihat melalui akun pendaftar. Didukung SatuSekolah.</p>
         </div>
       </main>
     </div>

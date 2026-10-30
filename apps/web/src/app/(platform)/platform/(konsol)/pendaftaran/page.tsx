@@ -6,6 +6,7 @@ import { suggestSlug } from '@/platform/validation'
 import { PLATFORM_ROOT_DOMAIN } from '@/tenancy/config'
 import { APPLICATION_LABEL, LEVEL_LABEL, ZONE_LABEL, fmtDateTime } from '@/platform/labels'
 import type { SchoolApplication } from '@/payload-types'
+import { packageLabel } from '@sekolahku/core'
 import { ApproveForm } from './approve'
 
 export const metadata = { title: 'Pendaftaran sekolah' }
@@ -18,7 +19,7 @@ const TABS = [
 ] as const
 
 function Facts({ a }: { a: SchoolApplication }) {
-  const products = [a.wantWeb ? 'Sekolahku Web' : null, a.wantApp ? 'Sekolahku App' : null].filter(Boolean).join(' + ') || '—'
+  const pkg = a.package ?? (a.wantApp ? 'lengkap' : 'gratis')
   return (
     <dl className="facts">
       <dt>Jenjang</dt>
@@ -31,8 +32,11 @@ function Facts({ a }: { a: SchoolApplication }) {
       </dd>
       <dt>Domain</dt>
       <dd>{a.domain || '—'}</dd>
-      <dt>Produk</dt>
-      <dd>{products}</dd>
+      <dt>Paket</dt>
+      <dd>
+        {packageLabel(pkg)}
+        {pkg === 'lengkap' ? <span className="pill pill--warn" style={{ marginLeft: 6 }}>Pengajuan demo</span> : null}
+      </dd>
       <dt>Pengelola</dt>
       <dd>
         {a.adminName}
@@ -105,8 +109,7 @@ export default async function Pendaftaran({ searchParams }: { searchParams: Prom
                       name: a.schoolName,
                       timezone: a.timezone || 'Asia/Jakarta',
                       domain: a.domain ?? '',
-                      webPlan: a.wantWeb ? 'basic' : 'none',
-                      appPlan: a.wantApp ? 'pilot' : 'none',
+                      package: a.package ?? (a.wantApp ? 'lengkap' : 'gratis'),
                     }}
                   />
                 </details>

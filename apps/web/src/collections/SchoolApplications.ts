@@ -1,4 +1,5 @@
 import type { CollectionConfig } from 'payload'
+import { PACKAGES } from '@sekolahku/core'
 import { isSuperAdmin, nobody, superAdminOnly } from '../access/roles'
 import { auditAfterChange, auditAfterDelete } from '../hooks/audit'
 
@@ -27,7 +28,7 @@ export const SchoolApplications: CollectionConfig = {
   labels: { singular: 'Pendaftaran Sekolah', plural: 'Pendaftaran Sekolah' },
   admin: {
     useAsTitle: 'schoolName',
-    defaultColumns: ['schoolName', 'city', 'adminEmail', 'status', 'createdAt'],
+    defaultColumns: ['schoolName', 'package', 'city', 'adminEmail', 'status', 'createdAt'],
     description: 'Pengajuan sekolah baru. Tinjau dan putuskan di konsol platform (/platform/pendaftaran).',
     hidden: ({ user }) => !isSuperAdmin(user as never),
   },
@@ -51,8 +52,15 @@ export const SchoolApplications: CollectionConfig = {
     { name: 'province', type: 'text', label: 'Provinsi', required: true },
     { name: 'timezone', type: 'text', label: 'Zona waktu' },
     { name: 'domain', type: 'text', label: 'Domain yang diinginkan', admin: { description: 'Mis. www.sman1contoh.sch.id. Boleh kosong.' } },
-    { name: 'wantWeb', type: 'checkbox', label: 'Ingin Sekolahku Web', defaultValue: true },
-    { name: 'wantApp', type: 'checkbox', label: 'Ingin Sekolahku App', defaultValue: false },
+    {
+      name: 'package',
+      type: 'select',
+      label: 'Paket yang dipilih',
+      options: PACKAGES.map((p) => ({ label: p.label, value: p.value })),
+      admin: { description: 'Paket Lengkap = pengajuan demo (harga dibahas setelah demo).' },
+    },
+    { name: 'wantWeb', type: 'checkbox', label: 'Ingin SatuSekolah Web', defaultValue: true },
+    { name: 'wantApp', type: 'checkbox', label: 'Ingin SatuSekolah App (Paket Lengkap)', defaultValue: false },
     { name: 'adminName', type: 'text', label: 'Nama pengelola (calon Admin Teknis)', required: true },
     { name: 'adminEmail', type: 'email', label: 'Email pengelola', required: true, index: true },
     { name: 'adminPhone', type: 'text', label: 'Telepon/WhatsApp' },

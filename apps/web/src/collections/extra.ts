@@ -91,7 +91,7 @@ export const StudentWorks = defineContent({
     {
       name: 'appRef',
       type: 'text',
-      label: 'Asal: Sekolahku App',
+      label: 'Asal: SatuSekolah App',
       index: true,
       access: { read: ({ req: { user } }) => isStaff(user), update: () => false },
       admin: { position: 'sidebar', readOnly: true, description: 'Diisi otomatis untuk karya dari App (izin orang tua tercatat di App). Bila izin ditarik di App, status persetujuan menjadi "Ditarik".' },
