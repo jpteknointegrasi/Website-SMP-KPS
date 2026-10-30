@@ -1,4 +1,5 @@
 import { APIError, type Access, type CollectionConfig, type Where } from 'payload'
+import { hasCms } from '@sekolahku/core'
 import { ROLE_OPTIONS, fieldAdminOnly, isAdmin, isSuperAdmin } from '../access/roles'
 import { auditAfterChange, auditAfterDelete } from '../hooks/audit'
 import { tenantOfUser } from '../tenancy/access'
@@ -44,7 +45,13 @@ export const Users: CollectionConfig = {
     delete: manageUsers(false),
     // Unlocking a locked-out account: only the account's own school admin (or the Super Admin).
     unlock: manageUsers(false),
-    admin: ({ req: { user } }) => Boolean(user && (user as { active?: boolean }).active !== false),
+    // CMS panel: active accounts; school staff only while their school's package includes the CMS (see hasCms).
+    admin: async ({ req }) => {
+      const user = req.user
+      if (!user || (user as { active?: boolean }).active === false) return false
+      if (isSuperAdmin(user)) return true
+      return hasCms(await tenantById(req.payload, tenantOfUser(user)))
+    },
   },
   hooks: {
     afterChange: [auditAfterChange],
@@ -59,6 +66,14 @@ export const Users: CollectionConfig = {
         const here = host ? await tenantByHost(req.payload, host) : null
         // only on the school's own address (an address that belongs to no school is the platform's, for the Super Admin)
         if (!here || here.id !== own.id) throw new APIError('Akun ini milik sekolah lain. Masuk lewat alamat website sekolah Anda.', 403, null, true)
+        // Website Gratis after its first month: the website stays online, the CMS is closed.
+        if (!hasCms(own))
+          throw new APIError(
+            'Masa akses CMS sekolah ini sudah berakhir. Website tetap tayang. Untuk mengelola konten lagi, berlangganan paket Website + CMS melalui pengelola SatuSekolah.',
+            403,
+            null,
+            true,
+          )
         return user
       },
     ],

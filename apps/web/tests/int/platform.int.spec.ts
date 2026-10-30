@@ -9,7 +9,9 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import config from '@/payload.config'
 import { approve, createApplication, reject } from '@/platform/service'
 import { readApplication, readApproval } from '@/platform/validation'
-import { schoolOwningHost } from '@/tenancy/resolve'
+import { clearTenantCache, schoolOwningHost, tenantById } from '@/tenancy/resolve'
+import { FREE_CMS_DAYS, hasCms } from '@sekolahku/core'
+import { Users } from '@/collections/Users'
 import { dropTestSchool } from './school'
 import type { User } from '@/payload-types'
 
@@ -82,7 +84,8 @@ describe('PLT-02 persetujuan oleh Super Admin', () => {
     tenants.push(res.tenantId)
     const t = await raw.findByID({ collection: 'tenants', id: res.tenantId, overrideAccess: true, depth: 0 })
     expect(t).toMatchObject({ slug, status: 'trial', timezone: 'Asia/Makassar' })
-    expect(t.web).toMatchObject({ plan: 'basic', status: 'trial' })
+    // Paket Lengkap: App always comes with Website + CMS
+    expect(t.web).toMatchObject({ plan: 'pro', status: 'trial' })
     expect(t.app).toMatchObject({ plan: 'pilot', status: 'trial' })
     // provisioned per-school documents (settings/menu/features) came with it
     expect((await raw.count({ collection: 'site-settings', where: { tenant: { equals: res.tenantId } }, overrideAccess: true })).totalDocs).toBe(1)
@@ -131,5 +134,52 @@ describe('PLT-02 persetujuan oleh Super Admin', () => {
     expect(await reject(raw, operator, app.id, 'NPSN tidak ditemukan')).toBe(true)
     expect(await raw.findByID({ collection: 'school-applications', id: app.id, overrideAccess: true })).toMatchObject({ status: 'rejected', decisionNote: 'NPSN tidak ditemukan', decidedBy: operator.id })
     expect(await reject(raw, operator, app.id, 'lagi')).toBe(false)
+  })
+})
+
+describe('PLT-03 paket SatuSekolah & akses CMS', () => {
+  const asUser = (u: User) => ({ ...u, collection: 'users' }) as never
+  const panel = (u: User) => (Users.access!.admin as (a: unknown) => Promise<boolean>)({ req: { user: asUser(u), payload: raw } })
+
+  it('Website Gratis: CMS dibuka 30 hari pertama, lalu tertutup (website tetap tayang)', async () => {
+    const r = await createApplication(raw, readApplication(form({ schoolName: `SMP Gratis ${RUN}`, city: 'Balikpapan', province: 'Kaltim', package: 'gratis', adminName: 'Admin G', adminEmail: `${RUN}-g@test.invalid`, consent: 'on' })).value)
+    const app = await appByRef((r as { reference: string }).reference)
+    expect(app.package).toBe('gratis')
+    const res = await approve(raw, operator, readApproval(form({ applicationId: String(app.id), slug: `${RUN}g`, name: `SMP Gratis ${RUN}`, timezone: 'Asia/Makassar', domain: `${RUN}g.sekolah.test`, package: 'gratis' })).value, '', '')
+    expect(res.ok).toBe(true)
+    if (!res.ok) return
+    tenants.push(res.tenantId)
+    const t = await raw.findByID({ collection: 'tenants', id: res.tenantId, overrideAccess: true, depth: 0 })
+    expect(t.web?.plan).toBe('basic')
+    const days = (Date.parse(String(t.web?.cmsUntil)) - Date.now()) / 86_400_000
+    expect(days).toBeGreaterThan(FREE_CMS_DAYS - 1)
+    expect(days).toBeLessThanOrEqual(FREE_CMS_DAYS)
+    const admin = (await raw.findByID({ collection: 'users', id: res.adminUserId, overrideAccess: true, depth: 0 })) as User
+    expect(hasCms(await tenantById(raw, res.tenantId))).toBe(true)
+    expect(await panel(admin)).toBe(true)
+    const post = await raw.create({ collection: 'posts', user: asUser(admin), overrideAccess: false, draft: true, data: { title: `Berita ${RUN}`, slug: `berita-${RUN}`, _status: 'draft' } as never })
+
+    // first month over
+    await raw.update({ collection: 'tenants', id: res.tenantId, overrideAccess: true, data: { web: { ...t.web, cmsUntil: new Date(Date.now() - 60_000).toISOString() } } as never })
+    clearTenantCache()
+    expect(hasCms(await tenantById(raw, res.tenantId))).toBe(false)
+    expect(await panel(admin)).toBe(false)
+    await expect(raw.create({ collection: 'posts', user: asUser(admin), overrideAccess: false, draft: true, data: { title: `Lagi ${RUN}`, slug: `lagi-${RUN}`, _status: 'draft' } as never })).rejects.toThrow()
+    await expect(raw.update({ collection: 'posts', id: post.id, user: asUser(admin), overrideAccess: false, draft: true, data: { title: 'Ubah' } as never })).rejects.toThrow()
+    // the Super Admin still can (e.g. to help the school)
+    await raw.update({ collection: 'posts', id: post.id, user: asUser(operator), overrideAccess: false, draft: true, data: { title: 'Dibantu platform' } as never })
+
+    // upgrading to Website + CMS opens the CMS again
+    await raw.update({ collection: 'tenants', id: res.tenantId, overrideAccess: true, data: { web: { plan: 'pro', status: 'active' } } as never })
+    clearTenantCache()
+    expect(await panel(admin)).toBe(true)
+  })
+
+  it('tidak ada paket App saja: App menjadikan Web "Website + CMS"', async () => {
+    const tid = tenants[0]!
+    await raw.update({ collection: 'tenants', id: tid, overrideAccess: true, data: { web: { plan: 'basic', status: 'active' }, app: { plan: 'standard', status: 'active' } } as never })
+    const t = await raw.findByID({ collection: 'tenants', id: tid, overrideAccess: true, depth: 0 })
+    expect(t.web?.plan).toBe('pro')
+    clearTenantCache()
   })
 })

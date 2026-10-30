@@ -35,6 +35,21 @@ describe('persetujuan', () => {
     expect(ok.errors).toEqual([])
     expect(ok.value.domain).toBe('www.sman1.sch.id')
   })
+  it('paket: konsol memilih paket; App selalu bersama Website + CMS, tidak ada App saja', () => {
+    const base = { applicationId: '7', slug: 'sman1', name: 'SMAN 1', timezone: 'Asia/Makassar' }
+    expect(readApproval(form({ ...base, package: 'gratis' })).value).toMatchObject({ webPlan: 'basic', appPlan: 'none' })
+    expect(readApproval(form({ ...base, package: 'cms', appPlan: 'standard' })).value).toMatchObject({ webPlan: 'pro', appPlan: 'none' })
+    expect(readApproval(form({ ...base, package: 'lengkap' })).value).toMatchObject({ webPlan: 'pro', appPlan: 'pilot' })
+    expect(readApproval(form({ ...base, package: 'lengkap', appPlan: 'standard' })).value).toMatchObject({ webPlan: 'pro', appPlan: 'standard' })
+    expect(readApproval(form({ ...base, webPlan: 'basic', appPlan: 'pilot' })).value).toMatchObject({ webPlan: 'pro', appPlan: 'pilot' })
+    expect(readApproval(form({ ...base, webPlan: 'none', appPlan: 'pilot' })).errors.length).toBe(1)
+    expect(readApproval(form({ ...base, package: 'emas' })).errors).toContain('Paket tidak dikenal.')
+  })
+  it('formulir: Paket Lengkap = pengajuan demo', () => {
+    expect(readApplication(form({ ...good, package: 'lengkap' })).value).toMatchObject({ package: 'lengkap', wantWeb: true, wantApp: true })
+    expect(readApplication(form({ ...good, package: 'cms' })).value).toMatchObject({ package: 'cms', wantApp: false })
+    expect(readApplication(form({ ...good })).value.package).toBe('gratis')
+  })
   it('nomor pendaftaran tanpa huruf/angka yang mirip', () => {
     for (let i = 0; i < 50; i++) expect(applicationReference()).toMatch(/^SK-[A-HJ-NP-Z2-9]{4}-[A-HJ-NP-Z2-9]{4}$/)
   })

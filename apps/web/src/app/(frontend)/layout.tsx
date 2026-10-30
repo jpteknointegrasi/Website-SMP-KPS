@@ -102,7 +102,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           items={header}
           schoolName={settings.schoolName}
           logoUrl={logo?.url}
-          portalUrl={settings.portalUrl || (hasProduct(school, 'app') ? PORTAL_BASE_PATH : null)}
+          // Paket Lengkap: always the school's own SatuSekolah App; other packages may link an external portal they set
+          portalUrl={hasProduct(school, 'app') ? PORTAL_BASE_PATH : settings.portalUrl || null}
         />
         <main id="main" tabIndex={-1}>
           {children}

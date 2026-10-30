@@ -1,7 +1,7 @@
 /**
  * Pure checks for the school sign-up form and the approval form (no database; unit-tested).
  */
-import { RESERVED_SLUGS, isSchoolTimezone, normalizeHost } from '@sekolahku/core'
+import { PACKAGES, RESERVED_SLUGS, isPackage, isSchoolTimezone, normalizeHost, type PackageCode } from '@sekolahku/core'
 
 export const SLUG_RE = /^[a-z0-9](?:[a-z0-9-]{0,40}[a-z0-9])?$/
 export const DOMAIN_RE = /^(?=.{4,253}$)([a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,}$/
@@ -21,6 +21,8 @@ export type ApplicationInput = {
   province: string
   timezone: string
   domain: string
+  /** Website Gratis / Website + CMS = sign-up; Paket Lengkap = a demo request (price discussed after the demo). */
+  package: PackageCode
   wantWeb: boolean
   wantApp: boolean
   adminName: string
@@ -36,6 +38,9 @@ export function readApplication(fd: FormData): { value: ApplicationInput; errors
   const level = text(fd.get('level'), 20)
   const domain = normalizeHost(text(fd.get('domain'), 253).replace(/^https?:\/\//i, '').split('/')[0])
   const tz = text(fd.get('timezone'), 40)
+  const chosen = text(fd.get('package'), 20)
+  // older form (product checkboxes): App → Paket Lengkap, Web only → Website Gratis
+  const pkg: PackageCode | null = isPackage(chosen) ? chosen : fd.get('wantApp') === 'on' ? 'lengkap' : fd.get('wantWeb') === 'on' ? 'gratis' : null
   const value: ApplicationInput = {
     schoolName: text(fd.get('schoolName'), 160),
     shortName: text(fd.get('shortName'), 60),
@@ -45,8 +50,9 @@ export function readApplication(fd: FormData): { value: ApplicationInput; errors
     province: text(fd.get('province'), 80),
     timezone: isSchoolTimezone(tz) ? tz : 'Asia/Jakarta',
     domain,
-    wantWeb: fd.get('wantWeb') === 'on',
-    wantApp: fd.get('wantApp') === 'on',
+    package: pkg ?? 'gratis',
+    wantWeb: true,
+    wantApp: pkg === 'lengkap',
     adminName: text(fd.get('adminName'), 120),
     adminEmail: text(fd.get('adminEmail'), 200).toLowerCase(),
     adminPhone: text(fd.get('adminPhone'), 30),
@@ -58,7 +64,7 @@ export function readApplication(fd: FormData): { value: ApplicationInput; errors
   if (!value.province) errors.province = 'Isi provinsi.'
   if (value.npsn && value.npsn.length !== 8) errors.npsn = 'NPSN terdiri dari 8 angka.'
   if (value.domain && !DOMAIN_RE.test(value.domain)) errors.domain = 'Domain tidak valid. Contoh: www.sman1contoh.sch.id'
-  if (!value.wantWeb && !value.wantApp) errors.products = 'Pilih minimal satu produk.'
+  if (!pkg) errors.products = 'Pilih paket.'
   if (value.adminName.length < 3) errors.adminName = 'Isi nama pengelola.'
   if (!EMAIL_RE.test(value.adminEmail)) errors.adminEmail = 'Isi email yang valid.'
   if (fd.get('consent') !== 'on') errors.consent = 'Centang persetujuan untuk melanjutkan.'
@@ -111,9 +117,21 @@ export function readApproval(fd: FormData): { value: ApprovalInput; errors: stri
   if (value.name.length < 4) errors.push('Isi nama sekolah.')
   if (!value.timezone) errors.push('Pilih zona waktu.')
   if (value.domain && !DOMAIN_RE.test(value.domain)) errors.push('Domain tidak valid.')
-  if (!PLAN_WEB.has(value.webPlan)) errors.push('Paket Sekolahku Web tidak dikenal.')
-  if (!PLAN_APP.has(value.appPlan)) errors.push('Paket Sekolahku App tidak dikenal.')
-  if (value.webPlan === 'none' && value.appPlan === 'none') errors.push('Pilih minimal satu produk (Web atau App).')
+  // The console chooses a package; the App tier (pilot/standard) only matters for Paket Lengkap.
+  const pkg = text(fd.get('package'), 20)
+  if (pkg) {
+    const p = PACKAGES.find((x) => x.value === pkg)
+    if (!p) errors.push('Paket tidak dikenal.')
+    else {
+      value.webPlan = p.web
+      value.appPlan = p.app === 'none' ? 'none' : PLAN_APP.has(value.appPlan) && value.appPlan !== 'none' ? value.appPlan : p.app
+    }
+  }
+  if (!PLAN_WEB.has(value.webPlan)) errors.push('Paket SatuSekolah Web tidak dikenal.')
+  if (!PLAN_APP.has(value.appPlan)) errors.push('Paket SatuSekolah App tidak dikenal.')
+  if (value.webPlan === 'none') errors.push('Setiap sekolah memakai SatuSekolah Web (tidak ada paket App saja).')
+  // Paket Lengkap always includes Website + CMS
+  if (value.appPlan !== 'none' && value.webPlan === 'basic') value.webPlan = 'pro'
   return { value, errors }
 }
 

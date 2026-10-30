@@ -422,6 +422,10 @@ export interface Tenant {
   web: {
     plan: 'none' | 'basic' | 'pro';
     status: 'active' | 'trial' | 'paused';
+    /**
+     * Diisi otomatis 30 hari sejak sekolah dibuat. Setelah lewat, website tetap tayang tetapi staf tidak bisa masuk CMS. Perpanjang tanggal ini, atau ubah paket ke "Website + CMS".
+     */
+    cmsUntil?: string | null;
   };
   app: {
     plan: 'none' | 'pilot' | 'standard';
@@ -2348,7 +2352,7 @@ export interface SiteSetting {
   notifyContactEmail?: string | null;
   notifyAdmissionsEmail?: string | null;
   /**
-   * Kosong = tombol Portal Sekolah disembunyikan.
+   * Untuk portal di luar SatuSekolah (mis. e-learning sekolah). Kosong = tombol Portal Sekolah disembunyikan. Sekolah dengan Paket Lengkap selalu memakai SatuSekolah App (/portal); isian ini diabaikan.
    */
   portalUrl?: string | null;
   /**
@@ -2443,6 +2447,10 @@ export interface SchoolApplication {
    * Mis. www.sman1contoh.sch.id. Boleh kosong.
    */
   domain?: string | null;
+  /**
+   * Paket Lengkap = pengajuan demo (harga dibahas setelah demo).
+   */
+  package?: ('gratis' | 'cms' | 'lengkap') | null;
   wantWeb?: boolean | null;
   wantApp?: boolean | null;
   adminName: string;
@@ -3959,6 +3967,7 @@ export interface TenantsSelect<T extends boolean = true> {
     | {
         plan?: T;
         status?: T;
+        cmsUntil?: T;
       };
   app?:
     | T
@@ -3999,6 +4008,7 @@ export interface SchoolApplicationsSelect<T extends boolean = true> {
   province?: T;
   timezone?: T;
   domain?: T;
+  package?: T;
   wantWeb?: T;
   wantApp?: T;
   adminName?: T;

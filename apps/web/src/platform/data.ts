@@ -1,5 +1,5 @@
 import 'server-only'
-import { hasProduct } from '@sekolahku/core'
+import { hasCms, hasProduct } from '@sekolahku/core'
 import { rawPayload } from '@/lib/payload'
 import { toInfo } from '@/tenancy/resolve'
 import type { AuditLog, SchoolApplication, Tenant } from '@/payload-types'
@@ -11,7 +11,7 @@ export type PlatformSchool = {
   status: 'active' | 'trial' | 'suspended'
   primaryDomain: string | null
   domains: string[]
-  web: { plan: string; status: string; on: boolean }
+  web: { plan: string; status: string; on: boolean; cms: boolean; cmsUntil: string | null }
   app: { plan: string; status: string; on: boolean; database: boolean }
   staff: number
   admins: number
@@ -47,7 +47,7 @@ export async function listSchools(): Promise<PlatformSchool[]> {
       status: info.status,
       primaryDomain: info.primaryDomain,
       domains: (t.domains ?? []).map((d) => d.domain).filter(Boolean) as string[],
-      web: { plan: info.web.plan, status: info.web.status, on: hasProduct(info, 'web') },
+      web: { plan: info.web.plan, status: info.web.status, on: hasProduct(info, 'web'), cms: hasCms(info), cmsUntil: info.web.cmsUntil ?? null },
       app: { plan: info.app.plan, status: info.app.status, on: hasProduct(info, 'app'), database: Boolean((t.app as { database?: string | null } | undefined)?.database) },
       staff: c.all,
       admins: c.admins,

@@ -24,7 +24,8 @@
     "sekolah:baru": "cross-env NODE_OPTIONS=--no-deprecation tsx scripts/create-school.ts",
     "sekolah:baru:prod": "cross-env DOTENV_CONFIG_PATH=.env.vercel NODE_OPTIONS=--no-deprecation tsx scripts/create-school.ts",
     "platform:superadmin": "cross-env NODE_OPTIONS=--no-deprecation tsx scripts/create-superadmin.ts",
-    "platform:superadmin:prod": "cross-env DOTENV_CONFIG_PATH=.env.vercel NODE_OPTIONS=--no-deprecation tsx scripts/create-superadmin.ts"
+    "platform:superadmin:prod": "cross-env DOTENV_CONFIG_PATH=.env.vercel NODE_OPTIONS=--no-deprecation tsx scripts/create-superadmin.ts",
+    "landing:build": "node scripts/build-landing.mjs"
   },
   "dependencies": {
     "@fontsource-variable/inter": "^5.2.8",

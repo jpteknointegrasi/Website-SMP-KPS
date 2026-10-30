@@ -1,7 +1,7 @@
 import React from 'react'
 import { requestBranding, requestCtx } from '@/server/request'
 import { portalSchool } from '@/lib/context'
-import { hasProduct } from '@sekolahku/core'
+import { unavailableMessage } from '@/lib/unavailable'
 import { P, publicFileUrl } from '@/ui/kit'
 import { FormEnhancer } from '@/ui/client'
 
@@ -13,7 +13,7 @@ export default async function PublicLayout({ children }: { children: React.React
     return (
       <main id="main" className="narrow" style={{ padding: '64px 16px' }}>
         <h1>{school ? school.name : 'Portal tidak ditemukan'}</h1>
-        <p>{school && !hasProduct(school, 'app') ? 'Portal sekolah belum aktif untuk sekolah ini.' : school ? 'Portal sekolah sedang disiapkan. Silakan coba lagi nanti.' : 'Alamat ini tidak terhubung ke sekolah yang aktif.'}</p>
+        <p>{unavailableMessage(school)}</p>
         {school ? <a href="/">Kembali ke website sekolah</a> : null}
       </main>
     )
@@ -41,7 +41,7 @@ export default async function PublicLayout({ children }: { children: React.React
             </div>
           </div>
           {children}
-          <p className="footnote">Didukung Sekolahku</p>
+          <p className="footnote">Didukung SatuSekolah</p>
         </main>
       </div>
       <FormEnhancer />

@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import React from 'react'
 import type { Navigation, SiteSetting, Media, SocialAccount } from '@/payload-types'
+import { platformPublicUrl } from '@sekolahku/core'
 import { Icon } from '../ui/Icon'
 
 export const PLATFORM_ICON: Record<string, string> = { instagram: 'instagram', youtube: 'youtube', tiktok: 'tiktok', facebook: 'facebook', whatsapp: 'whatsapp', web: 'globe' }
@@ -101,6 +102,9 @@ export const Footer = ({ settings, nav, accounts = [] }: { settings: SiteSetting
         </span>
         <span className="site-footer__legal">
           <Link href="/kebijakan-privasi">Kebijakan Privasi</Link>
+          <a href={platformPublicUrl()} className="site-footer__platform" target="_blank" rel="noopener">
+            Didukung oleh SatuSekolah
+          </a>
           {/* staff login; plain <a> so the admin app loads fully, nofollow keeps it out of search */}
           <a href="/admin" className="site-footer__admin" rel="nofollow">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2" /><path d="M8 11V8a4 4 0 0 1 8 0v3" /></svg>

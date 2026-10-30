@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation'
-import { PORTAL_BASE_PATH, hasProduct, isLive } from '@sekolahku/core'
+import { PORTAL_BASE_PATH, hasProduct, isDemoSchool, isLive } from '@sekolahku/core'
 import { rawPayload } from '@/lib/payload'
 import { onPlatformHost } from '@/platform/session'
 import { toInfo } from '@/tenancy/resolve'
@@ -16,7 +16,8 @@ export default async function MasukApp() {
   const res = await payload.find({ collection: 'tenants', pagination: false, depth: 0, sort: 'name', overrideAccess: true })
   const schools = res.docs
     .map((d) => toInfo(d as never))
-    .filter((t) => isLive(t) && hasProduct(t, 'app') && t.primaryDomain)
+    // demo schools (sample data) are shown only to people who are sent their address
+    .filter((t) => isLive(t) && hasProduct(t, 'app') && t.primaryDomain && !isDemoSchool(t))
 
   return (
     <div className="pub">

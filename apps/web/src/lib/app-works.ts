@@ -71,7 +71,7 @@ export async function syncAppWorks(payload: Payload, school: SchoolInfo, fetcher
         collection: 'media',
         overrideAccess: true,
         file: { data, mimetype: mime, name: `karya-${w.ref.slice(0, 8)}-${media.length + 1}.${EXT[mime]}`, size: data.length },
-        data: { alt: `Karya siswa: ${w.title}`.slice(0, 200), sha256: sha, consent: 'approved', reviewStatus: 'pending', license: 'Izin publikasi dari orang tua/wali, tercatat di Sekolahku App.', editorialNote: `Dari Sekolahku App (karya ${w.ref}).` },
+        data: { alt: `Karya siswa: ${w.title}`.slice(0, 200), sha256: sha, consent: 'approved', reviewStatus: 'pending', license: 'Izin publikasi dari orang tua/wali, tercatat di SatuSekolah App.', editorialNote: `Dari SatuSekolah App (karya ${w.ref}).` },
       } as never)
       media.push((doc as { id: number }).id)
     }

@@ -1,5 +1,5 @@
 /**
- * Platform onboarding (Alumniku model), independent of Next.js so it can be tested directly:
+ * SatuSekolah onboarding (Alumniku model), independent of Next.js so it can be tested directly:
  *  - a school signs up → a pending application (nothing else is created);
  *  - only the platform Super Admin approves → in ONE transaction: the school (tenant, with its settings, menu and
  *    feature documents), its first Admin Teknis account and trial subscriptions for the chosen products;
@@ -9,6 +9,7 @@
  */
 import { randomBytes, randomInt } from 'crypto'
 import { commitTransaction, createLocalReq, initTransaction, killTransaction, type Payload } from 'payload'
+import { FREE_CMS_DAYS } from '@sekolahku/core'
 import { isSuperAdmin } from '@/access/roles'
 import { clearTenantCache } from '@/tenancy/resolve'
 import type { User } from '@/payload-types'
@@ -48,12 +49,15 @@ export async function createApplication(payload: Payload, value: ApplicationInpu
   if (dup.docs[0]) return { ok: true, reference: dup.docs[0].reference, duplicate: true }
   const reference = applicationReference(randomInt)
   await payload.create({ collection: 'school-applications', overrideAccess: true, data: { ...value, reference, status: 'pending' } })
+  const demo = value.package === 'lengkap'
   await mail(
     payload,
     value.adminEmail,
-    `Pendaftaran ${value.schoolName} diterima (${reference})`,
-    `<p>Yth. ${escapeHtml(value.adminName)},</p><p>Pendaftaran <b>${escapeHtml(value.schoolName)}</b> ke platform Sekolahku sudah kami terima dengan nomor <b>${reference}</b>.</p><p>Tim kami akan meninjau dan mengirim kabar ke email ini. Bila disetujui, Anda menerima tautan untuk mengatur kata sandi akun Admin Teknis sekolah.</p>`,
-    'konfirmasi pendaftaran sekolah',
+    demo ? `Pengajuan demo ${value.schoolName} diterima (${reference})` : `Pendaftaran ${value.schoolName} diterima (${reference})`,
+    demo
+      ? `<p>Yth. ${escapeHtml(value.adminName)},</p><p>Pengajuan demo <b>Paket Lengkap SatuSekolah</b> (Website + SatuSekolah App) untuk <b>${escapeHtml(value.schoolName)}</b> sudah kami terima dengan nomor <b>${reference}</b>.</p><p>Tim kami akan menghubungi Anda untuk menjadwalkan demo. Harga dan cakupan paket dibahas setelah demo.</p>`
+      : `<p>Yth. ${escapeHtml(value.adminName)},</p><p>Pendaftaran <b>${escapeHtml(value.schoolName)}</b> ke SatuSekolah sudah kami terima dengan nomor <b>${reference}</b>.</p><p>Tim kami akan meninjau dan mengirim kabar ke email ini. Bila disetujui, Anda menerima tautan untuk mengatur kata sandi akun Admin Teknis sekolah.</p>`,
+    demo ? 'konfirmasi pengajuan demo' : 'konfirmasi pendaftaran sekolah',
   )
   return { ok: true, reference, duplicate: false }
 }
@@ -128,7 +132,11 @@ export async function approve(payload: Payload, operator: User, value: ApprovalI
     payload,
     made.adminEmail,
     `${made.schoolName} disetujui — atur kata sandi Admin Teknis`,
-    `<p>Selamat, pendaftaran <b>${escapeHtml(made.schoolName)}</b> di platform Sekolahku sudah disetujui.</p><p>Anda menjadi <b>Admin Teknis</b> sekolah. Atur kata sandi melalui tautan berikut (berlaku 72 jam):</p><p><a href="${inviteUrl}">${inviteUrl}</a></p><p>Setelah masuk, Anda dapat membuat akun staf lain dan mengatur perannya di menu Pengguna.</p>`,
+    `<p>Selamat, pendaftaran <b>${escapeHtml(made.schoolName)}</b> di SatuSekolah sudah disetujui.</p><p>Anda menjadi <b>Admin Teknis</b> sekolah. Atur kata sandi melalui tautan berikut (berlaku 72 jam):</p><p><a href="${inviteUrl}">${inviteUrl}</a></p><p>Setelah masuk, Anda dapat membuat akun staf lain dan mengatur perannya di menu Pengguna.</p>${
+      value.webPlan === 'basic'
+        ? `<p><b>Website Gratis:</b> CMS dapat dipakai selama ${FREE_CMS_DAYS} hari pertama untuk mengisi konten website. Setelah itu website tetap tayang; untuk terus mengelola konten, berlangganan paket <b>Website + CMS</b>.</p>`
+        : ''
+    }`,
     'undangan Admin Teknis',
   )
   return { ok: true, tenantId: made.tenantId, adminUserId: made.adminUserId, schoolName: made.schoolName, slug: value.slug, domain: made.domain, inviteUrl, emailed, adminEmail: made.adminEmail, app: value.appPlan !== 'none' }

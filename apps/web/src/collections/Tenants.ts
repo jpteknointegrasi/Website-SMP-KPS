@@ -1,6 +1,6 @@
 import { APIError, type CollectionConfig } from 'payload'
 import { fieldSuperAdminOnly, isStaff, isSuperAdmin, superAdminOnly } from '../access/roles'
-import { PLANS, PLAN_LABELS, PRODUCT_STATUS, sealSecret } from '@sekolahku/core'
+import { FREE_CMS_DAYS, PLANS, PLAN_LABELS, PRODUCT_STATUS, sealSecret } from '@sekolahku/core'
 import { auditAfterChange, auditAfterDelete } from '../hooks/audit'
 import { RESERVED_SLUGS, SCHOOL_TIMEZONES, DEFAULT_TIMEZONE } from '../tenancy/config'
 import { clearTenantCache, normalizeHost } from '../tenancy/resolve'
@@ -34,11 +34,18 @@ export const Tenants: CollectionConfig = {
   lockDocuments: false,
   hooks: {
     beforeValidate: [
-      ({ data }) => {
+      ({ data, originalDoc, operation }) => {
         if (data?.slug) data.slug = String(data.slug).trim().toLowerCase()
         if (Array.isArray(data?.domains)) {
           data.domains = data.domains.map((d: { domain?: string }) => ({ ...d, domain: normalizeHost(d?.domain) }))
         }
+        // Packages: an App subscription always comes with Website + CMS (Paket Lengkap); there is no App-only school.
+        const web = { ...((originalDoc?.web as object) ?? {}), ...((data?.web as object) ?? {}) } as { plan?: string; cmsUntil?: string | null }
+        const app = { ...((originalDoc?.app as object) ?? {}), ...((data?.app as object) ?? {}) } as { plan?: string }
+        if (data && app.plan && app.plan !== 'none' && web.plan !== 'pro') data.web = { ...web, plan: 'pro' }
+        // Website Gratis: the CMS is open for the first FREE_CMS_DAYS after the school is created.
+        if (data && operation === 'create' && (web.plan ?? 'basic') === 'basic' && !web.cmsUntil)
+          data.web = { ...web, ...((data.web as object) ?? {}), cmsUntil: new Date(Date.now() + FREE_CMS_DAYS * 86_400_000).toISOString() }
         return data
       },
     ],
@@ -133,12 +140,15 @@ export const Tenants: CollectionConfig = {
     {
       type: 'collapsible',
       label: 'Langganan produk',
-      admin: { description: 'Sekolahku Web dan Sekolahku App dijual terpisah. Setiap produk memeriksa langganannya sendiri di server.' },
+      admin: {
+        description:
+          'Paket SatuSekolah: Website Gratis (Web: Website Gratis), Website + CMS (Web: Website + CMS), Paket Lengkap (Web: Website + CMS + App). Memilih paket App otomatis menjadikan Web "Website + CMS".',
+      },
       fields: [
         {
           name: 'web',
           type: 'group',
-          label: 'Sekolahku Web (website & CMS, minat, kunjungan/open house)',
+          label: 'SatuSekolah Web (website & CMS, minat, kunjungan/open house)',
           fields: [
             {
               type: 'row',
@@ -147,12 +157,22 @@ export const Tenants: CollectionConfig = {
                 { name: 'status', type: 'select', label: 'Status', required: true, defaultValue: 'active', options: PRODUCT_STATUS.map((o) => ({ ...o })) },
               ],
             },
+            {
+              name: 'cmsUntil',
+              type: 'date',
+              label: 'Akses CMS sampai (Website Gratis)',
+              admin: {
+                date: { pickerAppearance: 'dayAndTime' },
+                condition: (_d, sibling) => (sibling as { plan?: string })?.plan === 'basic',
+                description: `Diisi otomatis ${FREE_CMS_DAYS} hari sejak sekolah dibuat. Setelah lewat, website tetap tayang tetapi staf tidak bisa masuk CMS. Perpanjang tanggal ini, atau ubah paket ke "Website + CMS".`,
+              },
+            },
           ],
         },
         {
           name: 'app',
           type: 'group',
-          label: 'Sekolahku App (portal /portal: penerimaan siswa baru, akademik, layanan)',
+          label: 'SatuSekolah App (portal /portal: penerimaan siswa baru, akademik, layanan) — Paket Lengkap',
           fields: [
             {
               type: 'row',

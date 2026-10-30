@@ -25,7 +25,7 @@ export async function submitApplication(_prev: FormState, fd: FormData): Promise
   if (Object.keys(errors).length) return { errors, message: 'Periksa kembali isian yang ditandai.', values: valuesOf(fd) }
   const r = await createApplication(await rawPayload(), value)
   if (!r.ok) return { message: r.message, values: valuesOf(fd) }
-  redirect(`/daftar-sekolah/terkirim?ref=${encodeURIComponent(r.reference)}`)
+  redirect(`/daftar-sekolah/terkirim?ref=${encodeURIComponent(r.reference)}${value.package === 'lengkap' ? '&demo=1' : ''}`)
 }
 
 export type ApproveState =

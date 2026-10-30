@@ -15,6 +15,8 @@ Untuk pemilik platform (Super Admin). Arsitekturnya dijelaskan di `SAAS_ARCHITEC
 | `DEFAULT_TENANT_SLUG` | kosong (atau `kps` selama transisi) | Sekolah untuk alamat yang tak dikenal, mis. `*.vercel.app` |
 | `PLATFORM_NAME` | mis. `Sekolahku` | Judul CMS |
 | `PLATFORM_HOSTS` | bawaan `satusekolah.my.id,www.satusekolah.my.id` | Domain platform yang berandanya landing page SatuSekolah (`/` → `/satusekolah`). Tombol *Masuk ke App* membuka `/masuk-app` (daftar sekolah dengan App aktif → `https://<domain sekolah>/portal`) |
+| `PLATFORM_PUBLIC_URL` | bawaan `https://www.satusekolah.my.id` | Tujuan tautan "Didukung oleh SatuSekolah" di footer setiap website sekolah |
+| `PLATFORM_DEMO_SLUGS` | bawaan `demo` | Kode sekolah demo (data contoh) yang tidak ditampilkan di daftar *Masuk ke App* |
 | `SMTP_HOST` | opsional | Penerima email diatur per sekolah di Pengaturan Sekolah → Notifikasi |
 
 ## B. Memindahkan produksi SMP Nasional KPS ke platform

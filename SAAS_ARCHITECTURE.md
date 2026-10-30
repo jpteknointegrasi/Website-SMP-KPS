@@ -69,14 +69,25 @@ Email login bersifat unik di seluruh platform: satu akun hanya untuk satu sekola
 
 ## 6. Langganan produk & fitur
 
-Sekolahku Web dan Sekolahku App dijual terpisah: setiap sekolah punya langganan **Web** dan **App** masing-masing (paket + status Aktif/Uji coba/Dijeda), lihat `docs/BLUEPRINT_ADDENDUM_v2.1.md`. Tanpa langganan Web yang aktif, website sekolah tidak tayang dan endpoint website tertutup; portal tetap dapat dipakai bila App aktif.
+SatuSekolah dijual dalam **tiga paket** (`packages/core` → `PACKAGES`). Di database setiap sekolah tetap punya langganan **Web** dan **App** (paket + status Aktif/Uji coba/Dijeda); paket SatuSekolah adalah kombinasinya:
+
+| Paket SatuSekolah | Web | App | CMS | Harga |
+|---|---|---|---|---|
+| Website Gratis | `basic` | `none` | 30 hari pertama (`web.cmsUntil`), lalu ditutup | Rp0 |
+| Website + CMS | `pro` | `none` | selalu | Rp100.000/bulan |
+| Paket Lengkap | `pro` | `pilot`/`standard` | selalu | setelah demo |
+
+- **Tidak ada paket App saja.** Memilih paket App otomatis menjadikan Web `pro` (hook Tenants, validasi persetujuan, migrasi `20261030_021053_satusekolah_paket`).
+- **CMS Website Gratis** (`hasCms()`): setelah `cmsUntil` lewat, website tetap tayang, tetapi staf sekolah tidak bisa masuk CMS (`beforeLogin`), panel admin tertutup (`Users.access.admin`), dan semua perubahan konten ditolak (`withTenantAccess`). Super Admin tetap bisa membantu. Perpanjang `cmsUntil` atau ubah ke Website + CMS untuk membukanya lagi; konten tidak hilang.
+- Formulir `/daftar-sekolah?paket=gratis|cms|lengkap`; `lengkap` = **pengajuan demo** (email & halaman terkirim berbeda). Konsol persetujuan memilih paket (dan tingkat App untuk Paket Lengkap).
+- Tanpa langganan Web yang aktif, website sekolah tidak tayang dan endpoint website tertutup.
 
 `readFlags()` = pilihan sekolah ∩ fitur yang diizinkan paket Web-nya (`packages/core` → `WEB_PLAN_FEATURES`):
 
 | Paket Web | Fitur yang bisa dinyalakan |
 |---|---|
-| Basic | Kalender bulanan, Video & media sosial |
-| Pro | + Form minat, Kunjungan sekolah, Karya siswa, Statistik pengunjung |
+| `basic` (Website Gratis) | Kalender bulanan, Video & media sosial |
+| `pro` (Website + CMS / Paket Lengkap) | + Form minat, Kunjungan sekolah, Karya siswa, Statistik pengunjung |
 
 SMP Nasional KPS dimigrasikan sebagai **Web Pro** (App: tidak berlangganan), sehingga tidak ada fitur yang hilang. Paket hanya membatasi; tagihan belum dibuat (lihat §10).
 

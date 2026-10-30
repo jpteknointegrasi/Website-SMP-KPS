@@ -1,5 +1,5 @@
 'use client'
-import { useActionState } from 'react'
+import { useActionState, useState } from 'react'
 import { submitApplication, type FormState } from '@/platform/actions'
 
 const LEVELS = [
@@ -16,10 +16,19 @@ const ZONES = [
   ['Asia/Jayapura', 'WIT (Asia/Jayapura)'],
 ] as const
 
-export function ApplicationForm() {
+/** Must match PACKAGES in @sekolahku/core (prices: see the landing page). */
+const PACKAGE_CHOICES = [
+  { value: 'gratis', title: 'Website Gratis', price: 'Rp0', text: 'Website sekolah tanpa biaya. CMS dibuka 1 bulan pertama untuk mengisi konten.' },
+  { value: 'cms', title: 'Website + CMS', price: 'Rp100.000/bulan', text: 'Sekolah mengelola sendiri konten website, semua fitur website aktif.' },
+  { value: 'lengkap', title: 'Paket Lengkap', price: 'Ajukan demo', text: 'Website + CMS + SatuSekolah App (penerimaan siswa, akademik, layanan). Harga dibahas setelah demo.' },
+] as const
+
+export function ApplicationForm({ initialPackage = 'gratis' }: { initialPackage?: string }) {
   const [state, action, pending] = useActionState<FormState, FormData>(submitApplication, null)
   const e = state?.errors ?? {}
   const v = state?.values ?? {}
+  const [pkg, setPkg] = useState<string>(v.package ?? initialPackage)
+  const demo = pkg === 'lengkap'
   const field = (name: string, label: string, opts: { required?: boolean; type?: string; hint?: string; auto?: string; max?: number } = {}) => (
     <label className="fld">
       <span>
@@ -81,19 +90,19 @@ export function ApplicationForm() {
       </fieldset>
 
       <fieldset>
-        <legend>Produk yang diminati</legend>
-        <label className="check">
-          <input type="checkbox" name="wantWeb" defaultChecked={state ? v.wantWeb === 'on' : true} />
-          <span>
-            <b>Sekolahku Web</b> — website sekolah & CMS: berita, agenda, galeri, informasi pendaftaran, minat & kunjungan.
-          </span>
-        </label>
-        <label className="check">
-          <input type="checkbox" name="wantApp" defaultChecked={v.wantApp === 'on'} />
-          <span>
-            <b>Sekolahku App</b> — portal sekolah: penerimaan siswa baru, buku induk, presensi, nilai & rapor, layanan TU.
-          </span>
-        </label>
+        <legend>Paket</legend>
+        <div className="pkgs" role="radiogroup" aria-label="Paket">
+          {PACKAGE_CHOICES.map((p) => (
+            <label key={p.value} className={`pkg${pkg === p.value ? ' is-on' : ''}`}>
+              <input type="radio" name="package" value={p.value} checked={pkg === p.value} onChange={() => setPkg(p.value)} />
+              <span>
+                <b>{p.title}</b>
+                <strong>{p.price}</strong>
+                <small>{p.text}</small>
+              </span>
+            </label>
+          ))}
+        </div>
         {e.products ? <em className="fld">{e.products}</em> : null}
       </fieldset>
 
@@ -112,7 +121,12 @@ export function ApplicationForm() {
         </div>
         <label className="fld">
           <span>Catatan</span>
-          <textarea name="note" maxLength={1500} defaultValue={v.note ?? ''} placeholder="Kebutuhan khusus, jumlah siswa, jadwal yang diinginkan…" />
+          <textarea
+            name="note"
+            maxLength={1500}
+            defaultValue={v.note ?? ''}
+            placeholder={demo ? 'Jumlah siswa, modul App yang paling dibutuhkan, waktu demo yang Anda inginkan…' : 'Kebutuhan khusus, jumlah siswa, jadwal yang diinginkan…'}
+          />
         </label>
       </fieldset>
 
@@ -135,7 +149,7 @@ export function ApplicationForm() {
       </label>
       <div className="actions">
         <button className="btn" type="submit" disabled={pending}>
-          {pending ? 'Mengirim…' : 'Kirim pendaftaran'}
+          {pending ? 'Mengirim…' : demo ? 'Ajukan demo' : 'Kirim pendaftaran'}
         </button>
       </div>
     </form>

@@ -12,7 +12,7 @@ type TenantDoc = {
   name: string
   timezone?: string | null
   status?: string | null
-  web?: { plan?: string | null; status?: string | null } | null
+  web?: { plan?: string | null; status?: string | null; cmsUntil?: string | null } | null
   app?: { plan?: string | null; status?: string | null } | null
   domains?: { domain?: string | null; primary?: boolean | null }[] | null
 }
@@ -36,7 +36,7 @@ export const toInfo = (d: TenantDoc): TenantInfo => {
     timezone: isSchoolTimezone(d.timezone) ? d.timezone : DEFAULT_TIMEZONE,
     status: d.status === 'suspended' ? 'suspended' : d.status === 'trial' ? 'trial' : 'active',
     primaryDomain: primary ? normalizeHost(primary) : (domains[0] ?? (PLATFORM_ROOT_DOMAIN ? `${d.slug}.${PLATFORM_ROOT_DOMAIN}` : null)),
-    web: product(d.web),
+    web: { ...product(d.web), cmsUntil: d.web?.cmsUntil ?? null },
     app: product(d.app),
   }
 }

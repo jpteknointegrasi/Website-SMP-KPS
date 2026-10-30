@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation'
-import { hasProduct } from '@sekolahku/core'
+import { unavailableMessage } from '@/lib/unavailable'
 import { portalSchool } from '@/lib/context'
 import { requestCtx } from '@/server/request'
 
@@ -11,7 +11,7 @@ export default async function PortalHome() {
     return (
       <main id="main" className="narrow" style={{ padding: '64px 16px' }}>
         <h1>{school ? school.name : 'Portal tidak ditemukan'}</h1>
-        <p>{!school ? 'Alamat ini tidak terhubung ke sekolah yang aktif.' : !hasProduct(school, 'app') ? 'Portal sekolah belum aktif untuk sekolah ini.' : 'Portal sekolah sedang disiapkan.'}</p>
+        <p>{unavailableMessage(school)}</p>
         {school ? <a href="/">Kembali ke website sekolah</a> : null}
       </main>
     )
